@@ -8,7 +8,7 @@ import { getMatchLogs, getPipelineStats } from '@/lib/pipeline-api';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
 import type { MatchLog } from '@/types/pipeline';
 
-export default function NotificationBell() {
+export default function NotificationBell({ compact = false }: { compact?: boolean }) {
   const [count, setCount] = useState(0);
   const [items, setItems] = useState<MatchLog[]>([]);
   const [open, setOpen] = useState(false);
@@ -54,14 +54,13 @@ export default function NotificationBell() {
   }, [open]);
 
   return (
-    <div ref={ref} className="relative px-3 pb-1">
+    <div ref={ref} className={compact ? 'relative' : 'relative px-3 pb-1'}>
       <button
         onClick={() => setOpen(v => !v)}
-        className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-[13px] font-medium transition-all duration-200 ease-out ${
-          open
-            ? 'bg-[var(--sidebar-muted)] text-[var(--foreground)]'
-            : 'text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:bg-[var(--sidebar-muted)]'
-        }`}
+        className={compact
+          ? `relative p-2 rounded-lg transition-all duration-200 ease-out ${open ? 'bg-[var(--sidebar-muted)] text-[var(--foreground)]' : 'text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:bg-[var(--sidebar-muted)]'}`
+          : `w-full flex items-center gap-3 px-3 py-2 rounded-lg text-[13px] font-medium transition-all duration-200 ease-out ${open ? 'bg-[var(--sidebar-muted)] text-[var(--foreground)]' : 'text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:bg-[var(--sidebar-muted)]'}`
+        }
       >
         <div className="relative w-[18px] h-[18px] flex-shrink-0">
           <Bell className="w-full h-full" strokeWidth={1.8} />
@@ -80,17 +79,17 @@ export default function NotificationBell() {
             )}
           </AnimatePresence>
         </div>
-        <span>Notifications</span>
+        {!compact && <span>Notifications</span>}
       </button>
 
       <AnimatePresence>
         {open && (
           <motion.div
-            initial={{ opacity: 0, x: -8, scale: 0.97 }}
-            animate={{ opacity: 1, x: 0, scale: 1 }}
-            exit={{ opacity: 0, x: -8, scale: 0.97 }}
+            initial={{ opacity: 0, y: compact ? 4 : 0, x: compact ? 0 : -8, scale: 0.97 }}
+            animate={{ opacity: 1, y: 0, x: 0, scale: 1 }}
+            exit={{ opacity: 0, y: compact ? 4 : 0, x: compact ? 0 : -8, scale: 0.97 }}
             transition={{ duration: 0.18, ease: [0.25, 0.1, 0.25, 1] }}
-            className="absolute left-full top-0 ml-3 w-80 bg-white rounded-2xl shadow-[0_8px_40px_rgba(0,0,0,0.12)] border border-[var(--border)] z-50 overflow-hidden"
+            className={`absolute w-80 bg-white rounded-2xl shadow-[0_8px_40px_rgba(0,0,0,0.12)] border border-[var(--border)] z-50 overflow-hidden ${compact ? 'top-full right-0 mt-2' : 'left-full top-0 ml-3'}`}
           >
             {/* Header */}
             <div className="px-4 py-3.5 border-b border-[var(--border)] flex items-center justify-between">

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import Sidebar from '@/components/Sidebar';
 import AIChatPanel from '@/components/AIChatPanel';
+import NotificationBell from '@/components/NotificationBell';
 import OnboardingModal from '@/components/OnboardingModal';
 import { useAuth } from '@/context/AuthContext';
 import { getUserPreferences } from '@/lib/pipeline-api';
@@ -75,11 +76,14 @@ export default function DashboardLayout({
     <div className="min-h-screen bg-white">
       <Sidebar />
       <main className="pl-[260px]">
+        <div className="flex items-center justify-end px-10 pt-6 pb-2">
+          <NotificationBell compact />
+        </div>
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
-          className="px-10 py-8 max-w-[1400px]"
+          className="px-10 py-4 max-w-[1400px]"
         >
           {children}
         </motion.div>

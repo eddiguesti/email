@@ -14,12 +14,11 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { toast } from 'sonner';
-import NotificationBell from './NotificationBell';
 
 const navigation = [
-  { name: 'Tableau de bord', href: '/dashboard',          icon: LayoutDashboard },
-  { name: 'Calendrier',      href: '/dashboard/calendar', icon: CalendarDays    },
   { name: 'Revue Pipeline',  href: '/dashboard/review',   icon: ScanSearch      },
+  { name: 'Calendrier',      href: '/dashboard/calendar', icon: CalendarDays    },
+  { name: 'Tableau de bord', href: '/dashboard',          icon: LayoutDashboard },
   { name: 'Activité',        href: '/dashboard/activity', icon: Activity        },
   { name: 'Paramètres',      href: '/dashboard/settings', icon: Settings        },
 ];
@@ -91,9 +90,6 @@ export default function Sidebar() {
           );
         })}
       </nav>
-
-      {/* Notification bell */}
-      <NotificationBell />
 
       {/* User section */}
       <div className="p-3 border-t border-[var(--border)]">
