@@ -1,0 +1,11 @@
+*.ts
+!*.d.ts
+src/
+local.settings.json
+tsconfig.json
+esbuild.config.mjs
+.git*
+.vscode
+node_modules/azure-functions-core-tools
+node_modules/@types
+node_modules/typescript

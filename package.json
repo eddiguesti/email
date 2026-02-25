@@ -1,0 +1,39 @@
+{
+  "name": "lb-bot",
+  "version": "0.1.0",
+  "private": true,
+  "description": "AI Legal Inbox - Outlook → Azure → Kleos Integration",
+  "scripts": {
+    "dev": "turbo run dev",
+    "dev:api": "pnpm --filter @lb-bot/api dev",
+    "dev:worker": "pnpm --filter @lb-bot/worker dev",
+    "dev:add-in": "pnpm --filter @lb-bot/add-in dev",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "test:ci": "turbo run test:ci",
+    "setup:subscription": "pnpm --filter @lb-bot/infra setup:subscription",
+    "tunnel": "pnpm --filter @lb-bot/infra tunnel",
+    "dev:web": "pnpm --filter web dev",
+    "dev:all": "turbo run dev --parallel",
+    "upload:kb": "tsx config/scripts/upload-knowledge-base.ts",
+    "dry-run": "tsx config/scripts/dry-run-pipeline.ts",
+    "clean": "turbo run clean && rm -rf node_modules",
+    "generate:llms": "tsx config/scripts/generate-llms-txt.ts",
+    "scan:secrets": "bash scripts/scan-secrets.sh"
+  },
+  "devDependencies": {
+    "esbuild": "^0.27.3",
+    "turbo": "^2.0.0",
+    "typescript": "^5.3.0"
+  },
+  "packageManager": "pnpm@8.15.0",
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=8.0.0"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.39.0"
+  }
+}

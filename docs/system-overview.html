@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LB-BOT System Overview</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: #0a0f1a; color: #f3f6f9; line-height: 1.6; }
+
+  .header { background: linear-gradient(135deg, #0a0f1a 0%, #1e2029 100%); padding: 60px 40px 40px; border-bottom: 3px solid #146ef5; }
+  .header h1 { font-size: 2.5em; font-weight: 300; letter-spacing: 0.05em; }
+  .header h1 span { color: #146ef5; }
+  .header p { color: #6e7391; margin-top: 8px; font-size: 1.1em; }
+  .header .gold { color: #d49a38; }
+
+  .container { max-width: 1200px; margin: 0 auto; padding: 40px 20px; }
+
+  h2 { font-size: 1.6em; font-weight: 300; letter-spacing: 0.04em; margin: 50px 0 20px; border-left: 4px solid #d49a38; padding-left: 16px; }
+  h3 { font-size: 1.1em; font-weight: 500; color: #146ef5; margin: 30px 0 12px; }
+
+  .card { background: #1e2029; border: 1px solid #2a2d3a; border-radius: 4px; padding: 24px; margin: 16px 0; }
+  .card:hover { border-color: #146ef5; }
+
+  .grid { display: grid; gap: 16px; }
+  .grid-2 { grid-template-columns: 1fr 1fr; }
+  .grid-3 { grid-template-columns: 1fr 1fr 1fr; }
+  .grid-4 { grid-template-columns: 1fr 1fr 1fr 1fr; }
+  @media (max-width: 768px) { .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; } }
+
+  .stat { text-align: center; padding: 20px; }
+  .stat .value { font-size: 2em; font-weight: 300; color: #146ef5; }
+  .stat .label { font-size: 0.85em; color: #6e7391; margin-top: 4px; }
+
+  .badge { display: inline-block; padding: 3px 10px; border-radius: 3px; font-size: 0.8em; font-weight: 500; }
+  .badge-blue { background: rgba(20,110,245,0.15); color: #146ef5; }
+  .badge-green { background: rgba(34,197,94,0.15); color: #22c55e; }
+  .badge-gold { background: rgba(212,154,56,0.15); color: #d49a38; }
+  .badge-red { background: rgba(239,68,68,0.15); color: #ef4444; }
+  .badge-gray { background: rgba(110,115,145,0.15); color: #6e7391; }
+
+  .flow { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin: 20px 0; }
+  .flow-item { background: #1e2029; border: 1px solid #2a2d3a; padding: 12px 20px; border-radius: 4px; text-align: center; min-width: 140px; }
+  .flow-item .title { font-weight: 500; font-size: 0.9em; }
+  .flow-item .sub { font-size: 0.75em; color: #6e7391; }
+  .flow-arrow { color: #146ef5; font-size: 1.4em; }
+
+  table { width: 100%; border-collapse: collapse; margin: 12px 0; }
+  th { text-align: left; padding: 10px 12px; border-bottom: 2px solid #2a2d3a; color: #6e7391; font-weight: 500; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.05em; }
+  td { padding: 10px 12px; border-bottom: 1px solid #2a2d3a; font-size: 0.9em; }
+  tr:hover td { background: rgba(20,110,245,0.03); }
+
+  code { background: #2a2d3a; padding: 2px 6px; border-radius: 3px; font-size: 0.85em; color: #d49a38; }
+
+  .url { color: #146ef5; text-decoration: none; }
+  .url:hover { text-decoration: underline; }
+
+  .section-icon { font-size: 1.2em; margin-right: 8px; }
+
+  .arch-box { border: 2px solid #2a2d3a; border-radius: 4px; padding: 20px; margin: 12px 0; position: relative; }
+  .arch-box .arch-title { position: absolute; top: -12px; left: 16px; background: #0a0f1a; padding: 0 8px; font-size: 0.8em; color: #d49a38; text-transform: uppercase; letter-spacing: 0.1em; }
+
+  .tier-list { list-style: none; }
+  .tier-list li { padding: 8px 0; border-bottom: 1px solid #2a2d3a; display: flex; align-items: center; gap: 10px; }
+  .tier-list li:last-child { border-bottom: none; }
+  .tier-num { display: inline-flex; width: 24px; height: 24px; align-items: center; justify-content: center; background: #146ef5; color: white; border-radius: 50%; font-size: 0.75em; font-weight: 600; flex-shrink: 0; }
+
+  .env-table td:first-child { font-family: monospace; color: #d49a38; white-space: nowrap; }
+
+  .page-list { list-style: none; }
+  .page-list li { padding: 12px 0; border-bottom: 1px solid #2a2d3a; }
+  .page-list li:last-child { border-bottom: none; }
+  .page-route { font-family: monospace; color: #146ef5; font-size: 0.95em; }
+  .page-desc { color: #f3f6f9; margin-top: 4px; font-size: 0.9em; }
+  .page-data { color: #6e7391; font-size: 0.8em; margin-top: 2px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="container">
+    <h1><span>LB-BOT</span> System Overview</h1>
+    <p>AI-Powered Email Classification Pipeline for <span class="gold">SELARL Brosset-Techer, Avocats</span></p>
+    <p style="margin-top:16px; font-size:0.85em;">
+      <span class="badge badge-green">Production</span>
+      <span class="badge badge-blue">Read-Only Mode</span>
+      <span class="badge badge-gold">941 Dossiers Indexed</span>
+    </p>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- What It Does -->
+  <h2>What LB-BOT Does</h2>
+  <div class="card">
+    <p>LB-BOT monitors the firm's email inboxes in real-time, automatically classifies each incoming email to the correct legal dossier (case file), and provides a dashboard for lawyers to review, approve, and manage these classifications.</p>
+    <br>
+    <p><strong>Currently in read-only mode:</strong> the system analyzes emails but does not move, file, or send anything. It writes analysis results to the database so the dashboard shows real insights.</p>
+  </div>
+
+  <!-- User Guide -->
+  <h2>User Guide &mdash; What to Expect</h2>
+
+  <!-- Step 1: Login -->
+  <div class="card">
+    <h3>Step 1: Log In</h3>
+    <p>Go to <a class="url" href="https://app.laurencebrosset-avocats.fr">app.laurencebrosset-avocats.fr</a></p>
+    <br>
+    <div class="grid grid-2">
+      <div>
+        <p>You'll see the login page with the firm's branding. Click <strong>"Se connecter avec Microsoft"</strong>.</p>
+        <br>
+        <p>This redirects to Microsoft's login page. Use your firm email (e.g. <code>laurence@lbrosset.com</code>) and your Microsoft password.</p>
+        <br>
+        <p>After login, you're automatically redirected to the dashboard. Behind the scenes, the system also creates a Graph webhook subscription for your mailbox so new emails are monitored in real-time.</p>
+      </div>
+      <div class="arch-box" style="text-align:center; padding:30px;">
+        <div class="arch-title">Login Screen</div>
+        <div style="border:1px solid #2a2d3a; border-radius:4px; padding:20px; margin:10px;">
+          <div style="font-size:1.3em; font-weight:300; letter-spacing:0.04em;">Laurence Brosset Avocats</div>
+          <div style="color:#d49a38; font-size:0.85em;">Gestion Interne</div>
+          <div style="margin-top:20px; padding:12px 24px; background:#146ef5; color:white; border-radius:3px; display:inline-block; font-size:0.9em;">Se connecter avec Microsoft</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Step 2: Dashboard -->
+  <div class="card">
+    <h3>Step 2: The Dashboard</h3>
+    <p>After login, you land on the main dashboard. Here's what each section shows:</p>
+    <br>
+    <div class="grid grid-4" style="margin-bottom:20px;">
+      <div style="background:#2a2d3a; border-radius:4px; padding:16px; text-align:center;">
+        <div style="font-size:1.4em; font-weight:300; color:#146ef5;">247</div>
+        <div style="font-size:0.75em; color:#6e7391;">Emails trait&eacute;s</div>
+        <div style="font-size:0.65em; color:#6e7391; margin-top:4px;">Last 30 days</div>
+      </div>
+      <div style="background:#2a2d3a; border-radius:4px; padding:16px; text-align:center;">
+        <div style="font-size:1.4em; font-weight:300; color:#22c55e;">87%</div>
+        <div style="font-size:0.75em; color:#6e7391;">Taux de matching</div>
+        <div style="font-size:0.65em; color:#6e7391; margin-top:4px;">How many emails got matched</div>
+      </div>
+      <div style="background:#2a2d3a; border-radius:4px; padding:16px; text-align:center;">
+        <div style="font-size:1.4em; font-weight:300; color:#d49a38;">142</div>
+        <div style="font-size:0.75em; color:#6e7391;">Auto-class&eacute;s</div>
+        <div style="font-size:0.65em; color:#6e7391; margin-top:4px;">&ge;85% confidence, no review needed</div>
+      </div>
+      <div style="background:#2a2d3a; border-radius:4px; padding:16px; text-align:center;">
+        <div style="font-size:1.4em; font-weight:300; color:#ef4444;">5</div>
+        <div style="font-size:0.75em; color:#6e7391;">&Agrave; revoir</div>
+        <div style="font-size:0.65em; color:#6e7391; margin-top:4px;">60-85% confidence, needs your review</div>
+      </div>
+    </div>
+    <p>Below the stats, you'll see:</p>
+    <ul style="margin:12px 0; padding-left:20px; color:#f3f6f9; font-size:0.9em;">
+      <li style="margin:6px 0;"><strong>Correspondances r&eacute;centes</strong> &mdash; The last 6 emails that were matched to a dossier, with sender, dossier name, and confidence</li>
+      <li style="margin:6px 0;"><strong>Dossiers actifs</strong> &mdash; Top 5 dossiers by recent email volume</li>
+      <li style="margin:6px 0;"><strong>R&eacute;partition par source</strong> &mdash; How emails were matched (AI, reference number, sender history, etc.)</li>
+    </ul>
+  </div>
+
+  <!-- Step 3: Review Queue -->
+  <div class="card">
+    <h3>Step 3: Review Queue (Your Main Task)</h3>
+    <p>Navigate to <strong>Revue Pipeline &rarr; File de revue</strong> in the sidebar.</p>
+    <br>
+    <p>This is where emails that the system isn't 100% sure about appear. These are matches with <strong>60-85% confidence</strong> &mdash; the system found a likely dossier but wants your confirmation.</p>
+    <br>
+    <div class="arch-box">
+      <div class="arch-title">Review Queue Item</div>
+      <div style="display:flex; gap:16px; align-items:center; padding:12px 0;">
+        <div style="flex:1;">
+          <div style="font-size:0.95em;"><strong>maitre.dupont@cabinet-dupont.fr</strong></div>
+          <div style="font-size:0.85em; color:#6e7391;">RE: Convocation expertise SMAC / BOUYGUES</div>
+        </div>
+        <div style="text-align:center;">
+          <div style="font-size:0.8em; color:#6e7391;">Dossier sugg&eacute;r&eacute;</div>
+          <div style="font-size:0.9em;"><code>202036</code> SMAC / BOUYGUES</div>
+        </div>
+        <div style="text-align:center;">
+          <div style="font-size:0.8em; color:#6e7391;">Confiance</div>
+          <div><span class="badge badge-gold">72%</span></div>
+        </div>
+        <div style="display:flex; gap:8px;">
+          <span style="padding:6px 16px; background:rgba(34,197,94,0.15); color:#22c55e; border-radius:3px; font-size:0.85em; cursor:pointer;">Approuver</span>
+          <span style="padding:6px 16px; background:rgba(239,68,68,0.15); color:#ef4444; border-radius:3px; font-size:0.85em; cursor:pointer;">Rejeter</span>
+        </div>
+      </div>
+    </div>
+    <br>
+    <p>For each email in the queue:</p>
+    <ul style="margin:12px 0; padding-left:20px; color:#f3f6f9; font-size:0.9em;">
+      <li style="margin:6px 0;"><strong>Approve</strong> &mdash; The suggested dossier is correct. The system learns from this for next time.</li>
+      <li style="margin:6px 0;"><strong>Reject</strong> &mdash; The suggested dossier is wrong. The system learns to avoid this mistake.</li>
+    </ul>
+    <p style="color:#6e7391; font-size:0.85em;">When the queue is empty, you'll see a green checkmark with "File de revue vide" &mdash; all caught up!</p>
+  </div>
+
+  <!-- Step 4: Browse All Matches -->
+  <div class="card">
+    <h3>Step 4: Browse All Matches</h3>
+    <p>Navigate to <strong>Revue Pipeline &rarr; Correspondances</strong>.</p>
+    <br>
+    <p>This shows the complete history of every email the system has processed. You can:</p>
+    <ul style="margin:12px 0; padding-left:20px; color:#f3f6f9; font-size:0.9em;">
+      <li style="margin:6px 0;"><strong>Filter</strong> by mailbox, source, lawyer, date, review status</li>
+      <li style="margin:6px 0;"><strong>Expand</strong> any row to see full match details and reasons</li>
+      <li style="margin:6px 0;"><strong>Generate an AI draft reply</strong> by clicking "R&eacute;diger une r&eacute;ponse" on expanded rows</li>
+      <li style="margin:6px 0;"><strong>See attachments</strong> and e-Barreau indicators</li>
+    </ul>
+    <p>Each match is color-coded:</p>
+    <div style="display:flex; gap:12px; margin-top:12px; flex-wrap:wrap;">
+      <span class="badge badge-green">Class&eacute; &mdash; &ge;85% confidence, auto-matched</span>
+      <span class="badge badge-gold">&Agrave; v&eacute;rifier &mdash; 60-85%, needs review</span>
+      <span class="badge badge-red">Non class&eacute; &mdash; No match found</span>
+      <span class="badge badge-gray">Ignor&eacute; &mdash; Spam/newsletter filtered out</span>
+    </div>
+  </div>
+
+  <!-- Step 5: Sender History -->
+  <div class="card">
+    <h3>Step 5: Sender History</h3>
+    <p>Navigate to <strong>Revue Pipeline &rarr; Exp&eacute;diteurs</strong>.</p>
+    <br>
+    <p>Shows all known email senders and which dossier they're associated with. Each sender shows:</p>
+    <ul style="margin:12px 0; padding-left:20px; color:#f3f6f9; font-size:0.9em;">
+      <li style="margin:6px 0;">Sender email address</li>
+      <li style="margin:6px 0;">Associated dossier name and reference number</li>
+      <li style="margin:6px 0;">Number of times matched (more = more reliable)</li>
+      <li style="margin:6px 0;">Average confidence score</li>
+      <li style="margin:6px 0;">Last contact date</li>
+    </ul>
+    <p style="color:#6e7391; font-size:0.85em;">The system uses sender history as one of the 8 matching tiers. The more a sender is associated with a dossier, the more confident future matches become.</p>
+  </div>
+
+  <!-- Step 6: Analytics -->
+  <div class="card">
+    <h3>Step 6: Analytics &amp; Tuning</h3>
+    <div class="grid grid-2">
+      <div>
+        <p><strong>Analytics</strong> (<em>Revue Pipeline &rarr; Analytiques</em>)</p>
+        <ul style="margin:8px 0; padding-left:20px; color:#f3f6f9; font-size:0.85em;">
+          <li style="margin:4px 0;">Daily match rate trend (7/30/90 days)</li>
+          <li style="margin:4px 0;">Confidence distribution histogram</li>
+          <li style="margin:4px 0;">Source effectiveness table</li>
+          <li style="margin:4px 0;">Per-mailbox performance</li>
+        </ul>
+      </div>
+      <div>
+        <p><strong>Tuning</strong> (<em>Revue Pipeline &rarr; Affinage</em>)</p>
+        <ul style="margin:8px 0; padding-left:20px; color:#f3f6f9; font-size:0.85em;">
+          <li style="margin:4px 0;">Review coverage % (how many matches have been reviewed)</li>
+          <li style="margin:4px 0;">Accuracy by source (which methods are most reliable)</li>
+          <li style="margin:4px 0;">Threshold recommendations (should auto-file be more/less aggressive?)</li>
+          <li style="margin:4px 0;">False positives list (recent wrong matches)</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Notifications -->
+  <div class="card">
+    <h3>Real-Time Notifications</h3>
+    <p>While you're logged in, you'll receive real-time notifications (top-right bell icon) when:</p>
+    <div class="grid grid-4" style="margin-top:12px;">
+      <div style="text-align:center; padding:12px;">
+        <div style="font-size:1.2em;">&#x2709;</div>
+        <div style="font-size:0.85em; margin-top:4px;">New email received</div>
+        <div style="font-size:0.75em; color:#146ef5;">email_received</div>
+      </div>
+      <div style="text-align:center; padding:12px;">
+        <div style="font-size:1.2em;">&#x2705;</div>
+        <div style="font-size:0.85em; margin-top:4px;">Email processed</div>
+        <div style="font-size:0.75em; color:#22c55e;">email_processed</div>
+      </div>
+      <div style="text-align:center; padding:12px;">
+        <div style="font-size:1.2em;">&#x1F4CB;</div>
+        <div style="font-size:0.85em; margin-top:4px;">Todo created</div>
+        <div style="font-size:0.75em; color:#d49a38;">todo_created</div>
+      </div>
+      <div style="text-align:center; padding:12px;">
+        <div style="font-size:1.2em;">&#x1F514;</div>
+        <div style="font-size:0.85em; margin-top:4px;">General alert</div>
+        <div style="font-size:0.75em; color:#6e7391;">notification</div>
+      </div>
+    </div>
+    <p style="color:#6e7391; font-size:0.85em; margin-top:12px;">Notifications are delivered via Server-Sent Events (SSE) &mdash; they appear instantly without refreshing the page. Toast notifications auto-dismiss after 5 seconds.</p>
+  </div>
+
+  <!-- AI Chat -->
+  <div class="card">
+    <h3>AI Search Assistant</h3>
+    <p>Look for the floating blue chat button in the bottom-right corner. Click it to open the AI assistant.</p>
+    <br>
+    <p>You can ask natural language questions to search your emails:</p>
+    <div style="margin:12px 0;">
+      <div style="background:#2a2d3a; padding:10px 14px; border-radius:4px; margin:6px 0; font-size:0.9em; display:inline-block;">"Emails de Maitre Dupont cette semaine"</div><br>
+      <div style="background:#2a2d3a; padding:10px 14px; border-radius:4px; margin:6px 0; font-size:0.9em; display:inline-block;">"Dossier SMAC BOUYGUES"</div><br>
+      <div style="background:#2a2d3a; padding:10px 14px; border-radius:4px; margin:6px 0; font-size:0.9em; display:inline-block;">"Factures impay&eacute;es depuis plus de 30 jours"</div>
+    </div>
+  </div>
+
+  <!-- Activity + Settings + Invoices -->
+  <div class="card">
+    <h3>Other Pages</h3>
+    <div class="grid grid-3">
+      <div>
+        <p style="font-size:0.95em;"><strong>Activit&eacute;</strong></p>
+        <p style="font-size:0.85em; color:#6e7391;">Complete audit trail of everything: approvals, rejections, logins, searches. Filter by "all users" or "my actions". Useful for compliance.</p>
+      </div>
+      <div>
+        <p style="font-size:0.95em;"><strong>Factures</strong></p>
+        <p style="font-size:0.85em; color:#6e7391;">Track invoices, import from Excel, send payment reminders, monitor overdue amounts. Bulk operations supported.</p>
+      </div>
+      <div>
+        <p style="font-size:0.95em;"><strong>Param&egrave;tres</strong></p>
+        <p style="font-size:0.85em; color:#6e7391;">Your profile, notification preferences (email alerts, urgent alerts), language (FR/EN), security status. Shows read-only mode badge.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- What Users Don't Need to Worry About -->
+  <div class="card" style="border-color:#22c55e;">
+    <h3 style="color:#22c55e;">What Happens Automatically (No Action Needed)</h3>
+    <ul style="margin:12px 0; padding-left:20px; color:#f3f6f9; font-size:0.9em;">
+      <li style="margin:8px 0;"><strong>Emails are monitored in real-time</strong> &mdash; The system watches your inbox via Microsoft Graph. You don't need to do anything.</li>
+      <li style="margin:8px 0;"><strong>Spam and newsletters are filtered</strong> &mdash; System emails, newsletters, and obvious spam are skipped automatically.</li>
+      <li style="margin:8px 0;"><strong>High-confidence matches are auto-classified</strong> &mdash; When the system is &ge;85% confident, it classifies the email without asking.</li>
+      <li style="margin:8px 0;"><strong>Sender associations build over time</strong> &mdash; Each time you approve a match, the system learns and gets smarter.</li>
+      <li style="margin:8px 0;"><strong>Thread memory</strong> &mdash; Once a conversation is associated with a dossier, all future replies in that thread are automatically matched.</li>
+      <li style="margin:8px 0;"><strong>Graph subscription auto-renews</strong> &mdash; When you log in, the webhook subscription is refreshed automatically.</li>
+    </ul>
+  </div>
+
+  <!-- Read-Only Warning -->
+  <div class="card" style="border-color:#d49a38;">
+    <h3 style="color:#d49a38;">Current Mode: Read-Only</h3>
+    <p>The system is currently in <strong>read-only mode</strong>. This means:</p>
+    <br>
+    <div class="grid grid-2">
+      <div>
+        <p style="color:#22c55e; font-size:0.9em;"><strong>What it DOES:</strong></p>
+        <ul style="padding-left:20px; font-size:0.85em; color:#f3f6f9; margin-top:6px;">
+          <li style="margin:4px 0;">Reads and analyzes incoming emails</li>
+          <li style="margin:4px 0;">Extracts legal references, entities, sender info</li>
+          <li style="margin:4px 0;">Matches emails to dossiers</li>
+          <li style="margin:4px 0;">Writes results to the dashboard database</li>
+          <li style="margin:4px 0;">Sends real-time notifications</li>
+        </ul>
+      </div>
+      <div>
+        <p style="color:#ef4444; font-size:0.9em;"><strong>What it does NOT do:</strong></p>
+        <ul style="padding-left:20px; font-size:0.85em; color:#f3f6f9; margin-top:6px;">
+          <li style="margin:4px 0;">Move or modify emails in Outlook</li>
+          <li style="margin:4px 0;">Send any emails or replies</li>
+          <li style="margin:4px 0;">Create drafts in your mailbox</li>
+          <li style="margin:4px 0;">File documents to KLEOS</li>
+          <li style="margin:4px 0;">Delete or archive anything</li>
+        </ul>
+      </div>
+    </div>
+    <p style="color:#6e7391; font-size:0.85em; margin-top:16px;">When ready to go live, read-only mode can be disabled to enable auto-filing to KLEOS and draft generation.</p>
+  </div>
+
+  <!-- Typical Daily Workflow -->
+  <div class="card">
+    <h3>Typical Daily Workflow</h3>
+    <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:12px;">
+      <div style="display:flex; align-items:center; gap:8px;">
+        <span class="tier-num">1</span>
+        <span style="font-size:0.9em;">Log in at <code>app.laurencebrosset-avocats.fr</code></span>
+      </div>
+      <span class="flow-arrow">&rarr;</span>
+      <div style="display:flex; align-items:center; gap:8px;">
+        <span class="tier-num">2</span>
+        <span style="font-size:0.9em;">Check dashboard stats</span>
+      </div>
+      <span class="flow-arrow">&rarr;</span>
+      <div style="display:flex; align-items:center; gap:8px;">
+        <span class="tier-num">3</span>
+        <span style="font-size:0.9em;">Review the queue (approve/reject)</span>
+      </div>
+      <span class="flow-arrow">&rarr;</span>
+      <div style="display:flex; align-items:center; gap:8px;">
+        <span class="tier-num">4</span>
+        <span style="font-size:0.9em;">Browse matches if needed</span>
+      </div>
+      <span class="flow-arrow">&rarr;</span>
+      <div style="display:flex; align-items:center; gap:8px;">
+        <span class="tier-num">5</span>
+        <span style="font-size:0.9em;">Done! System handles the rest</span>
+      </div>
+    </div>
+    <p style="color:#6e7391; font-size:0.85em; margin-top:16px;">The entire review process takes 2-5 minutes per day. High-confidence matches are handled automatically &mdash; you only review the uncertain ones.</p>
+  </div>
+
+  <!-- Architecture Overview -->
+  <h2>Architecture Overview</h2>
+
+  <div class="flow">
+    <div class="flow-item" style="border-color:#146ef5;">
+      <div class="title">Microsoft 365</div>
+      <div class="sub">laurence@lbrosset.com</div>
+    </div>
+    <div class="flow-arrow">&rarr;</div>
+    <div class="flow-item" style="border-color:#22c55e;">
+      <div class="title">Graph Webhook</div>
+      <div class="sub">New email notification</div>
+    </div>
+    <div class="flow-arrow">&rarr;</div>
+    <div class="flow-item" style="border-color:#d49a38;">
+      <div class="title">API (Azure Functions)</div>
+      <div class="sub">51 HTTP endpoints</div>
+    </div>
+    <div class="flow-arrow">&rarr;</div>
+    <div class="flow-item" style="border-color:#ef4444;">
+      <div class="title">Service Bus Queue</div>
+      <div class="sub">email-process</div>
+    </div>
+    <div class="flow-arrow">&rarr;</div>
+    <div class="flow-item" style="border-color:#22c55e;">
+      <div class="title">Worker (Azure Functions)</div>
+      <div class="sub">8-Tier Matching Engine</div>
+    </div>
+    <div class="flow-arrow">&rarr;</div>
+    <div class="flow-item" style="border-color:#146ef5;">
+      <div class="title">Supabase (PostgreSQL)</div>
+      <div class="sub">Match logs, analytics</div>
+    </div>
+    <div class="flow-arrow">&rarr;</div>
+    <div class="flow-item" style="border-color:#d49a38;">
+      <div class="title">Web Dashboard</div>
+      <div class="sub">Vercel (Next.js)</div>
+    </div>
+  </div>
+
+  <!-- Infrastructure -->
+  <h2>Infrastructure</h2>
+  <div class="grid grid-2">
+    <div class="card">
+      <h3>Web App (Frontend)</h3>
+      <table>
+        <tr><td>Platform</td><td><span class="badge badge-blue">Vercel</span></td></tr>
+        <tr><td>Framework</td><td>Next.js 15 (App Router)</td></tr>
+        <tr><td>URL</td><td><a class="url" href="https://app.laurencebrosset-avocats.fr">app.laurencebrosset-avocats.fr</a></td></tr>
+        <tr><td>Styling</td><td>Tailwind CSS + CSS Variables</td></tr>
+        <tr><td>Font</td><td>Montserrat + Inter</td></tr>
+        <tr><td>Charts</td><td>Recharts</td></tr>
+      </table>
+    </div>
+    <div class="card">
+      <h3>API (Backend)</h3>
+      <table>
+        <tr><td>Platform</td><td><span class="badge badge-blue">Azure Functions v4</span></td></tr>
+        <tr><td>Runtime</td><td>Node.js 20 (CJS, esbuild)</td></tr>
+        <tr><td>URL</td><td><code>lb-bot-api.azurewebsites.net</code></td></tr>
+        <tr><td>Functions</td><td>51 HTTP endpoints</td></tr>
+        <tr><td>Region</td><td>West Europe</td></tr>
+      </table>
+    </div>
+    <div class="card">
+      <h3>Worker (Pipeline)</h3>
+      <table>
+        <tr><td>Platform</td><td><span class="badge badge-green">Azure Functions v4</span></td></tr>
+        <tr><td>Trigger</td><td>Service Bus Queue</td></tr>
+        <tr><td>URL</td><td><code>lb-bot-worker.azurewebsites.net</code></td></tr>
+        <tr><td>Functions</td><td>2 (process-email, auto-send)</td></tr>
+        <tr><td>Mode</td><td><span class="badge badge-gold">Read-Only</span></td></tr>
+      </table>
+    </div>
+    <div class="card">
+      <h3>Database & Storage</h3>
+      <table>
+        <tr><td>Database</td><td><span class="badge badge-green">Supabase (PostgreSQL)</span></td></tr>
+        <tr><td>Blob Storage</td><td>Azure (lbbotstore)</td></tr>
+        <tr><td>Message Queue</td><td>Azure Service Bus (lb-bot-bus)</td></tr>
+        <tr><td>Auth</td><td>Azure AD (Brosset tenant)</td></tr>
+        <tr><td>AI Classifier</td><td>xAI Grok (grok-4-1-fast-reasoning)</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- Email Processing Pipeline -->
+  <h2>Email Processing Pipeline</h2>
+  <div class="card">
+    <p>When a new email arrives in the monitored inbox, it goes through this pipeline:</p>
+    <br>
+
+    <div class="arch-box">
+      <div class="arch-title">Pipeline Stages</div>
+      <table>
+        <thead>
+          <tr><th>Stage</th><th>Status</th><th>What Happens</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>1. Receive</td><td><code>RECEIVED</code></td><td>Graph webhook triggers, job queued to Service Bus</td></tr>
+          <tr><td>2. Fetch</td><td><code>FETCHING &rarr; FETCHED</code></td><td>Full email + attachments fetched from Graph API, PDFs text-extracted</td></tr>
+          <tr><td>3. Extract</td><td><code>EXTRACTING &rarr; EXTRACTED</code></td><td>RG numbers, entities, dates, sender domain, thread position extracted</td></tr>
+          <tr><td>4. Match</td><td><code>MATCHING &rarr; MATCHED</code></td><td>8-tier matching engine finds the best dossier match</td></tr>
+          <tr><td>5. Skip Filter</td><td><code>SKIPPED</code></td><td>Newsletters, spam, system emails filtered out automatically</td></tr>
+          <tr><td>6. Review</td><td><code>READY_FOR_REVIEW</code></td><td>Matches with 60-85% confidence flagged for human review</td></tr>
+          <tr><td style="color:#6e7391">7. File*</td><td style="color:#6e7391"><code>FILED</code></td><td style="color:#6e7391">*Disabled in read-only mode* — would file to KLEOS</td></tr>
+          <tr><td style="color:#6e7391">8. Draft*</td><td style="color:#6e7391"><code>DONE</code></td><td style="color:#6e7391">*Disabled in read-only mode* — would generate reply drafts</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 8-Tier Matching Engine -->
+  <h2>8-Tier Matching Engine</h2>
+  <div class="card">
+    <p>Each email is matched to a dossier using up to 8 strategies, tried in order of reliability:</p>
+    <br>
+    <ul class="tier-list">
+      <li><span class="tier-num">1</span> <strong>Thread Memory</strong> — If this email thread was already matched, reuse that mapping <span class="badge badge-green">Highest confidence</span></li>
+      <li><span class="tier-num">2</span> <strong>RG Number Match</strong> — Extract legal reference numbers (RG/RPF) and match to dossier <span class="badge badge-green">95% confidence</span></li>
+      <li><span class="tier-num">3</span> <strong>Sender Hints</strong> — Known sender-to-dossier associations from history</li>
+      <li><span class="tier-num">4</span> <strong>Entity Overlap</strong> — Match named entities (people, companies, jurisdictions)</li>
+      <li><span class="tier-num">5</span> <strong>Conversation Thread</strong> — Map based on conversation ID from prior matches</li>
+      <li><span class="tier-num">6</span> <strong>Reference Exact</strong> — Exact dossier reference number in email body <span class="badge badge-green">95% confidence</span></li>
+      <li><span class="tier-num">7</span> <strong>Sender History</strong> — Statistical sender-dossier correlation</li>
+      <li><span class="tier-num">8</span> <strong>AI Classifier</strong> — xAI Grok model classifies based on content <span class="badge badge-blue">90-97% confidence</span></li>
+    </ul>
+    <br>
+    <p style="color:#6e7391; font-size:0.85em;">Additional sub-tiers: KB Party Exact, KB Party Common, KB Party Fuzzy, KB Keyword, KLEOS Search</p>
+  </div>
+
+  <!-- Knowledge Base -->
+  <h2>Knowledge Base (941 Dossiers)</h2>
+  <div class="card">
+    <p>The matching engine uses a knowledge base exported from KLEOS containing:</p>
+    <div class="grid grid-4" style="margin-top:16px;">
+      <div class="stat"><div class="value">941</div><div class="label">Dossiers</div></div>
+      <div class="stat"><div class="value">3,192</div><div class="label">Party Names</div></div>
+      <div class="stat"><div class="value">935</div><div class="label">References</div></div>
+      <div class="stat"><div class="value">19</div><div class="label">Lawyers</div></div>
+    </div>
+    <p style="color:#6e7391; font-size:0.85em; margin-top:12px;">Stored in Azure Blob Storage (<code>config/kleos-knowledge.json</code>, 2.8 MB) and cached in worker memory on cold start.</p>
+  </div>
+
+  <!-- Dashboard Pages -->
+  <h2>Dashboard Pages</h2>
+  <div class="card">
+    <ul class="page-list">
+      <li>
+        <div class="page-route">/dashboard</div>
+        <div class="page-desc"><strong>Main Dashboard</strong> — Pipeline overview with key metrics, recent matches, active dossiers, source breakdown</div>
+        <div class="page-data">Shows: total processed, match rate, auto-filed count, review queue count, 30-day trends</div>
+      </li>
+      <li>
+        <div class="page-route">/dashboard/review</div>
+        <div class="page-desc"><strong>Pipeline Overview</strong> — Stats, 30-day match rate chart, source breakdown, recent pipeline runs</div>
+      </li>
+      <li>
+        <div class="page-route">/dashboard/review/queue</div>
+        <div class="page-desc"><strong>Review Queue</strong> — Emails with 60-85% confidence flagged for manual approve/reject</div>
+        <div class="page-data">Shows: sender, suggested dossier, confidence, match source, reasons. Actions: approve or reject</div>
+      </li>
+      <li>
+        <div class="page-route">/dashboard/review/matches</div>
+        <div class="page-desc"><strong>All Matches</strong> — Full searchable history of every email-to-dossier match</div>
+        <div class="page-data">Shows: sender, dossier ref, confidence, source, category, lawyer, attachments. Expandable rows with draft generation</div>
+      </li>
+      <li>
+        <div class="page-route">/dashboard/review/senders</div>
+        <div class="page-desc"><strong>Sender History</strong> — Known email senders with their associated dossiers and frequency</div>
+        <div class="page-data">Shows: email, dossier, match count, avg confidence, last contact</div>
+      </li>
+      <li>
+        <div class="page-route">/dashboard/review/analytics</div>
+        <div class="page-desc"><strong>Analytics</strong> — Performance charts: daily match rate, confidence distribution, source effectiveness, per-mailbox stats</div>
+      </li>
+      <li>
+        <div class="page-route">/dashboard/review/tuning</div>
+        <div class="page-desc"><strong>Tuning</strong> — Accuracy analysis: review coverage, accuracy by source, confidence vs accuracy, threshold recommendations, false positives</div>
+      </li>
+      <li>
+        <div class="page-route">/dashboard/activity</div>
+        <div class="page-desc"><strong>Activity Log</strong> — Audit trail of all user actions (approvals, rejections, logins, searches)</div>
+      </li>
+      <li>
+        <div class="page-route">/dashboard/invoices</div>
+        <div class="page-desc"><strong>Invoices</strong> — Invoice tracking, payment reminders, Excel import, status management</div>
+      </li>
+      <li>
+        <div class="page-route">/dashboard/settings</div>
+        <div class="page-desc"><strong>Settings</strong> — User preferences, notification settings, language, security status</div>
+      </li>
+    </ul>
+  </div>
+
+  <!-- Key Components -->
+  <h2>Key UI Components</h2>
+  <div class="grid grid-3">
+    <div class="card">
+      <h3>Sidebar</h3>
+      <p style="font-size:0.9em;">Fixed left navigation (264px). Firm branding, nav links with gold active indicator, user profile section, logout.</p>
+    </div>
+    <div class="card">
+      <h3>MatchLogRow</h3>
+      <p style="font-size:0.9em;">Expandable email match row. Shows sender, dossier, confidence, source. Expands to show details, match reasons, AI draft generation.</p>
+    </div>
+    <div class="card">
+      <h3>AI Chat Panel</h3>
+      <p style="font-size:0.9em;">Floating bottom-right chat button. Natural language email search, suggested queries, conversation history.</p>
+    </div>
+    <div class="card">
+      <h3>NotificationBell</h3>
+      <p style="font-size:0.9em;">Real-time SSE notifications. Unread count badge, dropdown with notification list, mark as read.</p>
+    </div>
+    <div class="card">
+      <h3>FilterBar</h3>
+      <p style="font-size:0.9em;">Multi-field filtering: mailbox, matched status, source, lawyer, date range, review status.</p>
+    </div>
+    <div class="card">
+      <h3>StatsCard</h3>
+      <p style="font-size:0.9em;">Metric display with title, large value, change indicator, colored icon. Used across dashboard pages.</p>
+    </div>
+  </div>
+
+  <!-- API Endpoints -->
+  <h2>API Endpoints (51 Functions)</h2>
+  <div class="card">
+    <table>
+      <thead>
+        <tr><th>Category</th><th>Endpoints</th><th>Description</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><span class="badge badge-blue">Auth</span></td><td><code>/auth/login</code> <code>/auth/callback</code> <code>/auth/me</code> <code>/auth/refresh</code> <code>/auth/logout</code></td><td>Microsoft OAuth flow, session management</td></tr>
+        <tr><td><span class="badge badge-green">Pipeline</span></td><td><code>/webhook/graph</code> <code>/pipeline/backfill</code> <code>/pipeline/status</code></td><td>Graph webhook, manual backfill, status check</td></tr>
+        <tr><td><span class="badge badge-gold">Review</span></td><td><code>/approve-dossier</code> <code>/search</code> <code>/generate-drafts</code> <code>/insert-draft</code></td><td>Match approval, search, AI draft generation</td></tr>
+        <tr><td><span class="badge badge-gray">Email</span></td><td><code>/emails</code> <code>/folders</code> <code>/subscription</code></td><td>Email listing, folder management, Graph subscriptions</td></tr>
+        <tr><td><span class="badge badge-blue">KLEOS</span></td><td><code>/kleos/*</code> (9 endpoints)</td><td>Case search, contacts, billing, document filing</td></tr>
+        <tr><td><span class="badge badge-gold">Invoices</span></td><td><code>/invoices/*</code> (10 endpoints)</td><td>CRUD, import, reminders, templates, stats</td></tr>
+        <tr><td><span class="badge badge-gray">Other</span></td><td><code>/todos/*</code> <code>/calendar/*</code> <code>/chat</code> <code>/notifications/*</code></td><td>Tasks, calendar, AI chat, SSE notifications</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Database Schema -->
+  <h2>Database Tables (Supabase)</h2>
+  <div class="card">
+    <table>
+      <thead>
+        <tr><th>Table</th><th>Purpose</th><th>Key Columns</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>processing_records</code></td><td>Email processing state machine</td><td>message_id, mailbox, status, subject, sender, match_result, match_confidence</td></tr>
+        <tr><td><code>match_logs</code></td><td>Dossier match results for dashboard</td><td>email_id, dossier_ref, dossier_name, match_source, confidence, review_approved, category_label</td></tr>
+        <tr><td><code>sender_history</code></td><td>Known sender-dossier associations</td><td>sender_email, dossier_id, dossier_name, match_count, avg_confidence, last_seen</td></tr>
+        <tr><td><code>conversation_threads</code></td><td>Thread-to-dossier mappings</td><td>conversation_id, mailbox, dossier_id, confidence, email_count</td></tr>
+        <tr><td><code>pipeline_runs</code></td><td>Pipeline execution summaries</td><td>mailbox, status, emails_processed, emails_matched, match_rate</td></tr>
+        <tr><td><code>activity_logs</code></td><td>User action audit trail</td><td>action, user_id, dossier_id, details, timestamp</td></tr>
+        <tr><td><code>users</code></td><td>Authenticated users + OAuth tokens</td><td>microsoft_id, email, access_token, graph_subscription_id</td></tr>
+        <tr><td><code>audit_logs</code></td><td>System audit events</td><td>action, entity_type, entity_id, actor_type, details</td></tr>
+        <tr><td><code>invoices</code></td><td>Invoice tracking</td><td>number, client, amount, status, due_date, reminders_sent</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Current Status -->
+  <h2>Current Data Status</h2>
+  <div class="grid grid-4">
+    <div class="card stat"><div class="value">25</div><div class="label">Emails Processed</div></div>
+    <div class="card stat"><div class="value">13</div><div class="label">Ready for Review</div></div>
+    <div class="card stat"><div class="value">12</div><div class="label">Skipped (Spam)</div></div>
+    <div class="card stat"><div class="value">159</div><div class="label">Sender History Entries</div></div>
+  </div>
+  <div class="grid grid-3">
+    <div class="card stat"><div class="value">236</div><div class="label">Conversation Threads</div></div>
+    <div class="card stat"><div class="value">16</div><div class="label">Pipeline Runs</div></div>
+    <div class="card stat"><div class="value">10+</div><div class="label">Match Log Entries</div></div>
+  </div>
+
+  <!-- Design System -->
+  <h2>Design System</h2>
+  <div class="card">
+    <div class="grid grid-2">
+      <div>
+        <h3>Colors</h3>
+        <table>
+          <tr><td><span style="display:inline-block;width:16px;height:16px;background:#146ef5;border-radius:2px;vertical-align:middle;"></span> Primary</td><td><code>#146ef5</code></td></tr>
+          <tr><td><span style="display:inline-block;width:16px;height:16px;background:#d49a38;border-radius:2px;vertical-align:middle;"></span> Gold Accent</td><td><code>#d49a38</code></td></tr>
+          <tr><td><span style="display:inline-block;width:16px;height:16px;background:#0a0f1a;border-radius:2px;vertical-align:middle;border:1px solid #2a2d3a;"></span> Background</td><td><code>#0a0f1a</code></td></tr>
+          <tr><td><span style="display:inline-block;width:16px;height:16px;background:#1e2029;border-radius:2px;vertical-align:middle;"></span> Card</td><td><code>#1e2029</code></td></tr>
+          <tr><td><span style="display:inline-block;width:16px;height:16px;background:#22c55e;border-radius:2px;vertical-align:middle;"></span> Success</td><td><code>#22c55e</code></td></tr>
+          <tr><td><span style="display:inline-block;width:16px;height:16px;background:#ef4444;border-radius:2px;vertical-align:middle;"></span> Destructive</td><td><code>#ef4444</code></td></tr>
+        </table>
+      </div>
+      <div>
+        <h3>Typography</h3>
+        <table>
+          <tr><td>Primary Font</td><td>Montserrat</td></tr>
+          <tr><td>Fallback</td><td>Inter, system-ui</td></tr>
+          <tr><td>Page Titles</td><td>2xl, font-light, tracking-wide</td></tr>
+          <tr><td>Section Headers</td><td>lg, font-medium, tracking-wide</td></tr>
+          <tr><td>Body</td><td>sm-base, font-normal</td></tr>
+          <tr><td>Stat Values</td><td>2xl, font-light (elegant)</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Connection Map -->
+  <h2>Service Connections</h2>
+  <div class="card">
+    <table class="env-table">
+      <thead>
+        <tr><th>From</th><th>To</th><th>Via</th><th>Purpose</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Microsoft 365</td><td>API</td><td>Graph Webhook (HTTPS POST)</td><td>New email notification</td></tr>
+        <tr><td>API</td><td>Service Bus</td><td>AMQP Connection</td><td>Queue email processing jobs</td></tr>
+        <tr><td>Service Bus</td><td>Worker</td><td>Service Bus Trigger</td><td>Dequeue and process emails</td></tr>
+        <tr><td>Worker</td><td>Graph API</td><td>Client Credentials OAuth</td><td>Fetch email content + attachments</td></tr>
+        <tr><td>Worker</td><td>xAI (Grok)</td><td>REST API</td><td>AI classification (tier 8)</td></tr>
+        <tr><td>Worker</td><td>Supabase</td><td>REST + PostgreSQL</td><td>Write match results, sender history</td></tr>
+        <tr><td>Web App</td><td>API</td><td>HTTPS (proxied via Next.js)</td><td>Dashboard data, user actions</td></tr>
+        <tr><td>Web App</td><td>API</td><td>SSE (Server-Sent Events)</td><td>Real-time notifications</td></tr>
+        <tr><td>Web App</td><td>Azure AD</td><td>OAuth 2.0 PKCE</td><td>User authentication</td></tr>
+        <tr><td>API</td><td>Supabase</td><td>REST</td><td>Read match logs, stats, user data</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Deployment -->
+  <h2>Deployment Commands</h2>
+  <div class="card">
+    <h3>Web App (Vercel)</h3>
+    <pre style="background:#2a2d3a; padding:16px; border-radius:4px; overflow-x:auto; font-size:0.85em; color:#f3f6f9;">
+# Build shared package first
+pnpm --filter @lb-bot/shared build
+
+# Deploy to Vercel (workaround for turborepo)
+mv turbo.json turbo.json.bak
+vercel deploy --prod --force --yes
+mv turbo.json.bak turbo.json</pre>
+
+    <h3>API (Azure Functions)</h3>
+    <pre style="background:#2a2d3a; padding:16px; border-radius:4px; overflow-x:auto; font-size:0.85em; color:#f3f6f9;">
+cd apps/api
+node esbuild.config.mjs
+zip -r /tmp/api-deploy.zip dist/ host.json package.json -x "*.map"
+az functionapp deployment source config-zip \
+  --name lb-bot-api --resource-group lb-bot-rg \
+  --src /tmp/api-deploy.zip</pre>
+
+    <h3>Worker (Azure Functions)</h3>
+    <pre style="background:#2a2d3a; padding:16px; border-radius:4px; overflow-x:auto; font-size:0.85em; color:#f3f6f9;">
+cd apps/worker
+node esbuild.config.mjs
+# Include knowledge base in deployment
+cp ../packages/shared/kleos-knowledge.json dist/
+zip -r /tmp/worker-deploy.zip dist/ host.json package.json -x "*.map"
+az functionapp deployment source config-zip \
+  --name lb-bot-worker --resource-group lb-bot-rg \
+  --src /tmp/worker-deploy.zip</pre>
+
+    <h3>Backfill Emails (Manual Pipeline Trigger)</h3>
+    <pre style="background:#2a2d3a; padding:16px; border-radius:4px; overflow-x:auto; font-size:0.85em; color:#f3f6f9;">
+curl -X POST "https://lb-bot-api.azurewebsites.net/api/pipeline/backfill\
+?mailbox=laurence@lbrosset.com&count=25" \
+  -H "x-api-key: YOUR_API_KEY"</pre>
+  </div>
+
+  <!-- Azure Resources -->
+  <h2>Azure Resources</h2>
+  <div class="card">
+    <table class="env-table">
+      <thead>
+        <tr><th>Resource</th><th>Name</th><th>Type</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Resource Group</td><td>lb-bot-rg</td><td>West Europe</td></tr>
+        <tr><td>API Function App</td><td>lb-bot-api</td><td>Flex Consumption (Node.js 20)</td></tr>
+        <tr><td>Worker Function App</td><td>lb-bot-worker</td><td>Flex Consumption (Node.js 20)</td></tr>
+        <tr><td>Service Bus</td><td>lb-bot-bus</td><td>Basic tier, 2 queues</td></tr>
+        <tr><td>Storage Account</td><td>lbbotstore</td><td>Blobs: lbbot-attachments, config</td></tr>
+        <tr><td>App Insights</td><td>(auto-created)</td><td>Monitoring + logging</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Graph Subscription -->
+  <h2>Graph Webhook Subscription</h2>
+  <div class="card">
+    <table class="env-table">
+      <tr><td>Subscription ID</td><td><code>ebe00433-058b-495d-9158-fb9dff625798</code></td></tr>
+      <tr><td>Mailbox</td><td>laurence@lbrosset.com</td></tr>
+      <tr><td>Resource</td><td>/users/laurence@lbrosset.com/mailFolders('Inbox')/messages</td></tr>
+      <tr><td>Notification URL</td><td>https://lb-bot-api.azurewebsites.net/api/webhook/graph</td></tr>
+      <tr><td>Expiration</td><td><span class="badge badge-red">Feb 26, 2026</span> (needs renewal every ~3 days)</td></tr>
+    </table>
+    <p style="color:#6e7391; font-size:0.85em; margin-top:12px;">Auto-renewed on user login via auth callback. Can also be manually renewed via the subscription-manage API endpoint.</p>
+  </div>
+
+  <!-- Footer -->
+  <div style="margin-top:60px; padding-top:20px; border-top:1px solid #2a2d3a; text-align:center; color:#6e7391; font-size:0.85em;">
+    <p>LB-BOT &mdash; Built for SELARL Brosset-Techer, Avocats</p>
+    <p style="margin-top:4px;">Monorepo: pnpm + Turborepo &bull; packages/shared + apps/web + apps/api + apps/worker</p>
+  </div>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Processus de Facturation - Cabinet d'Avocats</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #1a1a2e;
+      color: #eee;
+      padding: 30px;
+    }
+
+    h1 { text-align: center; margin-bottom: 6px; color: #fff; font-size: 24px; }
+    .subtitle { text-align: center; color: #888; margin-bottom: 8px; font-size: 13px; }
+
+    .disclaimer {
+      max-width: 1100px; margin: 0 auto 25px; text-align: center;
+      background: #2a2a3e; border: 1px solid #5c5c3a; border-radius: 8px;
+      padding: 12px 20px; font-size: 12px; color: #dddd99; line-height: 1.5;
+    }
+
+    /* ── Save bar ── */
+    .save-bar {
+      position: sticky; top: 0; z-index: 100;
+      max-width: 1100px; margin: 0 auto 20px;
+      background: #252542; border: 1px solid #3a3a5c; border-radius: 8px;
+      padding: 8px 20px; display: flex; justify-content: space-between; align-items: center;
+    }
+    .save-bar .btn-save {
+      background: #3a5c3a; border: none; color: #99ff99; padding: 7px 18px;
+      border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: bold; margin-right: 8px;
+    }
+    .save-bar .btn-save:hover { background: #4a7a4a; }
+    .save-bar .btn-export { background: #3a3a5c; }
+    .save-bar .btn-export:hover { background: #4a4a7a; }
+    .save-bar .btn-reset {
+      background: #5c3a3a; border: none; color: #ff9999; padding: 7px 12px;
+      border-radius: 4px; cursor: pointer; font-size: 11px;
+    }
+    .save-bar .btn-reset:hover { background: #7a4a4a; }
+    .save-status { color: #888; font-size: 11px; }
+
+    /* ── Horizontal Flowchart ── */
+    .flowchart-section {
+      max-width: 1100px; margin: 0 auto 30px;
+      background: #252542; border: 1px solid #3a3a5c; border-radius: 10px; padding: 25px 20px;
+      overflow: hidden;
+    }
+    .flowchart-section h2 { color: #aaa; font-size: 13px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 18px; text-align: center; }
+
+    .flowchart {
+      display: flex; align-items: flex-start; justify-content: center; gap: 0;
+      padding: 0 10px;
+    }
+
+    .fc-step {
+      display: flex; flex-direction: column; align-items: center; width: 150px; flex-shrink: 0;
+      cursor: pointer; transition: transform 0.15s;
+    }
+    .fc-step:hover { transform: translateY(-3px); }
+
+    .fc-icon {
+      width: 54px; height: 54px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+      font-size: 22px; margin-bottom: 8px; border: 2px solid;
+    }
+
+    .fc-step[data-color="blue"] .fc-icon { background: #252560; border-color: #5566aa; }
+    .fc-step[data-color="yellow"] .fc-icon { background: #3a3a1a; border-color: #aa9944; }
+    .fc-step[data-color="purple"] .fc-icon { background: #352545; border-color: #9966aa; }
+    .fc-step[data-color="cyan"] .fc-icon { background: #1a3535; border-color: #44aaaa; }
+    .fc-step[data-color="orange"] .fc-icon { background: #3a2a1a; border-color: #aa7744; }
+    .fc-step[data-color="green"] .fc-icon { background: #1a3a1a; border-color: #44aa44; }
+
+    .fc-label { font-size: 11px; color: #ccc; text-align: center; line-height: 1.3; font-weight: 600; }
+    .fc-tag {
+      margin-top: 5px; font-size: 9px; padding: 2px 8px; border-radius: 8px;
+      background: #3a3a5c; color: #888;
+    }
+    .fc-tag.priority { background: #3a5c3a; color: #99ff99; }
+    .fc-tag.warn { background: #5c3a3a; color: #ff9999; }
+
+    .fc-arrow { display: flex; align-items: center; padding-top: 18px; flex-shrink: 0; }
+    .fc-arrow svg { display: block; }
+
+    /* ── Grid: steps left, notes right ── */
+    .details-section { max-width: 1100px; margin: 0 auto 30px; }
+
+    .step-row {
+      display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px;
+      margin-bottom: 0;
+    }
+
+    .step-left {
+      background: #252542; border: 1px solid #3a3a5c; border-radius: 10px;
+      padding: 18px 20px;
+    }
+
+    .step-right {
+      display: flex; flex-direction: column;
+    }
+
+    .priority-row .step-left {
+      background: #1a2e1a; border-color: #4a7a4a;
+    }
+
+    .step-num {
+      font-size: 10px; text-transform: uppercase; letter-spacing: 1.5px; color: #666; margin-bottom: 6px;
+    }
+    .step-title { font-weight: bold; font-size: 15px; color: #fff; margin-bottom: 6px; }
+    .step-detail { font-size: 13px; color: #aaa; line-height: 1.6; }
+    .step-detail em { color: #dddd99; font-style: normal; }
+
+    .step-right textarea {
+      width: 100%; flex: 1; min-height: 80px; background: #1e1e38; border: 1px solid #3a3a5c;
+      border-radius: 10px; padding: 14px; color: #ccc; font-size: 13px;
+      font-family: inherit; resize: vertical;
+    }
+    .step-right textarea:focus { outline: none; border-color: #6666aa; }
+
+    .step-arrow {
+      display: flex; justify-content: center;
+      margin: 4px 0; padding-right: calc(50% + 8px);
+    }
+
+    /* ── Problems ── */
+    .problems {
+      max-width: 1100px; margin: 0 auto 25px;
+      background: #3a2a2a; border: 1px solid #5c3a3a; border-radius: 10px; padding: 20px;
+    }
+    .problems h2 { color: #ff9999; margin-bottom: 12px; font-size: 16px; }
+    .problems p { color: #cc9999; font-size: 12px; margin-bottom: 10px; }
+    .problem-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .problem-card {
+      display: flex; justify-content: space-between; padding: 8px 12px;
+      background: #2e1e1e; border-radius: 6px; font-size: 12px;
+    }
+    .problem-issue { color: #ccc; }
+    .problem-impact { color: #ff9999; }
+
+    /* ── Questions ── */
+    .questions-container {
+      max-width: 1100px; margin: 0 auto 25px;
+      background: #1a2e1a; border: 1px solid #3a5c3a; border-radius: 10px; padding: 25px;
+    }
+    .questions-container h2 { color: #99ff99; margin-bottom: 20px; font-size: 18px; }
+
+    .question-category { margin-bottom: 22px; }
+    .question-category h3 { color: #99ddaa; font-size: 14px; margin-bottom: 10px; }
+    .question-list { padding-left: 12px; }
+
+    .question-row {
+      display: flex; align-items: center; color: #ccc; padding: 6px 0;
+      border-bottom: 1px solid #2a4a2a; font-size: 13px;
+    }
+    .question-row input[type="checkbox"] { margin-right: 10px; flex-shrink: 0; }
+    .question-row .question-text { flex: 1; }
+    .question-row .btn-delete {
+      background: none; border: none; color: #884444; font-size: 18px;
+      cursor: pointer; padding: 0 6px; margin-left: 8px; opacity: 0.3;
+    }
+    .question-row .btn-delete:hover { opacity: 1; color: #ff6666; }
+
+    .btn-add {
+      display: inline-block; background: none; border: 1px dashed #3a5c3a;
+      color: #66aa66; font-size: 12px; cursor: pointer; padding: 5px 12px;
+      margin-top: 6px; border-radius: 4px;
+    }
+    .btn-add:hover { border-color: #66aa66; color: #99ff99; background: #1a3a1a; }
+
+    .notes-area { margin-top: 10px; }
+    .notes-area .notes-label { color: #77aa77; font-size: 11px; margin-bottom: 3px; }
+    .notes-area textarea {
+      width: 100%; min-height: 60px; background: #1a2a10; border: 1px solid #3a5c3a;
+      border-radius: 4px; padding: 8px; color: #ccc; font-size: 12px;
+      font-family: inherit; resize: vertical;
+    }
+    .notes-area textarea:focus { outline: none; border-color: #66aa66; }
+
+    /* ── General notes ── */
+    .general-notes {
+      max-width: 1100px; margin: 0 auto 25px;
+      background: #2a2a1a; border: 1px solid #5c5c3a; border-radius: 10px; padding: 20px;
+    }
+    .general-notes h2 { color: #ffff99; margin-bottom: 12px; font-size: 16px; }
+    .general-notes textarea {
+      width: 100%; min-height: 100px; background: #1a1a10; border: 1px solid #5c5c3a;
+      border-radius: 4px; padding: 10px; color: #ccc; font-size: 12px;
+      font-family: inherit; resize: vertical;
+    }
+    .general-notes textarea:focus { outline: none; border-color: #aaaa66; }
+
+    /* ── KLEOS API ── */
+    .api-section {
+      max-width: 1100px; margin: 0 auto 25px;
+      background: #2a1a1a; border: 1px solid #5c3a3a; border-radius: 10px; padding: 25px;
+    }
+    .api-section h2 { color: #ff8888; margin-bottom: 6px; font-size: 16px; }
+    .api-section .api-subtitle { color: #886666; font-size: 11px; margin-bottom: 16px; }
+    .api-section .api-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+    .api-item {
+      display: flex; align-items: flex-start; gap: 10px; padding: 10px 14px;
+      background: #1e1212; border-radius: 8px; font-size: 12px;
+    }
+    .api-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+    .api-icon.no { color: #ff6666; }
+    .api-icon.yes { color: #66cc66; }
+    .api-label { color: #ccc; }
+    .api-label small { display: block; color: #886666; font-size: 11px; margin-top: 2px; }
+    .api-note {
+      font-size: 12px; color: #aa8888; line-height: 1.6; padding: 12px 14px;
+      background: #1e1212; border-radius: 8px; border-left: 3px solid #ff6666;
+    }
+
+    .footer { text-align: center; margin-top: 30px; color: #555; font-size: 11px; }
+
+    /* ── Print ── */
+    @media print {
+      body { background: white; color: #333; padding: 15px; }
+      .save-bar { display: none; }
+      .flowchart-section { background: #f8f8ff; border-color: #ccc; }
+      .fc-icon { border-width: 1px; }
+      .fc-label { color: #333; }
+      .step-left { background: #f5f5ff; border-color: #ccc; }
+      .step-title { color: #333; }
+      .step-detail { color: #555; }
+      .step-detail em { color: #885500; }
+      .step-right textarea { background: #fff; border-color: #ccc; color: #333; }
+      .problems { background: #fff5f5; border-color: #dcc; }
+      .questions-container { background: #f5fff5; border-color: #cdc; }
+      .question-row { color: #333; border-color: #ddd; }
+      .btn-delete, .btn-add { display: none; }
+      .api-section { background: #fff5f5; border-color: #dcc; }
+      .api-item { background: #faf0f0; }
+      .api-label { color: #333; }
+      .api-label small { color: #888; }
+      .api-note { background: #faf0f0; color: #664444; border-color: #cc6666; }
+      .general-notes { background: #fffff5; border-color: #ddc; }
+      .general-notes textarea { background: #fff; border-color: #ccc; color: #333; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Save bar -->
+  <div class="save-bar">
+    <div>
+      <button class="btn-save" onclick="saveAll()">Sauvegarder</button>
+      <button class="btn-save btn-export" onclick="downloadWithNotes()">Exporter HTML</button>
+      <button class="btn-reset" onclick="resetAll()">Effacer tout</button>
+    </div>
+    <span class="save-status" id="saveStatus">Non sauvegardé</span>
+  </div>
+
+  <h1>Processus de Facturation</h1>
+  <p class="subtitle">Cabinet d'Avocats - Compréhension Actuelle (à confirmer)</p>
+  <div class="disclaimer">
+    <strong>Avant notre échange :</strong> Voici comment nous pensons que la facturation fonctionne au cabinet. Ce n'est qu'une supposition de notre part - nous avons besoin de votre confirmation pour savoir ce qui est juste, ce qui est faux et ce qui manque.
+  </div>
+
+  <!-- ═══ KLEOS API - CONTEXT ═══ -->
+  <div class="api-section">
+    <h2>Pourquoi on a besoin de mieux comprendre votre processus</h2>
+    <div class="api-subtitle">Usage interne - Contexte technique sur l'API KLEOS</div>
+
+    <div class="api-note" style="margin-bottom: 14px; border-color: #6688aa;">
+      <span style="color:#99bbdd;"><strong>L'API KLEOS fonctionne bien</strong> pour certaines choses : on peut récupérer les données clients, les dossiers, le temps saisi, et s'en servir pour des emails, des notifications, etc.</span>
+    </div>
+
+    <div class="api-note" style="margin-bottom: 14px;">
+      <strong>Mais pour la facturation, l'API est très limitée.</strong> On ne peut pas créer de facture, suivre les paiements, ni envoyer de relance via KLEOS. C'est pour ça qu'on a besoin de comprendre exactement comment vous travaillez au quotidien - pour trouver les bons contournements.
+    </div>
+
+    <div class="api-grid">
+      <div class="api-item">
+        <span class="api-icon no">&#10007;</span>
+        <span class="api-label">Créer ou envoyer une facture<small>Pas de endpoint pour générer ou envoyer des factures</small></span>
+      </div>
+      <div class="api-item">
+        <span class="api-icon no">&#10007;</span>
+        <span class="api-label">Suivre les paiements<small>Impossible de marquer une facture comme payée via l'API</small></span>
+      </div>
+      <div class="api-item">
+        <span class="api-icon no">&#10007;</span>
+        <span class="api-label">Envoyer des emails / relances<small>Pas d'envoi d'email depuis l'API</small></span>
+      </div>
+      <div class="api-item">
+        <span class="api-icon no">&#10007;</span>
+        <span class="api-label">Automatiser les relances<small>Aucune fonctionnalité de rappel automatique</small></span>
+      </div>
+      <div class="api-item">
+        <span class="api-icon no">&#10007;</span>
+        <span class="api-label">Rapprochement bancaire<small>Pas de lien entre factures et paiements bancaires</small></span>
+      </div>
+      <div class="api-item">
+        <span class="api-icon no">&#10007;</span>
+        <span class="api-label">Tableau de bord / reporting<small>Pas de données agrégées (CA, impayés, délais)</small></span>
+      </div>
+      <div class="api-item">
+        <span class="api-icon yes">&#10003;</span>
+        <span class="api-label">Lire les contacts / clients<small>Accès en lecture aux fiches clients</small></span>
+      </div>
+      <div class="api-item">
+        <span class="api-icon yes">&#10003;</span>
+        <span class="api-label">Lire les dossiers / time entries<small>Accès en lecture au temps saisi</small></span>
+      </div>
+    </div>
+
+    <div class="api-note" style="border-color: #4a7a4a; color: #99cc99;">
+      <strong>Ce n'est pas bloquant.</strong> Il y a plein de solutions pour contourner ces limites : connexion à la banque, envoi d'emails automatiques, tableaux de bord externes, etc. Mais pour choisir la bonne approche, on a besoin de savoir exactement quels outils vous utilisez et comment fonctionne votre processus aujourd'hui.
+    </div>
+  </div>
+
+  <!-- ═══ HORIZONTAL FLOWCHART ═══ -->
+  <div class="flowchart-section">
+    <h2>Vue d'ensemble du processus (à confirmer)</h2>
+    <div class="flowchart">
+
+      <div class="fc-step" data-color="blue" onclick="document.getElementById('row1').scrollIntoView({behavior:'smooth',block:'center'})">
+        <div class="fc-icon">&#9998;</div>
+        <div class="fc-label">Avocat<br>travaille</div>
+        <div class="fc-tag">~2 min ?</div>
+      </div>
+
+      <div class="fc-arrow"><svg width="40" height="20"><line x1="0" y1="10" x2="32" y2="10" stroke="#4a4a7a" stroke-width="2"/><polygon points="32,5 40,10 32,15" fill="#4a4a7a"/></svg></div>
+
+      <div class="fc-step" data-color="yellow" onclick="document.getElementById('row2').scrollIntoView({behavior:'smooth',block:'center'})">
+        <div class="fc-icon">&#9200;</div>
+        <div class="fc-label">Temps non<br>facturé ?</div>
+        <div class="fc-tag warn">?</div>
+      </div>
+
+      <div class="fc-arrow"><svg width="40" height="20"><line x1="0" y1="10" x2="32" y2="10" stroke="#4a4a7a" stroke-width="2"/><polygon points="32,5 40,10 32,15" fill="#4a4a7a"/></svg></div>
+
+      <div class="fc-step" data-color="purple" onclick="document.getElementById('row3').scrollIntoView({behavior:'smooth',block:'center'})">
+        <div class="fc-icon">&#128196;</div>
+        <div class="fc-label">Création<br>facture</div>
+        <div class="fc-tag">~10 min ?</div>
+      </div>
+
+      <div class="fc-arrow"><svg width="40" height="20"><line x1="0" y1="10" x2="32" y2="10" stroke="#4a4a7a" stroke-width="2"/><polygon points="32,5 40,10 32,15" fill="#4a4a7a"/></svg></div>
+
+      <div class="fc-step" data-color="cyan" onclick="document.getElementById('row4').scrollIntoView({behavior:'smooth',block:'center'})">
+        <div class="fc-icon">&#9993;</div>
+        <div class="fc-label">Envoi au<br>client</div>
+        <div class="fc-tag">~5 min ?</div>
+      </div>
+
+      <div class="fc-arrow"><svg width="40" height="20"><line x1="0" y1="10" x2="32" y2="10" stroke="#4a4a7a" stroke-width="2"/><polygon points="32,5 40,10 32,15" fill="#4a4a7a"/></svg></div>
+
+      <div class="fc-step" data-color="orange" onclick="document.getElementById('row5').scrollIntoView({behavior:'smooth',block:'center'})">
+        <div class="fc-icon">&#128179;</div>
+        <div class="fc-label">Suivi<br>paiement</div>
+        <div class="fc-tag warn">?</div>
+      </div>
+
+      <div class="fc-arrow"><svg width="40" height="20"><line x1="0" y1="10" x2="32" y2="10" stroke="#4a4a7a" stroke-width="2"/><polygon points="32,5 40,10 32,15" fill="#4a4a7a"/></svg></div>
+
+      <div class="fc-step" data-color="green" onclick="document.getElementById('row6').scrollIntoView({behavior:'smooth',block:'center'})">
+        <div class="fc-icon">&#128276;</div>
+        <div class="fc-label">Relances<br>impayés</div>
+        <div class="fc-tag priority">priorité</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ═══ STEP DETAILS ═══ -->
+  <div class="details-section">
+
+    <div class="step-row" id="row1">
+      <div class="step-left">
+        <div class="step-num">Étape 1 - à confirmer</div>
+        <div class="step-title">L'avocat travaille</div>
+        <div class="step-detail">
+          On pense que l'avocat termine son travail sur un dossier.<br>
+          Puis saisit son temps dans KLEOS. <em>(est-ce bien le cas ?)</em>
+        </div>
+      </div>
+      <div class="step-right">
+        <textarea data-step="etape1" placeholder="Notes / Corrections..."></textarea>
+      </div>
+    </div>
+
+    <div class="step-arrow"><svg width="24" height="28"><line x1="12" y1="0" x2="12" y2="20" stroke="#4a4a7a" stroke-width="2"/><polygon points="7,20 12,28 17,20" fill="#4a4a7a"/></svg></div>
+
+    <div class="step-row" id="row2">
+      <div class="step-left">
+        <div class="step-num">Étape 2 - à confirmer</div>
+        <div class="step-title">Le temps reste non facturé ?</div>
+        <div class="step-detail">
+          On suppose qu'il peut y avoir un délai avant facturation.<br>
+          <em>Est-ce que quelqu'un suit le temps non facturé ?</em><br>
+          <em>Y a-t-il un processus de vérification en place ?</em>
+        </div>
+      </div>
+      <div class="step-right">
+        <textarea data-step="etape2" placeholder="Notes / Corrections..."></textarea>
+      </div>
+    </div>
+
+    <div class="step-arrow"><svg width="24" height="28"><line x1="12" y1="0" x2="12" y2="20" stroke="#4a4a7a" stroke-width="2"/><polygon points="7,20 12,28 17,20" fill="#4a4a7a"/></svg></div>
+
+    <div class="step-row" id="row3">
+      <div class="step-left">
+        <div class="step-num">Étape 3 - à confirmer</div>
+        <div class="step-title">Création de la facture</div>
+        <div class="step-detail">
+          On pense que c'est Christoph (comptabilité) qui s'en charge. <em>(est-ce correct ?)</em><br>
+          <em>La facture est-elle créée dans KLEOS ou ailleurs ?</em><br>
+          <em>Le PDF est-il téléchargé ou envoyé directement ?</em>
+        </div>
+      </div>
+      <div class="step-right">
+        <textarea data-step="etape3" placeholder="Notes / Corrections..."></textarea>
+      </div>
+    </div>
+
+    <div class="step-arrow"><svg width="24" height="28"><line x1="12" y1="0" x2="12" y2="20" stroke="#4a4a7a" stroke-width="2"/><polygon points="7,20 12,28 17,20" fill="#4a4a7a"/></svg></div>
+
+    <div class="step-row" id="row4">
+      <div class="step-left">
+        <div class="step-num">Étape 4 - à confirmer</div>
+        <div class="step-title">Envoi de la facture</div>
+        <div class="step-detail">
+          On pense que la facture est envoyée par email depuis KLEOS. <em>(est-ce correct ?)</em><br>
+          <em>Certains clients reçoivent-ils la facture autrement ? (courrier, portail ?)</em>
+        </div>
+      </div>
+      <div class="step-right">
+        <textarea data-step="etape4" placeholder="Notes / Corrections..."></textarea>
+      </div>
+    </div>
+
+    <div class="step-arrow"><svg width="24" height="28"><line x1="12" y1="0" x2="12" y2="20" stroke="#4a4a7a" stroke-width="2"/><polygon points="7,20 12,28 17,20" fill="#4a4a7a"/></svg></div>
+
+    <div class="step-row" id="row5">
+      <div class="step-left">
+        <div class="step-num">Étape 5 - à confirmer</div>
+        <div class="step-title">Suivi du paiement</div>
+        <div class="step-detail">
+          On imagine que les paiements sont vérifiés via la banque.<br>
+          <em>Qui fait cette vérification et à quelle fréquence ?</em><br>
+          On sait que les paiements sont marqués dans KLEOS. <em>Utilisez-vous aussi un autre outil ? (Excel, logiciel comptable ?)</em>
+        </div>
+      </div>
+      <div class="step-right">
+        <textarea data-step="etape5" placeholder="Notes / Corrections..."></textarea>
+      </div>
+    </div>
+
+    <div class="step-arrow"><svg width="24" height="28"><line x1="12" y1="0" x2="12" y2="20" stroke="#4a7a4a" stroke-width="2"/><polygon points="7,20 12,28 17,20" fill="#4a7a4a"/></svg></div>
+
+    <div class="step-row priority-row" id="row6">
+      <div class="step-left">
+        <div class="step-num" style="color:#88cc88;">Étape 6 - PRIORITÉ</div>
+        <div class="step-title" style="color:#99ff99;">Relances des impayés</div>
+        <div class="step-detail">
+          On sait que les relances sont un sujet important pour le cabinet.<br>
+          <em>Comment se passent-elles aujourd'hui exactement ?</em>
+        </div>
+      </div>
+      <div class="step-right">
+        <textarea data-step="etape6" placeholder="Notes / Corrections..."></textarea>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ═══ PROBLEMS ═══ -->
+  <div class="problems">
+    <h2>Difficultés possibles (à confirmer)</h2>
+    <p>Ce sont des problèmes courants dans les cabinets. Est-ce que certains vous concernent ?</p>
+    <div class="problem-grid">
+      <div class="problem-card">
+        <span class="problem-issue">Du temps non facturé qui passe inaperçu ?</span>
+        <span class="problem-impact">Perte de revenus</span>
+      </div>
+      <div class="problem-card">
+        <span class="problem-issue">Facturation pas toujours rapide ?</span>
+        <span class="problem-impact">Impact trésorerie</span>
+      </div>
+      <div class="problem-card">
+        <span class="problem-issue">Envoi manuel des factures ?</span>
+        <span class="problem-impact">Temps perdu</span>
+      </div>
+      <div class="problem-card">
+        <span class="problem-issue">Relances pas toujours faites ?</span>
+        <span class="problem-impact">Factures impayées</span>
+      </div>
+      <div class="problem-card">
+        <span class="problem-issue">Manque de visibilité ?</span>
+        <span class="problem-impact">Difficile de suivre</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ QUESTIONS ═══ -->
+  <div class="questions-container" id="questionsContainer">
+    <h2>Ce qu'on aimerait mieux comprendre</h2>
+
+    <div class="question-category" data-category="taches-manuelles">
+      <h3>Tâches répétitives / manuelles</h3>
+      <div class="question-list">
+        <div class="question-row"><input type="checkbox"><span class="question-text">Y a-t-il des étapes que vous faites à la main et qui pourraient être automatisées ?</span><button class="btn-delete" onclick="deleteQuestion(this)" title="Supprimer">&times;</button></div>
+        <div class="question-row"><input type="checkbox"><span class="question-text">Qu'est-ce qui vous prend le plus de temps dans le processus de facturation ?</span><button class="btn-delete" onclick="deleteQuestion(this)" title="Supprimer">&times;</button></div>
+        <div class="question-row"><input type="checkbox"><span class="question-text">Y a-t-il des choses que vous recopiez d'un endroit à un autre ? (KLEOS vers Excel, etc.)</span><button class="btn-delete" onclick="deleteQuestion(this)" title="Supprimer">&times;</button></div>
+        <div class="question-row"><input type="checkbox"><span class="question-text">Environ combien de factures sont envoyées par mois ?</span><button class="btn-delete" onclick="deleteQuestion(this)" title="Supprimer">&times;</button></div>
+      </div>
+      <button class="btn-add" onclick="addQuestion(this)">+ Ajouter une question</button>
+      <div class="notes-area"><div class="notes-label">Notes :</div><textarea data-notes="taches-manuelles" placeholder="Tâches qui pourraient être automatisées..."></textarea></div>
+    </div>
+
+    <div class="question-category" data-category="relances">
+      <h3>Relances et impayés</h3>
+      <div class="question-list">
+        <div class="question-row"><input type="checkbox"><span class="question-text">Comment se passent les relances aujourd'hui ? (email, téléphone, courrier ?)</span><button class="btn-delete" onclick="deleteQuestion(this)" title="Supprimer">&times;</button></div>
+        <div class="question-row"><input type="checkbox"><span class="question-text">Au bout de combien de temps relancez-vous un client ?</span><button class="btn-delete" onclick="deleteQuestion(this)" title="Supprimer">&times;</button></div>
+        <div class="question-row"><input type="checkbox"><span class="question-text">Les relances sont-elles faites manuellement à chaque fois ?</span><button class="btn-delete" onclick="deleteQuestion(this)" title="Supprimer">&times;</button></div>
+        <div class="question-row"><input type="checkbox"><span class="question-text">Y a-t-il des clients qui oublient souvent ou qui posent régulièrement problème ?</span><button class="btn-delete" onclick="deleteQuestion(this)" title="Supprimer">&times;</button></div>
+      </div>
+      <button class="btn-add" onclick="addQuestion(this)">+ Ajouter une question</button>
+      <div class="notes-area"><div class="notes-label">Notes :</div><textarea data-notes="relances" placeholder="Comment fonctionnent les relances..."></textarea></div>
+    </div>
+
+    <div class="question-category" data-category="outils">
+      <h3>Outils et logiciels utilisés</h3>
+      <div class="question-list">
+        <div class="question-row"><input type="checkbox"><span class="question-text">En dehors de KLEOS, quels autres logiciels ou outils utilisez-vous ? (Excel, Word, Google Sheets, etc.)</span><button class="btn-delete" onclick="deleteQuestion(this)" title="Supprimer">&times;</button></div>
+        <div class="question-row"><input type="checkbox"><span class="question-text">Y a-t-il des tableaux Excel ou des fichiers que vous maintenez en parallèle de KLEOS ?</span><button class="btn-delete" onclick="deleteQuestion(this)" title="Supprimer">&times;</button></div>
+        <div class="question-row"><input type="checkbox"><span class="question-text">Utilisez-vous un logiciel comptable ? (Sage, Pennylane, expert-comptable externe, rien ?)</span><button class="btn-delete" onclick="deleteQuestion(this)" title="Supprimer">&times;</button></div>
+        <div class="question-row"><input type="checkbox"><span class="question-text">Est-ce que KLEOS fait tout ce dont vous avez besoin, ou il manque des choses ?</span><button class="btn-delete" onclick="deleteQuestion(this)" title="Supprimer">&times;</button></div>
+        <div class="question-row"><input type="checkbox"><span class="question-text">Y a-t-il des informations que vous aimeriez voir en un coup d'oeil ? (impayés, retards, etc.)</span><button class="btn-delete" onclick="deleteQuestion(this)" title="Supprimer">&times;</button></div>
+      </div>
+      <button class="btn-add" onclick="addQuestion(this)">+ Ajouter une question</button>
+      <div class="notes-area"><div class="notes-label">Notes :</div><textarea data-notes="outils" placeholder="Outils utilisés, manques identifiés..."></textarea></div>
+    </div>
+
+    <div class="question-category" data-category="banque">
+      <h3>Banque et paiements</h3>
+      <div class="question-list">
+        <div class="question-row"><input type="checkbox"><span class="question-text">Quelle banque utilisez-vous pour le cabinet ?</span><button class="btn-delete" onclick="deleteQuestion(this)" title="Supprimer">&times;</button></div>
+        <div class="question-row"><input type="checkbox"><span class="question-text">Comment vérifiez-vous que les paiements sont bien arrivés ? (manuellement, relevés ?)</span><button class="btn-delete" onclick="deleteQuestion(this)" title="Supprimer">&times;</button></div>
+        <div class="question-row"><input type="checkbox"><span class="question-text">Avez-vous accès à la banque en ligne ? (utile pour automatiser le rapprochement)</span><button class="btn-delete" onclick="deleteQuestion(this)" title="Supprimer">&times;</button></div>
+        <div class="question-row"><input type="checkbox"><span class="question-text">Les clients paient comment en général ? (virement, chèque, autre ?)</span><button class="btn-delete" onclick="deleteQuestion(this)" title="Supprimer">&times;</button></div>
+      </div>
+      <button class="btn-add" onclick="addQuestion(this)">+ Ajouter une question</button>
+      <div class="notes-area"><div class="notes-label">Notes :</div><textarea data-notes="banque" placeholder="Infos bancaires, modes de paiement..."></textarea></div>
+    </div>
+
+    <div class="question-category" data-category="irritants">
+      <h3>Ce qui vous gêne le plus</h3>
+      <div class="question-list">
+        <div class="question-row"><input type="checkbox"><span class="question-text">Si vous pouviez changer une seule chose dans le processus actuel, ce serait quoi ?</span><button class="btn-delete" onclick="deleteQuestion(this)" title="Supprimer">&times;</button></div>
+        <div class="question-row"><input type="checkbox"><span class="question-text">Y a-t-il des erreurs qui reviennent souvent ? (oublis, doublons, mauvais montants ?)</span><button class="btn-delete" onclick="deleteQuestion(this)" title="Supprimer">&times;</button></div>
+        <div class="question-row"><input type="checkbox"><span class="question-text">Arrive-t-il que du temps de travail ne soit jamais facturé ?</span><button class="btn-delete" onclick="deleteQuestion(this)" title="Supprimer">&times;</button></div>
+      </div>
+      <button class="btn-add" onclick="addQuestion(this)">+ Ajouter une question</button>
+      <div class="notes-area"><div class="notes-label">Notes :</div><textarea data-notes="irritants" placeholder="Points de friction, frustrations..."></textarea></div>
+    </div>
+  </div>
+
+  <!-- ═══ GENERAL NOTES ═══ -->
+  <div class="general-notes">
+    <h2>Autres notes / Actions à suivre</h2>
+    <textarea id="generalNotes" placeholder="Autres observations, prochaines étapes, idées..."></textarea>
+  </div>
+
+  <div class="footer">Documentation Projet LB-BOT</div>
+
+  <script>
+    const STORAGE_KEY = 'lb-bot-facturation-notes-v2';
+
+    function deleteQuestion(btn) {
+      if (confirm('Supprimer cette question ?')) { btn.closest('.question-row').remove(); markUnsaved(); }
+    }
+
+    function addQuestion(btn) {
+      const text = prompt('Nouvelle question :');
+      if (!text) return;
+      const row = document.createElement('div');
+      row.className = 'question-row';
+      row.innerHTML = '<input type="checkbox"><span class="question-text">' + escapeHtml(text) + '</span><button class="btn-delete" onclick="deleteQuestion(this)" title="Supprimer">&times;</button>';
+      btn.previousElementSibling.appendChild(row);
+      markUnsaved();
+    }
+
+    function escapeHtml(text) { const d = document.createElement('div'); d.textContent = text; return d.innerHTML; }
+
+    function markUnsaved() {
+      document.getElementById('saveStatus').textContent = 'Modifications non sauvegardées';
+      document.getElementById('saveStatus').style.color = '#ff9999';
+    }
+
+    function saveAll() {
+      const data = { categories: {}, steps: {}, generalNotes: document.getElementById('generalNotes').value, timestamp: new Date().toISOString() };
+      document.querySelectorAll('textarea[data-step]').forEach(ta => { data.steps[ta.dataset.step] = ta.value; });
+      document.querySelectorAll('.question-category').forEach(cat => {
+        const key = cat.dataset.category, questions = [];
+        cat.querySelectorAll('.question-row').forEach(row => {
+          questions.push({ text: row.querySelector('.question-text').textContent, checked: row.querySelector('input[type="checkbox"]').checked });
+        });
+        data.categories[key] = { questions, notes: cat.querySelector('textarea[data-notes]').value };
+      });
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      document.getElementById('saveStatus').textContent = 'Sauvegardé ' + new Date().toLocaleTimeString('fr-FR');
+      document.getElementById('saveStatus').style.color = '#99ff99';
+    }
+
+    function loadAll() {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return;
+      try {
+        const data = JSON.parse(raw);
+        if (data.generalNotes) document.getElementById('generalNotes').value = data.generalNotes;
+        Object.entries(data.steps || {}).forEach(([k, v]) => { const t = document.querySelector('textarea[data-step="' + k + '"]'); if (t && v) t.value = v; });
+        Object.entries(data.categories || {}).forEach(([key, cd]) => {
+          const cat = document.querySelector('.question-category[data-category="' + key + '"]');
+          if (!cat) return;
+          const ta = cat.querySelector('textarea[data-notes="' + key + '"]');
+          if (ta && cd.notes) ta.value = cd.notes;
+          const list = cat.querySelector('.question-list');
+          list.innerHTML = '';
+          (cd.questions || []).forEach(q => {
+            const row = document.createElement('div'); row.className = 'question-row';
+            row.innerHTML = '<input type="checkbox"' + (q.checked ? ' checked' : '') + '><span class="question-text">' + escapeHtml(q.text) + '</span><button class="btn-delete" onclick="deleteQuestion(this)" title="Supprimer">&times;</button>';
+            list.appendChild(row);
+          });
+        });
+        if (data.timestamp) {
+          document.getElementById('saveStatus').textContent = 'Dernière sauvegarde : ' + new Date(data.timestamp).toLocaleString('fr-FR');
+          document.getElementById('saveStatus').style.color = '#888';
+        }
+      } catch (e) { console.error('Load error:', e); }
+    }
+
+    function resetAll() {
+      if (!confirm('Effacer toutes les notes ? Cette action est irréversible.')) return;
+      localStorage.removeItem(STORAGE_KEY);
+      location.reload();
+    }
+
+    function downloadWithNotes() {
+      const clone = document.documentElement.cloneNode(true);
+      const realTA = document.querySelectorAll('textarea'), cloneTA = clone.querySelectorAll('textarea');
+      realTA.forEach((ta, i) => { cloneTA[i].textContent = ta.value; });
+      const realCB = document.querySelectorAll('input[type="checkbox"]'), cloneCB = clone.querySelectorAll('input[type="checkbox"]');
+      realCB.forEach((cb, i) => { if (cb.checked) cloneCB[i].setAttribute('checked', ''); else cloneCB[i].removeAttribute('checked'); });
+      const sb = clone.querySelector('.save-bar'); if (sb) sb.remove();
+      clone.querySelectorAll('.btn-delete, .btn-add').forEach(el => el.remove());
+      clone.querySelectorAll('script').forEach(el => el.remove());
+      const html = '<!DOCTYPE html>\n<html lang="fr">\n' + clone.innerHTML + '\n</html>';
+      const blob = new Blob([html], { type: 'text/html' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href = url;
+      a.download = 'facturation-notes-' + new Date().toISOString().slice(0, 10) + '.html';
+      a.click(); URL.revokeObjectURL(url);
+    }
+
+    document.addEventListener('input', e => { if (e.target.tagName === 'TEXTAREA') markUnsaved(); });
+    document.addEventListener('change', e => { if (e.target.type === 'checkbox') markUnsaved(); });
+    document.addEventListener('keydown', e => { if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); saveAll(); } });
+    loadAll();
+  </script>
+</body>
+</html>

@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Flowchart - Processus de Facturation</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #1a1a2e;
+      color: #eee;
+      padding: 30px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    h1 {
+      font-size: 22px;
+      margin-bottom: 5px;
+    }
+
+    .subtitle {
+      color: #888;
+      font-size: 13px;
+      margin-bottom: 8px;
+    }
+
+    .disclaimer {
+      color: #dddd99;
+      font-size: 11px;
+      background: #2a2a3e;
+      border: 1px solid #5c5c3a;
+      border-radius: 6px;
+      padding: 8px 16px;
+      margin-bottom: 20px;
+      max-width: 700px;
+      text-align: center;
+    }
+
+    .flowchart {
+      position: relative;
+      width: 750px;
+    }
+
+    /* Row layout */
+    .flow-row {
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      margin-bottom: 0;
+    }
+
+    /* Arrow rows */
+    .flow-arrow {
+      display: flex;
+      justify-content: center;
+      padding: 6px 0;
+    }
+
+    .flow-arrow svg {
+      display: block;
+    }
+
+    /* Boxes */
+    .flow-box {
+      border-radius: 10px;
+      padding: 14px 18px;
+      min-width: 320px;
+      max-width: 420px;
+      position: relative;
+    }
+
+    .flow-box.process {
+      background: #252542;
+      border: 2px solid #4a4a7a;
+    }
+
+    .flow-box.decision {
+      background: #2a2a1a;
+      border: 2px solid #7a7a4a;
+      transform: none;
+    }
+
+    .flow-box.problem {
+      background: #3a2020;
+      border: 2px solid #7a4a4a;
+    }
+
+    .flow-box.priority {
+      background: #1a2e1a;
+      border: 2px solid #4a7a4a;
+    }
+
+    .flow-box .box-step {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #888;
+      margin-bottom: 4px;
+    }
+
+    .flow-box .box-title {
+      font-weight: bold;
+      font-size: 14px;
+      margin-bottom: 6px;
+    }
+
+    .flow-box .box-detail {
+      font-size: 12px;
+      color: #aaa;
+      line-height: 1.5;
+    }
+
+    .flow-box .box-detail em {
+      color: #dddd99;
+      font-style: normal;
+    }
+
+    .flow-box .box-badge {
+      position: absolute;
+      top: 10px;
+      right: 12px;
+      font-size: 10px;
+      padding: 2px 8px;
+      border-radius: 10px;
+      background: #3a3a5c;
+      color: #aaa;
+    }
+
+    .flow-box .box-badge.warn {
+      background: #5c3a3a;
+      color: #ff9999;
+    }
+
+    .flow-box .box-badge.ok {
+      background: #3a5c3a;
+      color: #99ff99;
+    }
+
+    /* Side notes */
+    .flow-row-with-note {
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      gap: 20px;
+    }
+
+    .side-note {
+      width: 200px;
+      font-size: 11px;
+      color: #999;
+      padding: 10px;
+      border-left: 2px solid #3a3a5c;
+      margin-top: 10px;
+      line-height: 1.5;
+    }
+
+    .side-note.left {
+      text-align: right;
+      border-left: none;
+      border-right: 2px solid #3a3a5c;
+    }
+
+    /* Branch arrows */
+    .branch {
+      display: flex;
+      justify-content: center;
+      gap: 40px;
+      padding: 10px 0;
+    }
+
+    .branch-path {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .branch-label {
+      font-size: 11px;
+      color: #888;
+      padding: 2px 10px;
+      border-radius: 10px;
+      background: #252542;
+    }
+
+    .branch-label.yes { color: #99ff99; background: #1a2e1a; }
+    .branch-label.no { color: #ff9999; background: #2e1a1a; }
+
+    /* Footer */
+    .footer {
+      margin-top: 25px;
+      color: #555;
+      font-size: 11px;
+    }
+
+    /* Print */
+    @media print {
+      body { background: white; color: #333; }
+      .flow-box.process { background: #f5f5ff; border-color: #aaa; }
+      .flow-box.decision { background: #fffff5; border-color: #aa9; }
+      .flow-box.problem { background: #fff5f5; border-color: #c99; }
+      .flow-box.priority { background: #f5fff5; border-color: #9c9; }
+      .flow-box .box-detail { color: #666; }
+      .flow-box .box-detail em { color: #996600; }
+      .side-note { color: #888; border-color: #ccc; }
+      .disclaimer { background: #fffff0; border-color: #cc9; color: #665500; }
+      .branch-label { background: #eee; }
+      .branch-label.yes { background: #efe; color: #060; }
+      .branch-label.no { background: #fee; color: #600; }
+    }
+  </style>
+</head>
+<body>
+  <h1>Processus de Facturation</h1>
+  <p class="subtitle">Cabinet d'Avocats - Flowchart (à confirmer)</p>
+  <div class="disclaimer">Ceci est notre compréhension du processus. Merci de corriger ce qui ne correspond pas à la réalité.</div>
+
+  <div class="flowchart">
+
+    <!-- Step 1 -->
+    <div class="flow-row-with-note">
+      <div class="side-note left">On pense que le temps est saisi dans KLEOS après chaque intervention</div>
+      <div class="flow-box process">
+        <div class="box-step">Étape 1 - à confirmer</div>
+        <div class="box-title">L'avocat termine son travail</div>
+        <div class="box-detail">
+          Travail sur dossier terminé<br>
+          Saisie du temps dans KLEOS <em>(est-ce bien le cas ?)</em>
+        </div>
+        <div class="box-badge">~2 min ?</div>
+      </div>
+      <div class="side-note"></div>
+    </div>
+
+    <div class="flow-arrow">
+      <svg width="2" height="30"><line x1="1" y1="0" x2="1" y2="30" stroke="#4a4a7a" stroke-width="2"/></svg>
+    </div>
+
+    <!-- Step 2 - Decision -->
+    <div class="flow-row-with-note">
+      <div class="side-note left">Y a-t-il quelqu'un qui vérifie le temps non facturé ?</div>
+      <div class="flow-box decision">
+        <div class="box-step">Étape 2 - à confirmer</div>
+        <div class="box-title">Le temps est-il facturé rapidement ?</div>
+        <div class="box-detail">
+          On suppose qu'il peut y avoir un délai<br>
+          <em>Est-ce que quelqu'un suit le temps non facturé ?</em>
+        </div>
+        <div class="box-badge warn">?</div>
+      </div>
+      <div class="side-note">Risque : temps oublié = revenus perdus</div>
+    </div>
+
+    <!-- Branch -->
+    <div class="branch">
+      <div class="branch-path">
+        <div class="branch-label yes">Oui, rapidement</div>
+        <svg width="2" height="15"><line x1="1" y1="0" x2="1" y2="15" stroke="#4a7a4a" stroke-width="2"/></svg>
+      </div>
+      <div class="branch-path">
+        <div class="branch-label no">Non, retard / oublié</div>
+        <svg width="2" height="15"><line x1="1" y1="0" x2="1" y2="15" stroke="#7a4a4a" stroke-width="2"/></svg>
+      </div>
+    </div>
+
+    <div class="flow-arrow">
+      <svg width="2" height="15"><line x1="1" y1="0" x2="1" y2="15" stroke="#4a4a7a" stroke-width="2"/></svg>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="flow-row-with-note">
+      <div class="side-note left">Christoph (comptabilité) ?<br><em>À confirmer</em></div>
+      <div class="flow-box process">
+        <div class="box-step">Étape 3 - à confirmer</div>
+        <div class="box-title">Création de la facture</div>
+        <div class="box-detail">
+          <em>Qui s'en charge ?</em><br>
+          Créée dans KLEOS <em>(ou ailleurs ?)</em><br>
+          PDF téléchargé <em>(ou envoyé directement ?)</em>
+        </div>
+        <div class="box-badge">~10 min ?</div>
+      </div>
+      <div class="side-note">La facture est-elle vérifiée par l'avocat avant envoi ?</div>
+    </div>
+
+    <div class="flow-arrow">
+      <svg width="2" height="30"><line x1="1" y1="0" x2="1" y2="30" stroke="#4a4a7a" stroke-width="2"/></svg>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="flow-row-with-note">
+      <div class="side-note left">On pense que c'est par email depuis KLEOS</div>
+      <div class="flow-box process">
+        <div class="box-step">Étape 4 - à confirmer</div>
+        <div class="box-title">Envoi de la facture au client</div>
+        <div class="box-detail">
+          Email envoyé depuis KLEOS <em>(est-ce correct ?)</em><br>
+          <em>Certains clients reçoivent-ils par courrier ?</em>
+        </div>
+        <div class="box-badge">~5 min ?</div>
+      </div>
+      <div class="side-note">Y a-t-il un accusé de réception ?</div>
+    </div>
+
+    <div class="flow-arrow">
+      <svg width="2" height="30"><line x1="1" y1="0" x2="1" y2="30" stroke="#4a4a7a" stroke-width="2"/></svg>
+    </div>
+
+    <!-- Step 5 -->
+    <div class="flow-row-with-note">
+      <div class="side-note left">On sait que KLEOS est utilisé pour marquer les paiements</div>
+      <div class="flow-box decision">
+        <div class="box-step">Étape 5 - à confirmer</div>
+        <div class="box-title">Le client a-t-il payé ?</div>
+        <div class="box-detail">
+          Vérification via la banque <em>(on suppose)</em><br>
+          Marqué dans KLEOS <em>+ autre outil ?</em><br>
+          <em>Qui vérifie et à quelle fréquence ?</em>
+        </div>
+        <div class="box-badge warn">?</div>
+      </div>
+      <div class="side-note">Excel, logiciel comptable en parallèle ?</div>
+    </div>
+
+    <!-- Branch paid/unpaid -->
+    <div class="branch">
+      <div class="branch-path">
+        <div class="branch-label yes">Payé</div>
+        <svg width="2" height="15"><line x1="1" y1="0" x2="1" y2="15" stroke="#4a7a4a" stroke-width="2"/></svg>
+        <div class="flow-box process" style="min-width: 200px; max-width: 200px; padding: 10px 14px;">
+          <div class="box-title" style="font-size: 13px;">Terminé</div>
+          <div class="box-detail">Marqué payé dans KLEOS</div>
+        </div>
+      </div>
+      <div class="branch-path">
+        <div class="branch-label no">Impayé</div>
+        <svg width="2" height="15"><line x1="1" y1="0" x2="1" y2="15" stroke="#7a4a4a" stroke-width="2"/></svg>
+        <svg width="40" height="20"><path d="M20 0 L20 20" stroke="#7a4a4a" stroke-width="2" fill="none"/><path d="M14 14 L20 20 L26 14" stroke="#7a4a4a" stroke-width="2" fill="none"/></svg>
+      </div>
+    </div>
+
+    <!-- Step 6 - Priority -->
+    <div class="flow-row-with-note">
+      <div class="side-note left" style="border-color: #4a7a4a; color: #99ff99;">C'est ici que le cabinet a besoin d'aide en priorité</div>
+      <div class="flow-box priority">
+        <div class="box-step" style="color: #88cc88;">Étape 6 - PRIORITÉ</div>
+        <div class="box-title" style="color: #99ff99;">Relances des impayés</div>
+        <div class="box-detail">
+          <em>Comment se passent les relances aujourd'hui ?</em><br>
+          <em>Par quel moyen ? (email, tél, courrier)</em><br>
+          <em>Au bout de combien de temps ?</em><br>
+          <em>Quel est le plus gros problème ?</em>
+        </div>
+        <div class="box-badge ok">priorité</div>
+      </div>
+      <div class="side-note" style="border-color: #4a7a4a;">Objectif : automatiser les relances pour réduire les impayés</div>
+    </div>
+
+    <!-- Loop arrow -->
+    <div class="flow-arrow" style="padding: 10px 0;">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <svg width="200" height="50">
+          <path d="M100 0 L100 25 L30 25 L30 45" stroke="#7a4a4a" stroke-width="2" fill="none" stroke-dasharray="5,3"/>
+          <path d="M24 39 L30 49 L36 39" stroke="#7a4a4a" stroke-width="2" fill="none"/>
+          <text x="115" y="20" fill="#886666" font-size="11">Relance 2, 3...</text>
+        </svg>
+      </div>
+    </div>
+
+    <!-- Final outcome boxes -->
+    <div class="branch" style="padding-top: 0;">
+      <div class="branch-path">
+        <div class="flow-box process" style="min-width: 180px; max-width: 180px; padding: 10px 14px;">
+          <div class="box-title" style="font-size: 12px;">Client paie</div>
+          <div class="box-detail">Fermer le dossier</div>
+        </div>
+      </div>
+      <div class="branch-path">
+        <div class="flow-box problem" style="min-width: 180px; max-width: 180px; padding: 10px 14px;">
+          <div class="box-title" style="font-size: 12px;">Client ne paie pas</div>
+          <div class="box-detail"><em>Que se passe-t-il ensuite ?</em></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="footer">Processus de facturation - LB-BOT - À confirmer avec l'équipe comptabilité</div>
+</body>
+</html>

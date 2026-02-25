@@ -1,0 +1,47 @@
+{
+  "IsEncrypted": false,
+  "Values": {
+    "AzureWebJobsStorage": "UseDevelopmentStorage=true",
+    "FUNCTIONS_WORKER_RUNTIME": "node",
+
+    "AZURE_TENANT_ID": "your-tenant-id",
+    "AZURE_CLIENT_ID": "your-client-id",
+    "AZURE_CLIENT_SECRET": "your-client-secret",
+
+    "SESSION_SECRET": "generate-with-openssl-rand-hex-32",
+    "TOKEN_ENCRYPTION_KEY": "generate-with-openssl-rand-hex-32",
+    "INTERNAL_SERVICE_KEY": "generate-with-openssl-rand-hex-32",
+
+    "AUTH_REDIRECT_URI": "http://localhost:3000/api/auth/callback",
+    "FRONTEND_URL": "http://localhost:3000",
+
+    "SUPABASE_URL": "https://your-project.supabase.co",
+    "SUPABASE_SERVICE_KEY": "your-service-role-key",
+
+    "AZURE_SERVICE_BUS_CONNECTION_STRING": "Endpoint=sb://your-namespace.servicebus.windows.net/;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=your-key",
+    "EMAIL_PROCESS_QUEUE_NAME": "email-process",
+    "AUTO_SEND_QUEUE_NAME": "auto-send",
+
+    "AZURE_BLOB_CONNECTION_STRING": "DefaultEndpointsProtocol=https;AccountName=youraccount;AccountKey=your-key;EndpointSuffix=core.windows.net",
+    "AZURE_BLOB_CONTAINER": "lbbot-attachments",
+
+    "WEBHOOK_URL": "https://your-ngrok-subdomain.ngrok-free.app/api/webhook/graph",
+    "WEBHOOK_CLIENT_STATE": "generate-with-openssl-rand-hex-32",
+
+    "KLEOS_CLIENT_ID": "KleosFR.YOURFIRM_xxxxxx",
+    "KLEOS_CLIENT_SECRET": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+
+    "XAI_API_KEY": "your-xai-api-key",
+
+    "MONITORED_MAILBOXES": "lawyer@yourfirm.com",
+
+    "FIRM_NAME": "Your Law Firm",
+    "FIRM_EMAIL": "cabinet@yourfirm.com",
+    "FIRM_ADDRESS": "",
+    "FIRM_PHONE": ""
+  },
+  "Host": {
+    "CORS": "http://localhost:3000",
+    "CORSCredentials": true
+  }
+}
