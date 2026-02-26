@@ -22,12 +22,11 @@ export async function GET(req: NextRequest) {
   const cutoff = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
 
   try {
-    // Always scope to the authenticated user's own mailbox — never trust a client-provided value
     let query = supabaseAdmin
       .from('match_logs')
       .select('id, confidence, match_source, matched, review_approved, reviewed_at, dossier_ref, lawyer, mailbox, created_at')
-      .eq('mailbox', user.email)
       .gte('created_at', cutoff);
+    if (!user.isAdmin) query = query.eq('mailbox', user.email);
 
     const { data: logs, error } = await query;
     if (error) {

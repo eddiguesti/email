@@ -5,6 +5,12 @@ interface SessionUser {
   userId: string;
   email: string;
   name: string;
+  isAdmin: boolean;
+}
+
+function checkIsAdmin(userId: string): boolean {
+  const adminIds = process.env.ADMIN_USER_IDS || '';
+  return adminIds.split(',').map(s => s.trim()).includes(userId);
 }
 
 /**
@@ -42,10 +48,12 @@ function verifySessionToken(token: string): SessionUser | null {
     if (!payload.userId || !payload.email) return null;
     // Require exp claim — tokens without an expiry are rejected outright
     if (!payload.exp || payload.exp < Date.now()) return null;
+    const userId = payload.userId;
     return {
-      userId: payload.userId,
+      userId,
       email: payload.email,
       name: payload.name || payload.email.split('@')[0],
+      isAdmin: checkIsAdmin(userId),
     };
   } catch {
     return null;
@@ -70,7 +78,7 @@ export function getUserFromRequest(req: NextRequest): SessionUser | null {
   if (process.env.DEV_MODE === 'true') {
     const isDemo = req.cookies.get('lb_demo_mode')?.value === 'true';
     if (isDemo) {
-      return { userId: 'demo-user-1', email: 'demo@brosset-techer.fr', name: 'Utilisateur Demo' };
+      return { userId: 'demo-user-1', email: 'demo@brosset-techer.fr', name: 'Utilisateur Demo', isAdmin: false };
     }
   }
 

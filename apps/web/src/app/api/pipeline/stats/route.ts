@@ -12,12 +12,11 @@ export async function GET(req: NextRequest) {
   const days = Math.min(parseInt(searchParams.get('days') || '30', 10), 365);
   const cutoff = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
 
-  // Always scope to the authenticated user's own mailbox — never trust a client-provided value
   let query = supabaseAdmin
     .from('match_logs')
     .select('matched, confidence, match_source, mailbox, is_ebarreau, created_at')
-    .eq('mailbox', user.email)
     .gte('created_at', cutoff);
+  if (!user.isAdmin) query = query.eq('mailbox', user.email);
 
   const { data: logs, error } = await query;
   if (error) {

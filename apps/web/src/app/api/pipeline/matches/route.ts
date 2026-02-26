@@ -20,12 +20,11 @@ export async function GET(req: NextRequest) {
   const page = Math.max(parseInt(searchParams.get('page') || '1', 10), 1);
   const perPage = Math.min(parseInt(searchParams.get('per_page') || '50', 10), 200);
 
-  // Always scope to the authenticated user's own mailbox — never trust a client-provided value
   let query = supabaseAdmin
     .from('match_logs')
     .select('*', { count: 'exact' })
-    .eq('mailbox', user.email)
     .order('created_at', { ascending: false });
+  if (!user.isAdmin) query = query.eq('mailbox', user.email);
   if (matched === 'true') query = query.eq('matched', true);
   if (matched === 'false') query = query.eq('matched', false);
   if (confidenceMin) query = query.gte('confidence', parseFloat(confidenceMin));

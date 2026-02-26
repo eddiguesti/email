@@ -11,13 +11,12 @@ export async function GET(req: NextRequest) {
   const { searchParams } = req.nextUrl;
   const limit = Math.min(parseInt(searchParams.get('limit') || '20', 10), 100);
 
-  // Always scope to the authenticated user's own mailbox — never trust a client-provided value
   let query = supabaseAdmin
     .from('pipeline_runs')
     .select('*', { count: 'exact' })
-    .eq('mailbox', user.email)
     .order('started_at', { ascending: false })
     .limit(limit);
+  if (!user.isAdmin) query = query.eq('mailbox', user.email);
 
   const { data, error, count } = await query;
 
