@@ -131,10 +131,10 @@ const sections: Section[] = [
     title: 'Assistant IA',
     subtitle: 'Recherche en langage naturel',
     description:
-      'Cliquez sur l'icône ✦ en bas à droite de n'importe quelle page pour ouvrir l'assistant IA. Posez des questions sur vos emails en français naturel et obtenez des réponses instantanées.',
+      "Cliquez sur l'icône ✦ en bas à droite de n'importe quelle page pour ouvrir l'assistant IA. Posez des questions sur vos emails en français naturel et obtenez des réponses instantanées.",
     features: [
       { icon: <MessageSquare className="w-4 h-4" strokeWidth={1.8} />, label: 'Questions libres', detail: '« Emails urgents du tribunal cette semaine », « Dossiers sans réponse depuis 3 jours ».' },
-      { icon: <ScanSearch className="w-4 h-4" strokeWidth={1.8} />, label: 'Recherche sémantique', detail: 'L'IA comprend le contexte juridique et retrouve les emails pertinents même sans mot-clé exact.' },
+      { icon: <ScanSearch className="w-4 h-4" strokeWidth={1.8} />, label: 'Recherche sémantique', detail: "L'IA comprend le contexte juridique et retrouve les emails pertinents même sans mot-clé exact." },
       { icon: <Sparkles className="w-4 h-4" strokeWidth={1.8} />, label: 'Disponible partout', detail: 'Le panneau IA est accessible depuis toutes les pages du tableau de bord.' },
     ],
     link: null,
