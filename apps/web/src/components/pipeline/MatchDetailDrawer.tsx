@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   X,
@@ -212,7 +213,13 @@ export default function MatchDetailDrawer({ log, open, onClose, onReview }: Prop
   const sourceLabel = log?.match_source ? (MATCH_SOURCE_LABELS[log.match_source] || log.match_source) : null;
   const sourceColor = log?.match_source ? (MATCH_SOURCE_COLORS[log.match_source] || 'bg-gray-100 text-gray-600') : '';
 
-  return (
+  // Portal: render into document.body so CSS transforms in parent layouts
+  // don't create a new containing block for our position:fixed elements.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
+  if (!mounted) return null;
+
+  return createPortal(
     <AnimatePresence>
       {open && log && (
         <>
@@ -559,6 +566,7 @@ export default function MatchDetailDrawer({ log, open, onClose, onReview }: Prop
           </motion.aside>
         </>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   );
 }
