@@ -19,6 +19,7 @@ import './functions/get-status.js';
 import './functions/approve-dossier.js';
 import './functions/file-to-kleos.js';
 import './functions/search.js';
+import './functions/ai-search.js';
 import './functions/chat.js';
 import './functions/generate-drafts.js';
 import './functions/insert-draft.js';
