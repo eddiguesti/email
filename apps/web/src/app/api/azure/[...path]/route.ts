@@ -54,6 +54,7 @@ async function handler(req: NextRequest, { params }: Params): Promise<NextRespon
         'Authorization': `Bearer ${session}`,
       },
       body,
+      signal: AbortSignal.timeout(30_000),
     });
   } catch (err) {
     console.error('[azure-proxy] upstream fetch failed:', err);
