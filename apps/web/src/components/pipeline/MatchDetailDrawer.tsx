@@ -148,7 +148,10 @@ export default function MatchDetailDrawer({ log, open, onClose, onReview }: Prop
 
     setMsgLoad(true);
     try {
-      const res  = await fetch(`/api/messages?id=${encodeURIComponent(l.email_id)}`);
+      const msgUrl = new URL('/api/messages', window.location.origin);
+      msgUrl.searchParams.set('id', l.email_id);
+      if (l.mailbox) msgUrl.searchParams.set('mailbox', l.mailbox);
+      const res  = await fetch(msgUrl.toString());
       const data = await res.json();
 
       if (data.notFound) {
@@ -157,7 +160,10 @@ export default function MatchDetailDrawer({ log, open, onClose, onReview }: Prop
         setMessage(data.message);
         const convId = data.message.conversationId || l.conversation_id;
         if (convId) {
-          fetch(`/api/messages?conversationId=${encodeURIComponent(convId)}`)
+          const threadUrl = new URL('/api/messages', window.location.origin);
+          threadUrl.searchParams.set('conversationId', convId);
+          if (l.mailbox) threadUrl.searchParams.set('mailbox', l.mailbox);
+          fetch(threadUrl.toString())
             .then(r => r.json())
             .then(d => setThread((d.thread || []).filter((t: ThreadItem) => t.id !== l.email_id)))
             .catch(() => {});

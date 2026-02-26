@@ -1,37 +1,68 @@
 /**
- * GET /api/messages?id={messageId}             → fetch single email body + headers
- * GET /api/messages?conversationId={convId}    → fetch all emails in thread
+ * GET /api/messages?id={messageId}&mailbox={addr}          → fetch single email body + headers
+ * GET /api/messages?conversationId={convId}&mailbox={addr} → fetch all emails in thread
  *
- * Uses the authenticated user's decrypted MS Graph token.
+ * Uses app-level Graph credentials (client_credentials) so shared mailboxes are accessible.
+ * Falls back to the logged-in user's delegated token if no mailbox param is given.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserFromRequest } from '@/lib/auth-server';
-import { supabaseAdmin } from '@/lib/supabase-server';
-import { decryptToken } from '@lb-bot/shared';
 
-const GRAPH = 'https://graph.microsoft.com/v1.0';
+const GRAPH    = 'https://graph.microsoft.com/v1.0';
+const TOKEN_URL = `https://login.microsoftonline.com/${process.env.AZURE_TENANT_ID}/oauth2/v2.0/token`;
 
-async function getAccessToken(microsoftId: string): Promise<string | null> {
-  const { data } = await supabaseAdmin
-    .from('lawyers')
-    .select('access_token')
-    .eq('microsoft_id', microsoftId)
-    .single();
-  if (!data?.access_token) return null;
-  return decryptToken(data.access_token);
+// Module-level token cache so we don't hit the token endpoint on every request
+let cachedAppToken: string | null = null;
+let cachedAppTokenExpiry = 0;
+
+async function getAppToken(): Promise<string | null> {
+  if (cachedAppToken && Date.now() < cachedAppTokenExpiry) return cachedAppToken;
+
+  const clientId     = process.env.AZURE_CLIENT_ID;
+  const clientSecret = process.env.AZURE_CLIENT_SECRET;
+  const tenantId     = process.env.AZURE_TENANT_ID;
+  if (!clientId || !clientSecret || !tenantId) return null;
+
+  const body = new URLSearchParams({
+    grant_type:    'client_credentials',
+    client_id:     clientId,
+    client_secret: clientSecret,
+    scope:         'https://graph.microsoft.com/.default',
+  });
+
+  const res = await fetch(TOKEN_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: body.toString(),
+  });
+  if (!res.ok) return null;
+
+  const data = await res.json() as { access_token?: string; expires_in?: number };
+  if (!data.access_token) return null;
+
+  cachedAppToken       = data.access_token;
+  cachedAppTokenExpiry = Date.now() + ((data.expires_in ?? 3600) - 60) * 1000;
+  return cachedAppToken;
 }
 
 export async function GET(req: NextRequest) {
   const user = getUserFromRequest(req);
   if (!user) return NextResponse.json({ error: 'Non authentifié' }, { status: 401 });
 
-  const accessToken = await getAccessToken(user.userId);
+  const { searchParams } = req.nextUrl;
+  const messageId      = searchParams.get('id');
+  const conversationId = searchParams.get('conversationId');
+  const mailbox        = searchParams.get('mailbox');
+
+  // App token lets us read any mailbox in the tenant (shared mailboxes included)
+  const accessToken = await getAppToken();
   if (!accessToken) return NextResponse.json({ error: 'Token introuvable' }, { status: 401 });
 
-  const { searchParams } = req.nextUrl;
-  const messageId     = searchParams.get('id');
-  const conversationId = searchParams.get('conversationId');
+  // Route to the specific mailbox; fall back to /me if no mailbox supplied
+  const mailboxBase = mailbox
+    ? `${GRAPH}/users/${encodeURIComponent(mailbox)}`
+    : `${GRAPH}/me`;
 
   const headers = { Authorization: `Bearer ${accessToken}`, Accept: 'application/json' };
 
@@ -39,7 +70,7 @@ export async function GET(req: NextRequest) {
     // ── Single message ────────────────────────────────────────────────────
     if (messageId) {
       const select = 'id,subject,from,toRecipients,ccRecipients,receivedDateTime,body,bodyPreview,hasAttachments,conversationId,isRead,importance,internetMessageId';
-      const url    = `${GRAPH}/me/messages/${encodeURIComponent(messageId)}?$select=${select}`;
+      const url    = `${mailboxBase}/messages/${encodeURIComponent(messageId)}?$select=${select}`;
       const res    = await fetch(url, { headers, cache: 'no-store' });
 
       if (!res.ok) {
@@ -53,7 +84,7 @@ export async function GET(req: NextRequest) {
 
     // ── Thread (by conversationId) ────────────────────────────────────────
     if (conversationId) {
-      const url = new URL(`${GRAPH}/me/messages`);
+      const url = new URL(`${mailboxBase}/messages`);
       url.searchParams.set('$filter', `conversationId eq '${conversationId}'`);
       url.searchParams.set('$select', 'id,subject,from,receivedDateTime,bodyPreview,isRead,importance');
       url.searchParams.set('$orderby', 'receivedDateTime asc');
