@@ -94,11 +94,11 @@ export default function AIChatPanel() {
         }),
       });
 
-      if (!response.ok) {
-        throw new Error('Erreur de connexion');
-      }
-
       const data = await response.json();
+      if (!response.ok) {
+        const errMsg = data?.error || `Erreur ${response.status}`;
+        throw new Error(errMsg);
+      }
 
       let cleanMessage = data.message;
       if (data.action?.explanation) {
@@ -123,7 +123,7 @@ export default function AIChatPanel() {
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: "Désolé, une erreur s'est produite. Veuillez réessayer.",
+        content: `Erreur : ${error instanceof Error ? error.message : 'Veuillez réessayer.'}`,
         timestamp: new Date(),
       };
       setMessages((prev) => [...prev, errorMessage]);
