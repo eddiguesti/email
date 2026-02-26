@@ -126,8 +126,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Match not found' }, { status: 404 });
     }
 
-    // 2. Verify the match belongs to the authenticated user's mailbox
-    if (match.mailbox && match.mailbox !== user.email) {
+    // 2. Verify the match belongs to the authenticated user's mailbox (admins bypass this)
+    if (!user.isAdmin && match.mailbox && match.mailbox !== user.email) {
       return NextResponse.json({ error: 'Accès interdit' }, { status: 403 });
     }
 

@@ -6,6 +6,7 @@ import { Search, ChevronLeft, ChevronRight } from 'lucide-react';
 import type { MatchLog, MatchLogFilters } from '@/types/pipeline';
 import { getMatchLogs, reviewMatch } from '@/lib/pipeline-api';
 import MatchLogRow from '@/components/pipeline/MatchLogRow';
+import MatchDetailDrawer from '@/components/pipeline/MatchDetailDrawer';
 import FilterBar from '@/components/pipeline/FilterBar';
 import { useAuth } from '@/context/AuthContext';
 
@@ -15,6 +16,7 @@ export default function MatchesPage() {
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState<MatchLogFilters>({ page: 1, per_page: 50 });
+  const [selectedLog, setSelectedLog] = useState<MatchLog | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -47,6 +49,7 @@ export default function MatchesPage() {
   const totalPages = Math.ceil(total / perPage);
 
   return (
+    <>
     <div className="space-y-4">
       <FilterBar filters={filters} onChange={setFilters} />
 
@@ -114,7 +117,7 @@ export default function MatchesPage() {
               transition={{ delay: i * 0.02, duration: 0.25, ease: [0.25, 0.1, 0.25, 1] }}
               className="border-b border-[var(--border)] last:border-b-0"
             >
-              <MatchLogRow log={log} onReview={handleReview} showReviewActions />
+              <MatchLogRow log={log} onReview={handleReview} showReviewActions onSelect={setSelectedLog} />
             </motion.div>
           ))
         )}
@@ -142,5 +145,16 @@ export default function MatchesPage() {
         </div>
       )}
     </div>
+
+      <MatchDetailDrawer
+        log={selectedLog}
+        open={!!selectedLog}
+        onClose={() => setSelectedLog(null)}
+        onReview={(id, approved) => {
+          handleReview(id, approved);
+          setSelectedLog(null);
+        }}
+      />
+    </>
   );
 }

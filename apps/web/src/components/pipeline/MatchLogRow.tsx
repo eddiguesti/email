@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronDown, ChevronUp, Paperclip, CheckCircle, XCircle, Scale, PenLine, Copy, RefreshCw, Loader2 } from 'lucide-react';
+import { ChevronRight, ChevronDown, Paperclip, CheckCircle, XCircle, Scale, PenLine, Copy, RefreshCw, Loader2 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import type { MatchLog, DraftReplyResult } from '@/types/pipeline';
@@ -15,9 +15,11 @@ interface Props {
   log: MatchLog;
   onReview?: (id: string, approved: boolean) => void;
   showReviewActions?: boolean;
+  /** If provided, clicking the row opens the detail drawer instead of expanding inline */
+  onSelect?: (log: MatchLog) => void;
 }
 
-export default function MatchLogRow({ log, onReview, showReviewActions }: Props) {
+export default function MatchLogRow({ log, onReview, showReviewActions, onSelect }: Props) {
   const [expanded, setExpanded] = useState(false);
   const [draft, setDraft] = useState<DraftReplyResult | null>(null);
   const [draftLoading, setDraftLoading] = useState(false);
@@ -48,7 +50,7 @@ export default function MatchLogRow({ log, onReview, showReviewActions }: Props)
     <div>
       <div
         className="flex items-center gap-4 px-5 py-4 hover:bg-[var(--muted)] cursor-pointer transition-all duration-200"
-        onClick={() => setExpanded(!expanded)}
+        onClick={() => onSelect ? onSelect(log) : setExpanded(!expanded)}
       >
         {/* Status */}
         <div className="w-5 flex-shrink-0">
@@ -124,11 +126,15 @@ export default function MatchLogRow({ log, onReview, showReviewActions }: Props)
           </p>
         </div>
 
-        {/* Expand */}
+        {/* Expand / open */}
         <div className="w-5 flex-shrink-0">
-          <motion.div animate={{ rotate: expanded ? 180 : 0 }} transition={{ duration: 0.2 }}>
-            <ChevronDown className="w-4 h-4 text-[var(--muted-foreground)]" strokeWidth={1.8} />
-          </motion.div>
+          {onSelect ? (
+            <ChevronRight className="w-4 h-4 text-[var(--muted-foreground)]" strokeWidth={1.8} />
+          ) : (
+            <motion.div animate={{ rotate: expanded ? 180 : 0 }} transition={{ duration: 0.2 }}>
+              <ChevronDown className="w-4 h-4 text-[var(--muted-foreground)]" strokeWidth={1.8} />
+            </motion.div>
+          )}
         </div>
       </div>
 

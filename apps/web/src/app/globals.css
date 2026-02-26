@@ -31,6 +31,12 @@
   --radius-md: 12px;
   --radius-lg: 16px;
   --radius-xl: 20px;
+
+  /* Easing */
+  --ease-apple: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-out:   cubic-bezier(0.0, 0.0, 0.2, 1);
+  --ease-in-out: cubic-bezier(0.4, 0.0, 0.2, 1);
 }
 
 * {
@@ -196,4 +202,22 @@ body {
 ::selection {
   background: rgba(0, 113, 227, 0.15);
   color: inherit;
+}
+
+/* Snappy button press — matches Apple HIG active scale */
+button:active:not(:disabled) {
+  transform: scale(0.97);
+  transition: transform 80ms var(--ease-out);
+}
+
+/* GPU promotion for frequently animated elements */
+[data-framer-motion],
+.apple-card,
+.glass {
+  will-change: transform, opacity;
+}
+
+/* Smooth page-level scroll */
+html {
+  scroll-behavior: smooth;
 }

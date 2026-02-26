@@ -1,7 +1,6 @@
 import { app, HttpRequest, HttpResponseInit, InvocationContext } from '@azure/functions';
 import { Client } from '@microsoft/microsoft-graph-client';
-import { StorageClient } from '@lb-bot/shared';
-import { getUserIdFromRequest } from '../utils/auth.js';
+import { authenticateRequest } from '../utils/auth.js';
 
 const XAI_API_URL = 'https://api.x.ai/v1/chat/completions';
 
@@ -12,9 +11,9 @@ interface ChatMessage {
 
 async function aiSearch(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
   try {
-    const userId = getUserIdFromRequest(request);
-    if (!userId) {
-      return { status: 401, jsonBody: { error: 'Non authentifié' } };
+    const auth = await authenticateRequest(request);
+    if (!auth.success) {
+      return { status: auth.status, jsonBody: { error: auth.error } };
     }
 
     const body = await request.json() as { query: string; conversationHistory?: ChatMessage[] };
@@ -24,21 +23,10 @@ async function aiSearch(request: HttpRequest, context: InvocationContext): Promi
       return { status: 400, jsonBody: { error: 'La requête est requise' } };
     }
 
-    // Get user from database
-    const storage = new StorageClient({
-      supabaseUrl: process.env.SUPABASE_URL!,
-      supabaseKey: process.env.SUPABASE_SERVICE_KEY!,
-    });
-    const user = await storage.getUserById(userId);
-
-    if (!user || !user.access_token) {
-      return { status: 401, jsonBody: { error: 'Token d\'accès non trouvé' } };
-    }
-
-    // Create Graph client
+    // Create Graph client using the decrypted, auto-refreshed access token
     const graphClient = Client.init({
       authProvider: (done: (error: Error | null, token: string | null) => void) => {
-        done(null, user.access_token!);
+        done(null, auth.user.accessToken);
       },
     });
 
@@ -165,7 +153,7 @@ Catégories d'emails courants:
       // Response is not JSON, it's a natural language response
     }
 
-    context.log(`AI search for user ${user.email}: "${query}" -> ${searchResults.length} results`);
+    context.log(`AI search for user ${auth.user.email}: "${query}" -> ${searchResults.length} results`);
 
     return {
       status: 200,

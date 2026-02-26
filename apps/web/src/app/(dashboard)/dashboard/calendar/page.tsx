@@ -87,7 +87,7 @@ function CalendarSkeleton() {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function CalendarPage() {
-  const [view,          setView]          = useState<CalView>('agenda');
+  const [view,          setView]          = useState<CalView>('week');
   const [currentDate,   setCurrentDate]   = useState(new Date());
   const [events,        setEvents]        = useState<CalendarEvent[]>([]);
   const [suggestions,   setSuggestions]   = useState<CalendarSuggestion[]>([]);

@@ -11,16 +11,18 @@ import {
   ScanSearch,
   Activity,
   CalendarDays,
+  Compass,
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { toast } from 'sonner';
 
 const navigation = [
-  { name: 'Revue Pipeline',  href: '/dashboard/review',   icon: ScanSearch      },
+  { name: 'Pipeline',        href: '/dashboard/review',   icon: ScanSearch      },
   { name: 'Calendrier',      href: '/dashboard/calendar', icon: CalendarDays    },
   { name: 'Tableau de bord', href: '/dashboard',          icon: LayoutDashboard },
   { name: 'Activité',        href: '/dashboard/activity', icon: Activity        },
   { name: 'Paramètres',      href: '/dashboard/settings', icon: Settings        },
+  { name: 'Guide',           href: '/dashboard/tour',     icon: Compass         },
 ];
 
 export default function Sidebar() {
@@ -70,7 +72,9 @@ export default function Sidebar() {
       {/* Navigation */}
       <nav className="flex-1 px-3 py-2 space-y-0.5 overflow-y-auto">
         {navigation.map((item) => {
-          const isActive = pathname === item.href || pathname?.startsWith(item.href + '/');
+          const isActive = item.href === '/dashboard'
+            ? pathname === '/dashboard'
+            : pathname === item.href || pathname?.startsWith(item.href + '/');
           return (
             <Link
               key={item.name}
