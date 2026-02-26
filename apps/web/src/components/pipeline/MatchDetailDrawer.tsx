@@ -220,10 +220,10 @@ export default function MatchDetailDrawer({ log, open, onClose, onReview }: Prop
   if (!mounted) return null;
 
   return createPortal(
-    <AnimatePresence>
-      {open && log && (
-        <>
-          {/* ── Backdrop ──────────────────────────────────────────────────── */}
+    <>
+      {/* ── Backdrop — separate AnimatePresence so FM12 tracks it directly ── */}
+      <AnimatePresence>
+        {open && log && (
           <motion.div
             key="backdrop"
             initial={{ opacity: 0 }}
@@ -233,8 +233,12 @@ export default function MatchDetailDrawer({ log, open, onClose, onReview }: Prop
             className="fixed inset-0 z-40 bg-black/20 backdrop-blur-[2px]"
             onClick={onClose}
           />
+        )}
+      </AnimatePresence>
 
-          {/* ── Panel ─────────────────────────────────────────────────────── */}
+      {/* ── Panel — separate AnimatePresence ─────────────────────────────── */}
+      <AnimatePresence>
+        {open && log && (
           <motion.aside
             key="drawer"
             variants={PANEL}
@@ -564,9 +568,9 @@ export default function MatchDetailDrawer({ log, open, onClose, onReview }: Prop
 
             </motion.div>{/* end stagger wrapper */}
           </motion.aside>
-        </>
-      )}
-    </AnimatePresence>,
+        )}
+      </AnimatePresence>
+    </>,
     document.body
   );
 }
