@@ -21,6 +21,17 @@ interface Props {
   data: DataPoint[];
 }
 
+// Defined at module level — not re-created on every render.
+const tooltipContentStyle: React.CSSProperties = {
+  backgroundColor: '#ffffff',
+  border: 'none',
+  borderRadius: '12px',
+  boxShadow: '0 8px 30px rgba(0, 0, 0, 0.08)',
+  padding: '12px 16px',
+};
+const tooltipLabelStyle: React.CSSProperties = { color: '#1d1d1f', fontWeight: 500, fontSize: 13 };
+const tooltipItemStyle:  React.CSSProperties = { fontSize: 12 };
+
 export default function MatchRateChart({ data }: Props) {
   const chartData = data.map(d => ({
     ...d,
@@ -73,15 +84,9 @@ export default function MatchRateChart({ data }: Props) {
               tick={{ fill: '#86868b', fontSize: 11 }}
             />
             <Tooltip
-              contentStyle={{
-                backgroundColor: '#ffffff',
-                border: 'none',
-                borderRadius: '12px',
-                boxShadow: '0 8px 30px rgba(0, 0, 0, 0.08)',
-                padding: '12px 16px',
-              }}
-              labelStyle={{ color: '#1d1d1f', fontWeight: 500, fontSize: 13 }}
-              itemStyle={{ fontSize: 12 }}
+              contentStyle={tooltipContentStyle}
+              labelStyle={tooltipLabelStyle}
+              itemStyle={tooltipItemStyle}
             />
             <Area
               type="monotone"

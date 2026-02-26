@@ -219,20 +219,18 @@ function InvoicesContent() {
       toast.warning('Sélectionnez des factures');
       return;
     }
-    let sent = 0;
-    for (const id of selectedInvoices) {
-      try {
-        await fetch(`${API_BASE}/invoices/${id}/remind`, {
+    // Fire all reminder requests in parallel instead of one-by-one.
+    const results = await Promise.allSettled(
+      [...selectedInvoices].map(id =>
+        fetch(`${API_BASE}/invoices/${id}/remind`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
           body: JSON.stringify({}),
-        });
-        sent++;
-      } catch (error) {
-        console.error(`Error sending reminder for ${id}:`, error);
-      }
-    }
+        })
+      )
+    );
+    const sent = results.filter(r => r.status === 'fulfilled').length;
     toast.success(`${sent} relance(s) envoyée(s)`);
     setSelectedInvoices(new Set());
     fetchInvoices();
