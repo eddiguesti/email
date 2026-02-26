@@ -2,14 +2,19 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import dynamic from 'next/dynamic';
 import { motion } from 'framer-motion';
 import Sidebar from '@/components/Sidebar';
-import AIChatPanel from '@/components/AIChatPanel';
 import NotificationBell from '@/components/NotificationBell';
-import OnboardingModal from '@/components/OnboardingModal';
 import { useAuth } from '@/context/AuthContext';
 import { getUserPreferences } from '@/lib/pipeline-api';
 import { Loader2 } from 'lucide-react';
+
+// Lazy-load heavy panels — excluded from the initial JS bundle so first-load
+// JavaScript is smaller. AIChatPanel is hidden on mount; OnboardingModal only
+// appears for first-time users.
+const AIChatPanel     = dynamic(() => import('@/components/AIChatPanel'),    { ssr: false });
+const OnboardingModal = dynamic(() => import('@/components/OnboardingModal'), { ssr: false });
 
 export default function DashboardLayout({
   children,

@@ -45,6 +45,10 @@ const nextConfig: NextConfig = {
   async headers() {
     return [{ source: '/:path*', headers: SECURITY_HEADERS }];
   },
+  images: {
+    // Serve AVIF/WebP when the browser supports them — same visual quality, 30-50% smaller files.
+    formats: ['image/avif', 'image/webp'],
+  },
 };
 
 export default nextConfig;

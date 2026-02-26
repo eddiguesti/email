@@ -1,0 +1,28 @@
+# Large files and directories not needed for the web app build
+_archive/
+llms.txt
+SYSTEM-DOCUMENTATION.md
+*.jpg
+*.webp
+*.png
+*.pdf
+
+# Non-web app source
+apps/api/
+apps/worker/
+apps/outlook-addin/
+
+# Build artifacts (rebuilt on Vercel)
+packages/shared/dist/
+packages/shared/node_modules/
+apps/api/node_modules/
+apps/worker/node_modules/
+
+# Secrets and local config
+config/.env
+apps/api/local.settings.json
+apps/worker/local.settings.json
+config/kleos-config.txt
+
+# Misc
+.turbo/
