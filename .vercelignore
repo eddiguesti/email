@@ -2,10 +2,11 @@
 _archive/
 llms.txt
 SYSTEM-DOCUMENTATION.md
-*.jpg
-*.webp
-*.png
-*.pdf
+# Only exclude images at the monorepo root (not inside apps/web/public/)
+/*.jpg
+/*.webp
+/*.png
+/*.pdf
 
 # Non-web app source
 apps/api/
