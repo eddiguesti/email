@@ -16,6 +16,7 @@ import {
   User,
   Inbox,
   AlertCircle,
+  Send,
 } from 'lucide-react';
 import { formatDistanceToNow, format } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -136,6 +137,10 @@ export default function MatchDetailDrawer({ log, open, onClose, onReview }: Prop
   const [draftLoading, setDraftLoading] = useState(false);
   const [draftError,   setDraftError]   = useState<string | null>(null);
   const [copied,       setCopied]       = useState(false);
+  const [editedDraft,  setEditedDraft]  = useState('');
+  const [sending,      setSending]      = useState(false);
+  const [sendError,    setSendError]    = useState<string | null>(null);
+  const [sent,         setSent]         = useState(false);
 
   const [reviewLoading, setReviewLoading] = useState(false);
   const [reviewError,   setReviewError]   = useState<string | null>(null);
@@ -147,6 +152,10 @@ export default function MatchDetailDrawer({ log, open, onClose, onReview }: Prop
     setNotFound(false);
     setDraft(null);
     setDraftError(null);
+    setEditedDraft('');
+    setSending(false);
+    setSendError(null);
+    setSent(false);
     if (!l.email_id) return;
 
     setMsgLoad(true);
@@ -199,9 +208,12 @@ export default function MatchDetailDrawer({ log, open, onClose, onReview }: Prop
     if (!log) return;
     setDraftLoading(true);
     setDraftError(null);
+    setSent(false);
+    setSendError(null);
     try {
       const result = await generateDraftReply(log.id);
       setDraft(result);
+      setEditedDraft(result.draft);
     } catch (err) {
       setDraftError((err as Error).message || 'Erreur de génération');
     } finally {
@@ -209,9 +221,36 @@ export default function MatchDetailDrawer({ log, open, onClose, onReview }: Prop
     }
   }
 
+  async function handleSend() {
+    if (!log?.email_id || !log?.mailbox || !editedDraft.trim()) return;
+    setSending(true);
+    setSendError(null);
+    try {
+      const res = await fetch('/api/pipeline/send-reply', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          matchId:   log.id,
+          emailId:   log.email_id,
+          mailbox:   log.mailbox,
+          replyText: editedDraft.trim(),
+        }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({})) as { error?: string };
+        throw new Error(data.error || `Erreur ${res.status}`);
+      }
+      setSent(true);
+    } catch (err) {
+      setSendError((err as Error).message || "Erreur lors de l'envoi");
+    } finally {
+      setSending(false);
+    }
+  }
+
   async function handleCopy() {
-    if (!draft) return;
-    await navigator.clipboard.writeText(draft.draft);
+    if (!editedDraft) return;
+    await navigator.clipboard.writeText(editedDraft);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   }
@@ -533,27 +572,59 @@ export default function MatchDetailDrawer({ log, open, onClose, onReview }: Prop
                         </span>
                         <span className="text-[10px] text-[var(--muted-foreground)]">{draft.styleMatch}</span>
                       </div>
-                      <div className="bg-[var(--muted)] border-l-2 border-l-[var(--accent)] rounded-xl p-4">
-                        <p className="text-[13px] text-[var(--foreground)] whitespace-pre-wrap leading-relaxed">
-                          {draft.draft}
-                        </p>
-                      </div>
-                      <div className="flex gap-2">
-                        <button
-                          onClick={handleCopy}
-                          className="flex items-center gap-1.5 px-3.5 py-2 text-[12px] font-medium rounded-xl bg-[var(--foreground)] text-white hover:opacity-90 transition-opacity duration-150"
-                        >
-                          <Copy className="w-3.5 h-3.5" strokeWidth={1.8} />
-                          {copied ? 'Copié !' : 'Copier'}
-                        </button>
-                        <button
-                          onClick={() => { setDraft(null); handleGenerateDraft(); }}
-                          className="flex items-center gap-1.5 px-3.5 py-2 text-[12px] font-medium rounded-xl bg-[var(--muted)] text-[var(--foreground)] hover:bg-[var(--foreground)]/10 transition-colors duration-150"
-                        >
-                          <RefreshCw className="w-3.5 h-3.5" strokeWidth={1.8} />
-                          Régénérer
-                        </button>
-                      </div>
+
+                      {sent ? (
+                        <div className="flex items-center gap-2 px-4 py-3 bg-emerald-50 border border-emerald-200 rounded-xl text-[13px] font-medium text-emerald-700">
+                          <CheckCircle className="w-4 h-4 flex-shrink-0" strokeWidth={1.8} />
+                          Réponse envoyée avec votre signature
+                        </div>
+                      ) : (
+                        <>
+                          <textarea
+                            value={editedDraft}
+                            onChange={e => { setEditedDraft(e.target.value); setSendError(null); }}
+                            disabled={sending}
+                            rows={8}
+                            className="w-full text-[13px] text-[var(--foreground)] leading-relaxed bg-[var(--muted)] border border-transparent focus:border-[var(--accent)] focus:outline-none rounded-xl p-4 resize-none disabled:opacity-60 transition-colors duration-150"
+                          />
+                          {sendError && (
+                            <div className="flex items-center gap-1.5 text-[12px] text-red-500">
+                              <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" strokeWidth={1.8} />
+                              {sendError}
+                            </div>
+                          )}
+                          <div className="flex gap-2 flex-wrap">
+                            <button
+                              onClick={handleSend}
+                              disabled={sending || !editedDraft.trim()}
+                              className="flex items-center gap-1.5 px-3.5 py-2 text-[12px] font-medium rounded-xl bg-[var(--accent)] text-white hover:opacity-90 transition-opacity duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              {sending ? (
+                                <Loader2 className="w-3.5 h-3.5 animate-spin" strokeWidth={1.8} />
+                              ) : (
+                                <Send className="w-3.5 h-3.5" strokeWidth={1.8} />
+                              )}
+                              {sending ? 'Envoi…' : 'Envoyer avec signature'}
+                            </button>
+                            <button
+                              onClick={handleCopy}
+                              disabled={sending}
+                              className="flex items-center gap-1.5 px-3.5 py-2 text-[12px] font-medium rounded-xl bg-[var(--muted)] text-[var(--foreground)] hover:bg-[var(--foreground)]/10 transition-colors duration-150 disabled:opacity-50"
+                            >
+                              <Copy className="w-3.5 h-3.5" strokeWidth={1.8} />
+                              {copied ? 'Copié !' : 'Copier'}
+                            </button>
+                            <button
+                              onClick={() => { setDraft(null); setEditedDraft(''); setSent(false); setSendError(null); handleGenerateDraft(); }}
+                              disabled={sending}
+                              className="flex items-center gap-1.5 px-3.5 py-2 text-[12px] font-medium rounded-xl bg-[var(--muted)] text-[var(--foreground)] hover:bg-[var(--foreground)]/10 transition-colors duration-150 disabled:opacity-50"
+                            >
+                              <RefreshCw className="w-3.5 h-3.5" strokeWidth={1.8} />
+                              Régénérer
+                            </button>
+                          </div>
+                        </>
+                      )}
                     </div>
                   )}
                 </motion.div>
