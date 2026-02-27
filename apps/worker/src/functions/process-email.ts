@@ -135,7 +135,8 @@ async function sendPushNotifications(
 
 /**
  * Detect meeting intent and persist a calendar suggestion (idempotent).
- * Privacy: only the first 1000 chars of plain-text body are passed to the detector.
+ * Privacy: only the first 3000 chars of plain-text body are passed to the detector.
+ * This covers quoted reply sections where meeting details often appear.
  * Raw body is never stored; only the evidence snippet (≤ 500 chars) is persisted.
  */
 async function createCalendarSuggestionIfNeeded(
@@ -149,10 +150,10 @@ async function createCalendarSuggestionIfNeeded(
     const from = message.from?.emailAddress?.address || message.sender?.emailAddress?.address || '';
     const subject = message.subject || '';
 
-    // Extract body snippet (plain text, max 1000 chars)
+    // Extract body snippet (plain text, max 3000 chars — covers quoted reply sections)
     const rawBody = message.body?.content || '';
     const plainBody = message.body?.contentType === 'html' ? stripHtml(rawBody) : rawBody;
-    const bodySnippet = plainBody.slice(0, 1000);
+    const bodySnippet = plainBody.slice(0, 3000);
 
     const intent = detectMeetingIntent(from, subject, bodySnippet);
     if (!intent) return;
