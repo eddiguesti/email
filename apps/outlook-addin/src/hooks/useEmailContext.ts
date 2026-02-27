@@ -10,6 +10,8 @@ export interface EmailInfo {
   receivedAt: string;
   mailbox: string;
   hasAttachments: boolean;
+  /** Outlook importance flag from the selected email */
+  importance: 'low' | 'normal' | 'high';
 }
 
 export function useEmailContext() {
@@ -92,6 +94,12 @@ export function useEmailContext() {
         // Ignore - not always available
       }
 
+      // Read the Outlook importance flag (synchronous property)
+      const rawImportance = (item as any).importance as string | undefined;
+      const importance: 'low' | 'normal' | 'high' =
+        rawImportance === 'high' ? 'high' :
+        rawImportance === 'low'  ? 'low'  : 'normal';
+
       const info: EmailInfo = {
         messageId,
         internetMessageId,
@@ -102,6 +110,7 @@ export function useEmailContext() {
         receivedAt: dateReceived.toISOString(),
         mailbox,
         hasAttachments: item.attachments?.length > 0,
+        importance,
       };
 
       setEmailInfo(info);

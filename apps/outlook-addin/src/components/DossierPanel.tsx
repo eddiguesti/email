@@ -17,6 +17,7 @@ import {
   GavelRegular,
   MailInboxRegular,
   DeleteRegular,
+  ImportantRegular,
 } from '@fluentui/react-icons';
 import { useStore } from '../hooks/useStore';
 import type { EmailInfo } from '../hooks/useEmailContext';
@@ -172,6 +173,14 @@ export default function DossierPanel({ emailInfo, status }: DossierPanelProps) {
 
   return (
     <div className="p-4 space-y-4">
+      {/* Urgency banner — shown when sender flagged the email as high importance */}
+      {emailInfo.importance === 'high' && (
+        <div className="flex items-center gap-2 px-3 py-2 bg-red-50 border border-red-200 rounded-lg animate-fade-in">
+          <ImportantRegular className="w-4 h-4 text-red-500 flex-shrink-0" />
+          <span className="text-sm font-medium text-red-700">Email marqué urgent</span>
+        </div>
+      )}
+
       {/* Status Badge */}
       {record?.status && (
         <div className="flex items-center gap-2 animate-fade-in">

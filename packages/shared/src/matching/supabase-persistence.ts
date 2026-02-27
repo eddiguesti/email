@@ -15,6 +15,34 @@ export function hashSubject(subject: string): string {
   return createHash('sha256').update(subject).digest('hex').slice(0, 32);
 }
 
+/** French + English urgency keywords scanned in the subject line */
+const URGENCY_KEYWORDS = [
+  'urgent', 'urgence', 'urgente', 'urgentes', 'urgents',
+  'important', 'importante', 'importants', 'importantes',
+  'priorité', 'prioritaire', 'prioritaires',
+  'immédiat', 'immédiate', 'immédiatement',
+  'deadline', 'échéance', 'délai impératif',
+  'réponse requise', 'réponse souhaitée', 'réponse attendue',
+  'rappel', 'relance',
+  'tribunal', 'audience', 'convocation', 'assignation',
+  'mise en demeure', 'injonction',
+];
+
+/**
+ * Detect urgency from Outlook importance flag and/or subject keywords.
+ * Returns 'high' if the sender flagged it important OR the subject contains urgency signals.
+ */
+export function detectEmailImportance(
+  importanceFlag: string | undefined,
+  subject: string
+): 'low' | 'normal' | 'high' {
+  if (importanceFlag === 'high') return 'high';
+  if (importanceFlag === 'low') return 'low';
+  const lower = subject.toLowerCase();
+  if (URGENCY_KEYWORDS.some(kw => lower.includes(kw))) return 'high';
+  return 'normal';
+}
+
 /**
  * Save a match log to Supabase.
  */
@@ -40,6 +68,8 @@ export async function saveMatchLog(
     };
     const category = classifyCategory(categoryInput);
 
+    const emailImportance = detectEmailImportance(email.importance, email.subject || '');
+
     await supabase.from('match_logs').upsert({
       mailbox,
       email_id: email.id,
@@ -62,6 +92,7 @@ export async function saveMatchLog(
       action_taken: action,
       category_label: category.label,
       category_color: category.color,
+      email_importance: emailImportance,
     }, { onConflict: 'email_id,mailbox' });
   } catch (err) {
     console.log(`  ⚠️  DB log failed: ${(err as Error).message?.slice(0, 60)}`);

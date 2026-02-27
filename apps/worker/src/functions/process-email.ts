@@ -13,6 +13,8 @@ import {
   createKleosClientFromEnv,
   detectMeetingIntent,
   stripHtml,
+  saveMatchLog,
+  parseEBarreau,
   type EmailProcessJob,
   type ProcessingRecord,
   type GraphMessage,
@@ -381,6 +383,54 @@ export async function processEmail(
     }
 
     record = (await storageClient.getProcessingRecord(message.mailbox, message.messageId))!;
+
+    // Persist to Supabase match_logs (non-fatal: DB write must not break email processing)
+    if (cachedMessage) {
+      try {
+        const db = getSupabase();
+        const topMatch = record.matchResults?.[0];
+        const matchForLog = topMatch ? {
+          dossierId: parseInt(topMatch.dossierId, 10),
+          dossierName: topMatch.dossierName,
+          dossierRef: topMatch.dossierRef,
+          confidence: topMatch.confidence,
+          reasons: topMatch.reasons,
+          source: topMatch.source,
+          lawyer: topMatch.lawyer,
+        } : null;
+
+        const action = record.status === 'MATCHED' ? 'auto_filed'
+          : record.status === 'SKIPPED' ? 'skipped'
+          : topMatch ? 'review'
+          : 'dry_run';
+
+        const bodyText = cachedMessage.body?.contentType === 'html'
+          ? stripHtml(cachedMessage.body.content)
+          : (cachedMessage.body?.content || cachedMessage.bodyPreview || '');
+        const eBarreauData = parseEBarreau(cachedMessage.subject, bodyText.slice(0, 500));
+
+        await saveMatchLog(
+          db,
+          message.mailbox,
+          {
+            id: cachedMessage.id,
+            subject: cachedMessage.subject,
+            receivedDateTime: cachedMessage.receivedDateTime,
+            hasAttachments: cachedMessage.hasAttachments,
+            bodyPreview: cachedMessage.bodyPreview,
+            from: cachedMessage.from,
+            conversationId: cachedMessage.conversationId,
+            importance: cachedMessage.importance,
+          },
+          matchForLog,
+          action,
+          eBarreauData.isEBarreau,
+          {}
+        );
+      } catch (err) {
+        context.warn('match_logs write failed (non-fatal):', err);
+      }
+    }
 
     // READ-ONLY MODE: Stop here — do NOT generate drafts or file to KLEOS
     if (READ_ONLY_MODE) {

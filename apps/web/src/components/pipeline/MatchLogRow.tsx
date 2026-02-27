@@ -2,10 +2,11 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronRight, ChevronDown, Paperclip, CheckCircle, XCircle, Scale, PenLine, Copy, RefreshCw, Loader2 } from 'lucide-react';
+import { ChevronRight, ChevronDown, Paperclip, CheckCircle, XCircle, Scale, PenLine, Copy, RefreshCw, Loader2, AlertCircle, Clock, HelpCircle } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import type { MatchLog, DraftReplyResult } from '@/types/pipeline';
+import { getActionStatus, ACTION_STATUS_CONFIG } from '@/types/pipeline';
 import { generateDraftReply } from '@/lib/pipeline-api';
 import ConfidenceBadge from './ConfidenceBadge';
 import MatchSourceTag from './MatchSourceTag';
@@ -25,6 +26,9 @@ export default function MatchLogRow({ log, onReview, showReviewActions, onSelect
   const [draftLoading, setDraftLoading] = useState(false);
   const [draftError, setDraftError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+
+  const actionStatus = getActionStatus(log);
+  const actionCfg = ACTION_STATUS_CONFIG[actionStatus];
 
   async function handleGenerateDraft() {
     setDraftLoading(true);
@@ -47,18 +51,19 @@ export default function MatchLogRow({ log, onReview, showReviewActions, onSelect
   }
 
   return (
-    <div>
+    <div className="relative">
+      {/* Left urgency accent bar */}
+      {actionStatus !== 'done' && (
+        <div className={`absolute left-0 top-0 bottom-0 w-[3px] rounded-r-sm ${actionCfg.accentBg}`} />
+      )}
+
       <div
         className="flex items-center gap-4 px-5 py-4 hover:bg-[var(--muted)] cursor-pointer transition-all duration-200"
         onClick={() => onSelect ? onSelect(log) : setExpanded(!expanded)}
       >
-        {/* Status */}
+        {/* Status dot — urgency-aware */}
         <div className="w-5 flex-shrink-0">
-          {log.matched ? (
-            <div className="w-2 h-2 rounded-full bg-emerald-400" />
-          ) : (
-            <div className="w-2 h-2 rounded-full bg-gray-200" />
-          )}
+          <div className={`w-2 h-2 rounded-full ${actionCfg.dotClass} ${actionCfg.pulse ? 'animate-pulse' : ''}`} />
         </div>
 
         {/* Sender */}
@@ -96,9 +101,17 @@ export default function MatchLogRow({ log, onReview, showReviewActions, onSelect
           <p className="text-[11px] text-[var(--muted-foreground)] truncate">{log.lawyer || '-'}</p>
         </div>
 
-        {/* Category */}
-        <div className="w-36 flex-shrink-0 hidden lg:block">
+        {/* Category + Action badge */}
+        <div className="w-36 flex-shrink-0 hidden lg:block space-y-1">
           <CategoryBadge color={log.category_color} />
+          {actionStatus !== 'done' && (
+            <span className={`inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-medium rounded-full border ${actionCfg.badgeClass}`}>
+              {actionStatus === 'urgent' && <AlertCircle className="w-2.5 h-2.5" strokeWidth={2.5} />}
+              {actionStatus === 'to_review' && <Clock className="w-2.5 h-2.5" strokeWidth={2.5} />}
+              {actionStatus === 'unclassified' && <HelpCircle className="w-2.5 h-2.5" strokeWidth={2.5} />}
+              {actionCfg.label}
+            </span>
+          )}
         </div>
 
         {/* Icons */}

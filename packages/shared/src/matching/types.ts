@@ -111,6 +111,8 @@ export interface GraphEmailData {
   bodyPreview: string;
   from: { emailAddress: { name: string; address: string } };
   conversationId?: string;
+  /** Outlook importance flag set by the sender ('low' | 'normal' | 'high') */
+  importance?: 'low' | 'normal' | 'high';
 }
 
 export interface PipelineRunStats {

@@ -76,10 +76,15 @@ export default function App() {
   return (
     <div className="flex flex-col h-screen bg-gray-50">
       {/* Header */}
-      <header className="bg-white border-b border-gray-200 px-4 py-3">
-        <h1 className="text-lg font-semibold text-gray-900 truncate">
-          {emailInfo.subject || 'No Subject'}
-        </h1>
+      <header className={`border-b px-4 py-3 ${emailInfo.importance === 'high' ? 'bg-red-50 border-red-200' : 'bg-white border-gray-200'}`}>
+        <div className="flex items-center gap-1.5 min-w-0">
+          {emailInfo.importance === 'high' && (
+            <span className="w-2 h-2 rounded-full bg-red-500 flex-shrink-0 animate-pulse" />
+          )}
+          <h1 className="text-lg font-semibold text-gray-900 truncate">
+            {emailInfo.subject || 'No Subject'}
+          </h1>
+        </div>
         <p className="text-sm text-gray-500 truncate">
           From: {emailInfo.sender}
         </p>

@@ -25,6 +25,8 @@ export interface MatchLog {
   review_approved: boolean | null;
   category_label: string | null;
   category_color: string | null;
+  /** Outlook importance flag + urgency keyword detection ('low' | 'normal' | 'high') */
+  email_importance: 'low' | 'normal' | 'high' | null;
 }
 
 export interface PipelineRun {
@@ -215,6 +217,68 @@ export const CATEGORY_STYLES: Record<string, string> = {
   blue: 'bg-blue-100 text-blue-700 border-blue-200',
   grey: 'bg-gray-100 text-gray-500 border-gray-200',
   purple: 'bg-purple-100 text-purple-700 border-purple-200',
+};
+
+// ── Action / Urgency Status ──────────────────────────────────────────────────
+
+export type ActionStatus = 'urgent' | 'to_review' | 'unclassified' | 'done';
+
+/** Derive what action the lawyer needs to take on this match */
+export function getActionStatus(log: MatchLog): ActionStatus {
+  // Already handled
+  if (log.review_approved === true) return 'done';
+  if (log.action_taken === 'auto_filed') return 'done';
+  // Matched but awaiting review
+  if (log.matched && log.review_approved === null) {
+    // Sender explicitly flagged high importance OR urgency keywords detected in subject
+    if (log.email_importance === 'high') return 'urgent';
+    // Time-based escalation: pending review for more than 48h
+    const ageMs = log.received_at
+      ? Date.now() - new Date(log.received_at).getTime()
+      : 0;
+    return ageMs / (1000 * 60 * 60 * 24) >= 2 ? 'urgent' : 'to_review';
+  }
+  // Not matched — needs manual classification
+  if (!log.matched) {
+    // High importance unmatched = extra urgent
+    if (log.email_importance === 'high') return 'urgent';
+    return 'unclassified';
+  }
+  return 'done';
+}
+
+export const ACTION_STATUS_CONFIG: Record<
+  ActionStatus,
+  { label: string; accentBg: string; badgeClass: string; dotClass: string; pulse: boolean }
+> = {
+  urgent: {
+    label: 'Urgent',
+    accentBg: 'bg-red-400',
+    badgeClass: 'bg-red-50 text-red-600 border-red-200',
+    dotClass: 'bg-red-400',
+    pulse: true,
+  },
+  to_review: {
+    label: 'À revoir',
+    accentBg: 'bg-amber-400',
+    badgeClass: 'bg-amber-50 text-amber-600 border-amber-200',
+    dotClass: 'bg-amber-400',
+    pulse: false,
+  },
+  unclassified: {
+    label: 'À classer',
+    accentBg: 'bg-slate-300',
+    badgeClass: 'bg-slate-100 text-slate-500 border-slate-200',
+    dotClass: 'bg-gray-300',
+    pulse: false,
+  },
+  done: {
+    label: '',
+    accentBg: '',
+    badgeClass: '',
+    dotClass: 'bg-emerald-400',
+    pulse: false,
+  },
 };
 
 export interface DraftReplyResult {

@@ -16,8 +16,31 @@ export default function FilterBar({ filters, onChange }: Props) {
     onChange({ ...filters, ...partial, page: 1 });
   };
 
+  // Derive quick-filter value from current filter state
+  const quickFilter =
+    filters.matched === true && filters.reviewed === 'false' ? 'to_review' :
+    filters.matched === false ? 'unclassified' :
+    '';
+
+  const applyQuickFilter = (v: string) => {
+    if (v === 'to_review')    update({ matched: true,      reviewed: 'false' });
+    else if (v === 'unclassified') update({ matched: false, reviewed: undefined });
+    else                      update({ matched: undefined, reviewed: undefined });
+  };
+
   return (
     <div className="flex flex-wrap gap-2.5 p-5 bg-white rounded-2xl shadow-[var(--shadow-card)]">
+      {/* Quick action preset — most common lawyer workflow */}
+      <select
+        value={quickFilter}
+        onChange={(e) => applyQuickFilter(e.target.value)}
+        className={selectClasses}
+      >
+        <option value="">Action : tous</option>
+        <option value="to_review">À revoir</option>
+        <option value="unclassified">À classer</option>
+      </select>
+
       <select
         value={filters.matched === undefined ? '' : String(filters.matched)}
         onChange={(e) => {
