@@ -17,6 +17,8 @@ export interface StyleProfile {
 export interface DraftReplyInput {
   senderName: string;
   senderEmail: string;
+  subject?: string;       // Original email subject
+  emailBody?: string;     // Plain-text body of the email being replied to
   dossierRef: string | null;
   dossierName: string | null;
   matchReasons: string[];

@@ -138,6 +138,8 @@ export default function ReviewQueuePage() {
 
             <ReviewActions
               matchId={item.id}
+              emailId={item.email_id ?? undefined}
+              mailbox={item.mailbox ?? undefined}
               reviewedBy={reviewerEmail}
               onReviewed={(id, _approved) => handleReviewed(id)}
             />

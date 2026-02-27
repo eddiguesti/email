@@ -34,14 +34,10 @@ export default function MatchesPage() {
   useEffect(() => { load(); }, [load]);
 
   const handleReview = async (id: string, approved: boolean) => {
-    try {
-      await reviewMatch(id, approved);
-      setLogs(prev => prev.map(l =>
-        l.id === id ? { ...l, review_approved: approved, reviewed_by: user?.email ?? null, reviewed_at: new Date().toISOString() } : l
-      ));
-    } catch {
-      // Fail silently
-    }
+    await reviewMatch(id, approved); // let errors propagate so the drawer can show them
+    setLogs(prev => prev.map(l =>
+      l.id === id ? { ...l, review_approved: approved, reviewed_by: user?.email ?? null, reviewed_at: new Date().toISOString() } : l
+    ));
   };
 
   const page = filters.page || 1;
@@ -150,10 +146,7 @@ export default function MatchesPage() {
         log={selectedLog}
         open={!!selectedLog}
         onClose={() => setSelectedLog(null)}
-        onReview={(id, approved) => {
-          handleReview(id, approved);
-          setSelectedLog(null);
-        }}
+        onReview={(id, approved) => handleReview(id, approved)}
       />
     </>
   );

@@ -10,7 +10,7 @@ import {
 } from '@lb-bot/shared/drafting';
 
 const XAI_API_URL = 'https://api.x.ai/v1/chat/completions';
-const XAI_MODEL = 'grok-4-1-fast-reasoning';
+const XAI_MODEL = 'grok-3-latest';
 
 /**
  * Acquire a Graph API token using client_credentials flow.
@@ -144,15 +144,46 @@ export async function POST(req: NextRequest) {
       model: process.env.XAI_MODEL || XAI_MODEL,
     };
 
-    // 4. Get or create style profile for the lawyer
+    // 4. Fetch the actual email body so the AI can reply to what was written
+    let emailSubject: string | undefined;
+    let emailBody: string | undefined;
+    if (match.email_id && match.mailbox) {
+      try {
+        const graphToken = await getGraphToken();
+        const GRAPH = 'https://graph.microsoft.com/v1.0';
+        const msgUrl = `${GRAPH}/users/${encodeURIComponent(match.mailbox)}/messages/${encodeURIComponent(match.email_id)}?$select=subject,body,bodyPreview`;
+        const msgRes = await fetch(msgUrl, {
+          headers: { Authorization: `Bearer ${graphToken}` },
+          signal: AbortSignal.timeout(10_000),
+        });
+        if (msgRes.ok) {
+          const msg = await msgRes.json() as {
+            subject?: string;
+            bodyPreview?: string;
+            body?: { contentType?: string; content?: string };
+          };
+          emailSubject = msg.subject || undefined;
+          const rawBody = msg.body?.contentType === 'html'
+            ? msg.body.content?.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()
+            : msg.body?.content || msg.bodyPreview || '';
+          emailBody = rawBody ? rawBody.slice(0, 2500) : undefined;
+        }
+      } catch {
+        // Non-fatal — generate without email body
+      }
+    }
+
+    // 5. Get or create style profile for the lawyer
     const lawyerEmail = match.mailbox || match.lawyer || '';
     const displayName = match.lawyer || lawyerEmail.split('@')[0];
     const style = await getOrCreateStyleProfile(lawyerEmail, displayName, aiConfig);
 
-    // 5. Generate draft reply
+    // 6. Generate draft reply
     const result = await generateDraftReply(style, {
       senderName: match.sender_name || '',
       senderEmail: match.sender_email || '',
+      subject: emailSubject,
+      emailBody,
       dossierRef: match.dossier_ref || null,
       dossierName: match.dossier_name || null,
       matchReasons: match.match_reasons || [],
