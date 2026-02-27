@@ -14,17 +14,26 @@ export interface StyleProfile {
   expiresAt: string;
 }
 
+export interface ConversationMessage {
+  from: string;
+  date: string;
+  bodyPreview: string;
+}
+
 export interface DraftReplyInput {
   senderName: string;
   senderEmail: string;
-  subject?: string;       // Original email subject
-  emailBody?: string;     // Plain-text body of the email being replied to
+  subject?: string;
+  emailBody?: string;
   dossierRef: string | null;
   dossierName: string | null;
   matchReasons: string[];
   matchSource: string | null;
   isEBarreau: boolean;
   lawyerEmail: string;
+  // Additional context for better replies
+  conversationHistory?: ConversationMessage[];  // Prior messages in the thread
+  kleosCase?: { name: string; reference: string; typeName?: string } | null;
 }
 
 export interface DraftReplyResult {

@@ -144,14 +144,19 @@ export async function POST(req: NextRequest) {
       model: process.env.XAI_MODEL || XAI_MODEL,
     };
 
-    // 4. Fetch the actual email body so the AI can reply to what was written
+    // 4. Fetch email body, conversation thread, and Kleos case in parallel
     let emailSubject: string | undefined;
     let emailBody: string | undefined;
+    let conversationId: string | undefined;
+    let conversationHistory: Array<{ from: string; date: string; bodyPreview: string }> = [];
+    let kleosCase: { name: string; reference: string; typeName?: string } | null = null;
+
+    const GRAPH = 'https://graph.microsoft.com/v1.0';
+
     if (match.email_id && match.mailbox) {
       try {
         const graphToken = await getGraphToken();
-        const GRAPH = 'https://graph.microsoft.com/v1.0';
-        const msgUrl = `${GRAPH}/users/${encodeURIComponent(match.mailbox)}/messages/${encodeURIComponent(match.email_id)}?$select=subject,body,bodyPreview`;
+        const msgUrl = `${GRAPH}/users/${encodeURIComponent(match.mailbox)}/messages/${encodeURIComponent(match.email_id)}?$select=subject,body,bodyPreview,conversationId`;
         const msgRes = await fetch(msgUrl, {
           headers: { Authorization: `Bearer ${graphToken}` },
           signal: AbortSignal.timeout(10_000),
@@ -160,25 +165,84 @@ export async function POST(req: NextRequest) {
           const msg = await msgRes.json() as {
             subject?: string;
             bodyPreview?: string;
+            conversationId?: string;
             body?: { contentType?: string; content?: string };
           };
           emailSubject = msg.subject || undefined;
+          conversationId = msg.conversationId || undefined;
           const rawBody = msg.body?.contentType === 'html'
             ? msg.body.content?.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()
             : msg.body?.content || msg.bodyPreview || '';
-          emailBody = rawBody ? rawBody.slice(0, 2500) : undefined;
+          emailBody = rawBody ? rawBody.slice(0, 3000) : undefined;
         }
       } catch {
-        // Non-fatal — generate without email body
+        // Non-fatal
       }
     }
+
+    // Fetch conversation thread + Kleos case in parallel (both non-fatal)
+    await Promise.allSettled([
+      // Thread
+      (async () => {
+        const convId = conversationId || match.conversation_id;
+        if (!convId || !match.mailbox) return;
+        try {
+          const graphToken = await getGraphToken();
+          const threadUrl = new URL(`${GRAPH}/users/${encodeURIComponent(match.mailbox)}/messages`);
+          threadUrl.searchParams.set('$filter', `conversationId eq '${convId}'`);
+          threadUrl.searchParams.set('$select', 'id,from,receivedDateTime,bodyPreview');
+          threadUrl.searchParams.set('$orderby', 'receivedDateTime asc');
+          threadUrl.searchParams.set('$top', '8');
+          const res = await fetch(threadUrl.toString(), {
+            headers: { Authorization: `Bearer ${graphToken}` },
+            signal: AbortSignal.timeout(8_000),
+          });
+          if (res.ok) {
+            const data = await res.json() as { value?: Array<{
+              id: string;
+              from: { emailAddress: { name?: string; address?: string } };
+              receivedDateTime: string;
+              bodyPreview: string;
+            }> };
+            conversationHistory = (data.value || [])
+              .filter(m => m.id !== match.email_id)
+              .map(m => ({
+                from: m.from?.emailAddress?.name || m.from?.emailAddress?.address || 'Inconnu',
+                date: new Date(m.receivedDateTime).toLocaleDateString('fr-FR'),
+                bodyPreview: m.bodyPreview || '',
+              }));
+          }
+        } catch {
+          // Non-fatal
+        }
+      })(),
+      // Kleos case
+      (async () => {
+        if (!match.dossier_id) return;
+        const azureUrl = process.env.AZURE_API_URL;
+        const azureKey = process.env.AZURE_FUNCTIONS_KEY;
+        if (!azureUrl || !azureKey) return;
+        try {
+          const res = await fetch(`${azureUrl}/api/kleos/cases/${match.dossier_id}`, {
+            headers: { 'x-functions-key': azureKey },
+            signal: AbortSignal.timeout(7_000),
+          });
+          if (res.ok) {
+            const data = await res.json() as { case?: { name: string; reference: string; typeName?: string } };
+            kleosCase = data.case ?? null;
+          }
+        } catch {
+          // Non-fatal
+        }
+      })(),
+    ]);
 
     // 5. Get or create style profile for the lawyer
     const lawyerEmail = match.mailbox || match.lawyer || '';
     const displayName = match.lawyer || lawyerEmail.split('@')[0];
     const style = await getOrCreateStyleProfile(lawyerEmail, displayName, aiConfig);
 
-    // 6. Generate draft reply
+    // 6. Generate draft reply with full context
     const result = await generateDraftReply(style, {
       senderName: match.sender_name || '',
       senderEmail: match.sender_email || '',
@@ -190,6 +254,8 @@ export async function POST(req: NextRequest) {
       matchSource: match.match_source || null,
       isEBarreau: match.is_ebarreau || false,
       lawyerEmail,
+      conversationHistory: conversationHistory.length > 0 ? conversationHistory : undefined,
+      kleosCase,
     }, aiConfig);
 
     // Log user activity
