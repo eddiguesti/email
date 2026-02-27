@@ -16,6 +16,8 @@ import './functions/auth-refresh.js';
 // Core API endpoints
 import './functions/webhook-graph.js';
 import './functions/get-status.js';
+import './functions/get-emails.js';
+import './functions/get-folders.js';
 import './functions/approve-dossier.js';
 import './functions/file-to-kleos.js';
 import './functions/search.js';

@@ -20,40 +20,48 @@ export async function generateDraftReply(
     throw new Error('Cannot generate draft: sender email not extracted from original message');
   }
 
-  const systemPrompt = `You are a legal email assistant for LAURENCE BROSSET AVOCATS, a French construction and insurance law firm.
+  const systemPrompt = `Tu es l'assistant juridique de LAURENCE BROSSET AVOCATS, cabinet d'avocats spécialisé en droit de la construction et droit des assurances.
 
-YOUR TASK: Write a reply draft that matches the lawyer's personal writing style exactly.
+TON RÔLE : Rédiger un brouillon de réponse à l'email ci-dessous, en imitant fidèlement le style d'écriture de l'avocate.
 
-LAWYER'S WRITING STYLE:
+STYLE D'ÉCRITURE DE L'AVOCATE :
 ${sanitizeForPrompt(style.styleSummary)}
 
-Typical greetings they use: ${sanitizeForPrompt(style.sampleGreetings.join(' / '))}
-Typical sign-offs they use: ${sanitizeForPrompt(style.sampleSignoffs.join(' / '))}
-Formality level: ${style.formalityLevel}
-Average reply length: ~${style.avgReplyLength} words
+Formules d'introduction habituelles : ${sanitizeForPrompt(style.sampleGreetings.join(' / '))}
+Formules de clôture habituelles : ${sanitizeForPrompt(style.sampleSignoffs.join(' / '))}
+Niveau de formalité : ${style.formalityLevel === 'formal' ? 'formel' : 'semi-formel'}
+Longueur moyenne de ses réponses : ~${style.avgReplyLength} mots
 
-RULES:
-1. Write the entire reply in French
-2. Match the lawyer's EXACT tone, greeting style, and sign-off style
-3. Reference the dossier naturally if one is matched
-4. Be professional and legally appropriate
-5. Do NOT include the subject line — only the email body
-6. Sign with the lawyer's name: ${sanitizeForPrompt(style.displayName)}
-7. Keep it around ${style.avgReplyLength} words
-8. Output ONLY the email body text, nothing else — no JSON, no markdown code blocks`;
+RÈGLES IMPÉRATIVES :
+1. Rédige UNIQUEMENT le corps de l'email — pas d'objet, pas de balises Markdown
+2. Réponds précisément au contenu de l'email reçu (questions posées, demandes formulées, points soulevés)
+3. Adopte le style EXACT de l'avocate : ses formules d'introduction, son ton, ses formules de clôture
+4. Mentionne le dossier naturellement si un dossier est associé
+5. Signe avec le nom de l'avocate : ${sanitizeForPrompt(style.displayName)}
+6. Longueur cible : ${style.avgReplyLength} mots environ
+7. Langue : français uniquement`;
 
   const dossierContext = input.dossierRef
-    ? `Dossier: [${sanitizeForPrompt(input.dossierRef)}] ${sanitizeForPrompt(input.dossierName || '')}\nClassification: ${input.matchSource || 'unknown'}\nDetails: ${input.matchReasons.join(', ')}`
-    : 'No dossier matched — this may be a new matter or a general inquiry.';
+    ? `Dossier associé : [${sanitizeForPrompt(input.dossierRef)}] ${sanitizeForPrompt(input.dossierName || '')}\nSource de classement : ${input.matchSource || 'inconnu'}\nRaisons : ${input.matchReasons.join(', ')}`
+    : "Aucun dossier associé — il peut s'agir d'une nouvelle affaire ou d'une demande générale.";
 
-  const userPrompt = `Write a reply to this email:
+  const emailSection = input.subject || input.emailBody
+    ? `OBJET : ${sanitizeForPrompt(input.subject || '(sans objet)')}
 
-FROM: ${sanitizeForPrompt(input.senderName)} <${input.senderEmail}>
-${input.isEBarreau ? 'NOTE: This is an e-Barreau (French legal electronic messaging system) message.\n' : ''}
-CONTEXT:
+CONTENU DE L'EMAIL REÇU :
+${sanitizeForPrompt((input.emailBody || '').slice(0, 2000) || '(contenu non disponible)')}`
+    : "CONTENU DE L'EMAIL REÇU : (non disponible — rédige une réponse de courtoisie générale)";
+
+  const userPrompt = `Rédige une réponse à l'email suivant :
+
+DE : ${sanitizeForPrompt(input.senderName || input.senderEmail)} <${input.senderEmail}>
+${input.isEBarreau ? "NOTE : Cet email provient du système e-Barreau (messagerie électronique du barreau français).\n" : ''}
+${emailSection}
+
+CONTEXTE DOSSIER :
 ${dossierContext}
 
-Generate the reply now, using the lawyer's style.`;
+Rédige maintenant la réponse en adoptant le style de l'avocate.`;
 
   try {
     const resp = await fetch(aiConfig.apiUrl, {
@@ -68,9 +76,10 @@ Generate the reply now, using the lawyer's style.`;
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt },
         ],
-        temperature: 0.4,
-        max_tokens: 800,
+        temperature: 0.3,
+        max_tokens: 1200,
       }),
+      signal: AbortSignal.timeout(30_000),
     });
 
     if (!resp.ok) {

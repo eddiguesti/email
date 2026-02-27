@@ -22,7 +22,7 @@ interface GraphSentMessage {
 export async function fetchSentEmails(
   graphToken: string,
   mailbox: string,
-  count = 20
+  count = 30
 ): Promise<GraphSentMessage[]> {
   const url =
     `https://graph.microsoft.com/v1.0/users/${encodeURIComponent(mailbox)}` +
@@ -32,6 +32,7 @@ export async function fetchSentEmails(
 
   const resp = await fetch(url, {
     headers: { Authorization: `Bearer ${graphToken}` },
+    signal: AbortSignal.timeout(15_000),
   });
 
   if (!resp.ok) {
@@ -69,18 +70,18 @@ export async function extractStyleProfile(
 ): Promise<StyleProfile> {
   // Extract plain text samples from sent emails
   const samples: string[] = [];
-  for (const email of sentEmails.slice(0, 15)) {
+  for (const email of sentEmails.slice(0, 20)) {
     const body =
       email.body?.contentType === 'html'
         ? stripHtml(email.body.content)
         : email.body?.content || email.bodyPreview || '';
-    // Keep only first 500 chars of each email
+    // Keep first 800 chars — enough to capture greeting, body, and sign-off
     if (body.length > 30) {
-      samples.push(body.slice(0, 500));
+      samples.push(body.slice(0, 800));
     }
   }
 
-  if (samples.length < 3) {
+  if (samples.length < 2) {
     // Not enough samples — return a default formal French style
     return defaultStyleProfile(lawyerEmail, displayName);
   }
@@ -121,8 +122,9 @@ Analyze their writing style and return ONLY the JSON object.`;
           { role: 'user', content: userPrompt },
         ],
         temperature: 0.2,
-        max_tokens: 500,
+        max_tokens: 600,
       }),
+      signal: AbortSignal.timeout(30_000),
     });
 
     if (!resp.ok) {

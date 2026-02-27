@@ -15,6 +15,8 @@ import {
   ExternalLink,
   Minimize2,
   Maximize2,
+  FolderOpen,
+  Users,
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -24,6 +26,8 @@ interface Message {
   role: 'user' | 'assistant';
   content: string;
   results?: EmailResult[];
+  dossierResults?: KleosDossierResult[];
+  contactResults?: KleosContactResult[];
   timestamp: Date;
 }
 
@@ -37,10 +41,26 @@ interface EmailResult {
   importance: string;
 }
 
+interface KleosDossierResult {
+  id: number;
+  name: string;
+  reference: string;
+  description?: string;
+  typeName?: string;
+}
+
+interface KleosContactResult {
+  id: number;
+  firstName?: string;
+  lastName?: string;
+  email?: string;
+  phoneNumber?: string;
+}
+
 const suggestedQueries = [
   "Montre-moi les emails du tribunal cette semaine",
   "Emails urgents non lus",
-  "Messages des confrères avec pièces jointes",
+  "Cherche le dossier Dupont dans Kleos",
   "Recherche 'convocation audience'",
 ];
 
@@ -117,13 +137,16 @@ export default function AIChatPanel() {
         cleanMessage = cleanMessage.replace(/\{[\s\S]*"action"[\s\S]*\}/g, '').trim();
       }
 
+      const totalResults = (data.results?.length || 0) + (data.dossierResults?.length || 0) + (data.contactResults?.length || 0);
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: cleanMessage || (data.results?.length > 0
-          ? `J'ai trouvé ${data.results.length} email(s) correspondant à votre recherche.`
+        content: cleanMessage || (totalResults > 0
+          ? `J'ai trouvé ${totalResults} résultat(s).`
           : "Je n'ai pas trouvé de résultats pour cette recherche."),
         results: data.results,
+        dossierResults: data.dossierResults,
+        contactResults: data.contactResults,
         timestamp: new Date(),
       };
 
@@ -188,7 +211,7 @@ export default function AIChatPanel() {
                 </div>
                 <div>
                   <h3 className="text-[15px] font-semibold tracking-[-0.01em] text-[var(--foreground)]">Assistant IA</h3>
-                  <p className="text-[11px] text-[var(--muted-foreground)]">Recherche intelligente d&apos;emails</p>
+                  <p className="text-[11px] text-[var(--muted-foreground)]">Emails · Kleos · Contacts</p>
                 </div>
               </div>
               <div className="flex items-center gap-1">
@@ -223,7 +246,7 @@ export default function AIChatPanel() {
                     Comment puis-je vous aider ?
                   </h4>
                   <p className="text-[13px] text-[var(--muted-foreground)] mb-8">
-                    Posez des questions sur vos emails en langage naturel
+                    Cherchez dans vos emails et dossiers Kleos en langage naturel
                   </p>
                   <div className="space-y-2">
                     {suggestedQueries.map((query, i) => (
@@ -302,6 +325,64 @@ export default function AIChatPanel() {
                         </div>
                       )}
 
+                      {/* Kleos Dossier Results */}
+                      {message.dossierResults && message.dossierResults.length > 0 && (
+                        <div className="mt-2.5 space-y-2">
+                          {message.dossierResults.map((dossier) => (
+                            <motion.div
+                              key={dossier.id}
+                              initial={{ opacity: 0, scale: 0.97 }}
+                              animate={{ opacity: 1, scale: 1 }}
+                              className="bg-white rounded-xl shadow-[var(--shadow-card)] p-3.5 hover:shadow-[var(--shadow-card-hover)] transition-all duration-300"
+                            >
+                              <div className="flex items-start gap-3">
+                                <div className="p-2 rounded-lg bg-blue-50 flex-shrink-0">
+                                  <FolderOpen className="w-3.5 h-3.5 text-blue-500" strokeWidth={1.8} />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <p className="font-medium text-[13px] text-[var(--foreground)] truncate">{dossier.name}</p>
+                                  <p className="text-[11px] text-[var(--muted-foreground)] mt-0.5">Réf. {dossier.reference}{dossier.typeName ? ` · ${dossier.typeName}` : ''}</p>
+                                  {dossier.description && (
+                                    <p className="text-[11px] text-[var(--muted-foreground)] mt-1 line-clamp-2 opacity-70">{dossier.description}</p>
+                                  )}
+                                </div>
+                              </div>
+                            </motion.div>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Kleos Contact Results */}
+                      {message.contactResults && message.contactResults.length > 0 && (
+                        <div className="mt-2.5 space-y-2">
+                          {message.contactResults.map((contact) => (
+                            <motion.div
+                              key={contact.id}
+                              initial={{ opacity: 0, scale: 0.97 }}
+                              animate={{ opacity: 1, scale: 1 }}
+                              className="bg-white rounded-xl shadow-[var(--shadow-card)] p-3.5 hover:shadow-[var(--shadow-card-hover)] transition-all duration-300"
+                            >
+                              <div className="flex items-start gap-3">
+                                <div className="p-2 rounded-lg bg-green-50 flex-shrink-0">
+                                  <Users className="w-3.5 h-3.5 text-green-500" strokeWidth={1.8} />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <p className="font-medium text-[13px] text-[var(--foreground)]">
+                                    {[contact.firstName, contact.lastName].filter(Boolean).join(' ') || 'Contact'}
+                                  </p>
+                                  {contact.email && (
+                                    <p className="text-[11px] text-[var(--muted-foreground)] mt-0.5">{contact.email}</p>
+                                  )}
+                                  {contact.phoneNumber && (
+                                    <p className="text-[11px] text-[var(--muted-foreground)] mt-0.5">{contact.phoneNumber}</p>
+                                  )}
+                                </div>
+                              </div>
+                            </motion.div>
+                          ))}
+                        </div>
+                      )}
+
                       <p className="text-[11px] text-[var(--muted-foreground)] mt-1.5 px-1 opacity-60">
                         {formatDistanceToNow(message.timestamp, { addSuffix: true, locale: fr })}
                       </p>
@@ -327,7 +408,7 @@ export default function AIChatPanel() {
                   <div className="bg-[var(--muted)] rounded-2xl px-4 py-3">
                     <div className="flex items-center gap-2.5">
                       <Loader2 className="w-3.5 h-3.5 animate-spin text-[var(--muted-foreground)]" />
-                      <span className="text-[13px] text-[var(--muted-foreground)]">Recherche en cours...</span>
+                      <span className="text-[13px] text-[var(--muted-foreground)]">Recherche emails et Kleos...</span>
                     </div>
                   </div>
                 </motion.div>
@@ -344,7 +425,7 @@ export default function AIChatPanel() {
                   type="text"
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
-                  placeholder="Demandez-moi de chercher des emails..."
+                  placeholder="Emails, dossiers Kleos, contacts..."
                   disabled={loading}
                   className="flex-1 px-4 py-3 rounded-xl bg-[var(--muted)] text-[var(--foreground)] text-[13px] placeholder:text-[var(--muted-foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--foreground)]/10 transition-all duration-200 disabled:opacity-50"
                 />

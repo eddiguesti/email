@@ -1,6 +1,13 @@
 import { app, HttpRequest, HttpResponseInit, InvocationContext } from '@azure/functions';
 import { Client } from '@microsoft/microsoft-graph-client';
 import { authenticateRequest, checkRateLimit } from '../utils/auth.js';
+import {
+  searchCases,
+  searchContacts,
+  isKleosConfigured,
+  KleosCase,
+  KleosIdentity,
+} from '../services/kleos-client.js';
 
 const XAI_API_URL = 'https://api.x.ai/v1/chat/completions';
 
@@ -36,46 +43,40 @@ async function aiSearch(request: HttpRequest, context: InvocationContext): Promi
       },
     });
 
-    // First, use AI to understand the search intent and generate a Graph API search query
+    const kleosAvailable = isKleosConfigured();
+
     const systemPrompt = `Tu es un assistant juridique intelligent pour un cabinet d'avocats français spécialisé en baux commerciaux et immobilier.
 
-Ton rôle est d'aider les avocats à chercher et comprendre leurs emails. Tu dois:
+Ton rôle est d'aider les avocats à chercher dans leurs emails ET dans Kleos (logiciel de gestion de dossiers).
+Tu dois:
 1. Comprendre les demandes en langage naturel en français
-2. Identifier les critères de recherche (expéditeur, sujet, date, mots-clés)
-3. Reformuler les recherches de manière structurée
+2. Identifier si la question concerne des emails, des dossiers Kleos, ou des contacts
+3. Répondre UNIQUEMENT avec un objet JSON structuré (sans texte avant ni après)
 
-Quand l'utilisateur demande de chercher des emails, réponds avec un JSON structuré:
-{
-  "action": "search",
-  "search_query": "mots clés à chercher",
-  "filters": {
-    "from": "email ou nom de l'expéditeur si mentionné",
-    "subject_contains": "mots dans le sujet si mentionné",
-    "date_filter": "today|this_week|this_month|null",
-    "has_attachments": true/false/null
-  },
-  "explanation": "Explication de ce que tu cherches"
-}
+${kleosAvailable
+  ? 'Tu as accès à: emails Microsoft 365 (TOUS les dossiers), dossiers/affaires Kleos, contacts Kleos.'
+  : 'Tu as accès à: emails Microsoft 365 (TOUS les dossiers de la boîte mail).'}
 
-Si l'utilisateur pose une question générale ou veut de l'aide, réponds naturellement en français.
+**Pour rechercher des emails (tous dossiers de boîte mail):**
+{"action":"search_emails","search_query":"mots clés","filters":{"from":null,"subject_contains":null,"date_filter":"today|this_week|this_month|null","has_attachments":null},"explanation":"Ce que tu cherches"}
 
-Catégories d'emails courants:
-- tribunaux: Tribunaux, greffes, cours d'appel, convocations
-- confreres: Autres avocats, cabinets
-- clients: Communications clients
-- expertises: Experts judiciaires, rapports
-- huissiers: Huissiers de justice
-- notaires: Notaires
-- bailleurs: Propriétaires, bailleurs, SCI
-- locataires: Locataires, preneurs
-- assurances: Compagnies d'assurance`;
+${kleosAvailable ? `**Pour rechercher des dossiers/affaires dans Kleos:**
+{"action":"search_dossiers","search_query":"référence ou nom du dossier ou client","explanation":"Ce que tu cherches"}
+
+**Pour rechercher des contacts dans Kleos:**
+{"action":"search_contacts","search_query":"nom ou email","explanation":"Ce que tu cherches"}` : ''}
+
+**Pour une réponse directe sans recherche:**
+{"action":"answer","explanation":"Ta réponse en français"}
+
+Catégories emails courants: tribunaux, greffes, cours d'appel, confrères/avocats, clients, experts judiciaires, huissiers, notaires, bailleurs/SCI, locataires, assurances.`;
 
     const xaiApiKey = process.env.XAI_API_KEY;
     if (!xaiApiKey) {
       return { status: 500, jsonBody: { error: 'Configuration IA manquante' } };
     }
 
-    // Call xAI Grok API to understand the query
+    // Call xAI Grok to understand query intent
     const xaiResponse = await fetch(XAI_API_URL, {
       method: 'POST',
       headers: {
@@ -86,11 +87,11 @@ Catégories d'emails courants:
         model: 'grok-3-latest',
         messages: [
           { role: 'system', content: systemPrompt },
-          ...conversationHistory.slice(-10), // Keep last 10 messages for context
+          ...conversationHistory.slice(-10),
           { role: 'user', content: query },
         ],
-        temperature: 0.7,
-        max_tokens: 1000,
+        temperature: 0.3,
+        max_tokens: 600,
       }),
       signal: AbortSignal.timeout(30_000),
     });
@@ -98,7 +99,7 @@ Catégories d'emails courants:
     if (!xaiResponse.ok) {
       const errorText = await xaiResponse.text();
       context.error('xAI API error:', errorText);
-      return { status: 500, jsonBody: { error: 'Erreur de l\'assistant IA' } };
+      return { status: 500, jsonBody: { error: "Erreur de l'assistant IA" } };
     }
 
     const xaiData = await xaiResponse.json() as {
@@ -107,44 +108,64 @@ Catégories d'emails courants:
 
     const aiMessage = xaiData.choices[0]?.message?.content || '';
 
-    // Try to parse as JSON for search action
-    let searchResults: any[] = [];
+    // Execute action based on AI intent
+    let emailResults: any[] = [];
+    let dossierResults: KleosCase[] = [];
+    let contactResults: KleosIdentity[] = [];
     let aiAction: any = null;
+    let explanation = '';
 
     try {
-      // Check if the response contains a JSON search command
       const jsonMatch = aiMessage.match(/\{[\s\S]*"action"[\s\S]*\}/);
       if (jsonMatch) {
         aiAction = JSON.parse(jsonMatch[0]);
+        explanation = aiAction.explanation || '';
 
-        if (aiAction.action === 'search' && aiAction.search_query) {
-          // Build Microsoft Graph search query
-          let graphQuery = aiAction.search_query;
-
-          // Add filters
-          const filters: string[] = [];
+        if (aiAction.action === 'search_emails' && aiAction.search_query) {
+          // Build KQL search query — search across ALL mail folders via /me/messages
+          const parts: string[] = [aiAction.search_query];
           if (aiAction.filters?.from) {
-            filters.push(`from:${aiAction.filters.from}`);
+            parts.push(`from:${aiAction.filters.from}`);
+          }
+          if (aiAction.filters?.subject_contains) {
+            parts.push(`subject:${aiAction.filters.subject_contains}`);
           }
           if (aiAction.filters?.has_attachments) {
-            filters.push('hasAttachments:true');
+            parts.push('hasAttachments:true');
+          }
+          const kqlQuery = parts.join(' ');
+
+          // Optional OData date filter (applied after Graph KQL search via client-side filter
+          // because .search() and .filter() cannot be combined in Graph)
+          let cutoff: Date | null = null;
+          if (aiAction.filters?.date_filter === 'today') {
+            cutoff = new Date();
+            cutoff.setHours(0, 0, 0, 0);
+          } else if (aiAction.filters?.date_filter === 'this_week') {
+            cutoff = new Date();
+            cutoff.setDate(cutoff.getDate() - 7);
+          } else if (aiAction.filters?.date_filter === 'this_month') {
+            cutoff = new Date();
+            cutoff.setDate(cutoff.getDate() - 30);
           }
 
-          const searchQuery = filters.length > 0
-            ? `${graphQuery} ${filters.join(' ')}`
-            : graphQuery;
-
-          // Search emails using Microsoft Graph
           try {
+            // /me/messages searches ALL folders (inbox, sent, archives, etc.)
             const searchResponse = await graphClient
               .api('/me/messages')
-              .search(`"${searchQuery}"`)
+              .search(`"${kqlQuery}"`)
               .select('id,subject,from,receivedDateTime,bodyPreview,hasAttachments,importance')
-              .top(10)
+              .top(20)
               .orderby('receivedDateTime desc')
               .get();
 
-            searchResults = searchResponse.value.map((msg: any) => ({
+            const allMsgs = searchResponse.value || [];
+            // Apply date filter client-side (Graph search + filter cannot be combined)
+            const filtered = cutoff
+              ? allMsgs.filter((m: any) => new Date(m.receivedDateTime) >= cutoff!)
+              : allMsgs;
+
+            emailResults = filtered.slice(0, 15).map((msg: any) => ({
               id: msg.id,
               subject: msg.subject || '(Sans objet)',
               from: {
@@ -159,29 +180,52 @@ Catégories d'emails courants:
           } catch (graphError) {
             context.error('Graph search error:', graphError);
           }
+
+        } else if (aiAction.action === 'search_dossiers' && aiAction.search_query && kleosAvailable) {
+          try {
+            const result = await searchCases(aiAction.search_query, { pageSize: 10 });
+            dossierResults = result.cases;
+          } catch (kleosError) {
+            context.error('Kleos dossier search error:', kleosError);
+          }
+
+        } else if (aiAction.action === 'search_contacts' && aiAction.search_query && kleosAvailable) {
+          try {
+            const result = await searchContacts(aiAction.search_query, { pageSize: 10 });
+            contactResults = result.contacts;
+          } catch (kleosError) {
+            context.error('Kleos contact search error:', kleosError);
+          }
         }
+        // 'answer' action: explanation is used as-is
       }
-    } catch (parseError) {
-      // Response is not JSON, it's a natural language response
+    } catch {
+      // Not valid JSON — fall back to raw message text
+      explanation = aiMessage;
     }
 
-    context.log(`AI search for user ${auth.user.email}: "${query}" -> ${searchResults.length} results`);
+    if (!explanation) {
+      explanation = aiMessage;
+    }
+
+    context.log(
+      `AI search user=${auth.user.email} query="${query}" emails=${emailResults.length} dossiers=${dossierResults.length} contacts=${contactResults.length}`
+    );
 
     return {
       status: 200,
       jsonBody: {
-        message: aiMessage,
+        message: explanation,
         action: aiAction,
-        results: searchResults,
-        resultsCount: searchResults.length,
+        results: emailResults,
+        resultsCount: emailResults.length,
+        dossierResults,
+        contactResults,
       },
     };
   } catch (error) {
     context.error('Error in AI search:', error);
-    return {
-      status: 500,
-      jsonBody: { error: 'Erreur lors de la recherche' },
-    };
+    return { status: 500, jsonBody: { error: 'Erreur lors de la recherche' } };
   }
 }
 
