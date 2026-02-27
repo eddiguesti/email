@@ -99,7 +99,7 @@ export async function getCurrentUser(): Promise<User | null> {
   }
 }
 
-export function loginWithMicrosoft(redirect: string = '/dashboard') {
+export function loginWithMicrosoft(redirect: string = '/dashboard/review') {
   window.location.href = `${AUTH_BASE}/login?redirect=${encodeURIComponent(redirect)}`;
 }
 

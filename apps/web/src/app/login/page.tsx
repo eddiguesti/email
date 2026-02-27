@@ -13,7 +13,7 @@ function LoginContent() {
   const error = searchParams?.get('error');
 
   const handleLogin = () => {
-    window.location.href = '/api/auth/login?redirect=/dashboard';
+    window.location.href = '/api/auth/login?redirect=/dashboard/review';
   };
 
   return (
