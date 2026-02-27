@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -17,6 +17,9 @@ import {
   Inbox,
   AlertCircle,
   Send,
+  Sparkles,
+  ExternalLink,
+  MessageSquare,
 } from 'lucide-react';
 import { formatDistanceToNow, format } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -145,6 +148,13 @@ export default function MatchDetailDrawer({ log, open, onClose, onReview }: Prop
   const [reviewLoading, setReviewLoading] = useState(false);
   const [reviewError,   setReviewError]   = useState<string | null>(null);
 
+  const [chatHistory, setChatHistory] = useState<Array<{ q: string; a: string }>>([]);
+  const [chatInput,   setChatInput]   = useState('');
+  const [chatLoading, setChatLoading] = useState(false);
+
+  const draftSectionRef = useRef<HTMLDivElement>(null);
+  const chatEndRef      = useRef<HTMLDivElement>(null);
+
   const fetchEmail = useCallback(async (l: MatchLog) => {
     setMessage(null);
     setThread([]);
@@ -156,6 +166,8 @@ export default function MatchDetailDrawer({ log, open, onClose, onReview }: Prop
     setSending(false);
     setSendError(null);
     setSent(false);
+    setChatHistory([]);
+    setChatInput('');
     if (!l.email_id) return;
 
     setMsgLoad(true);
@@ -210,6 +222,8 @@ export default function MatchDetailDrawer({ log, open, onClose, onReview }: Prop
     setDraftError(null);
     setSent(false);
     setSendError(null);
+    // Scroll to draft section immediately so the user sees the spinner
+    draftSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     try {
       const result = await generateDraftReply(log.id);
       setDraft(result);
@@ -245,6 +259,29 @@ export default function MatchDetailDrawer({ log, open, onClose, onReview }: Prop
       setSendError((err as Error).message || "Erreur lors de l'envoi");
     } finally {
       setSending(false);
+    }
+  }
+
+  async function handleChatQuestion(q: string) {
+    if (!log || !q.trim()) return;
+    const question = q.trim();
+    setChatInput('');
+    setChatLoading(true);
+    try {
+      const res = await fetch('/api/pipeline/dossier-ask', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ matchId: log.id, question }),
+      });
+      const data = await res.json() as { answer?: string; error?: string };
+      const answer = data.answer ?? data.error ?? 'Erreur inconnue.';
+      setChatHistory(prev => [...prev, { q: question, a: answer }]);
+      // Scroll to bottom of chat after answer
+      setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 50);
+    } catch {
+      setChatHistory(prev => [...prev, { q: question, a: 'Impossible de contacter le serveur.' }]);
+    } finally {
+      setChatLoading(false);
     }
   }
 
@@ -356,6 +393,22 @@ export default function MatchDetailDrawer({ log, open, onClose, onReview }: Prop
                     )}
                   </div>
                 </div>
+                {/* Quick reply shortcut — always visible in header */}
+                {!sent && log.email_id && (
+                  <button
+                    onClick={handleGenerateDraft}
+                    disabled={draftLoading || msgLoad}
+                    title="Rédiger une réponse IA"
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[12px] font-medium bg-[var(--accent)] text-white hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-150 flex-shrink-0"
+                  >
+                    {draftLoading ? (
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" strokeWidth={1.8} />
+                    ) : (
+                      <Send className="w-3.5 h-3.5" strokeWidth={1.8} />
+                    )}
+                    Répondre
+                  </button>
+                )}
                 <button
                   onClick={onClose}
                   className="p-2 rounded-lg hover:bg-[var(--muted)] text-[var(--muted-foreground)] transition-colors duration-150 flex-shrink-0"
@@ -415,6 +468,17 @@ export default function MatchDetailDrawer({ log, open, onClose, onReview }: Prop
                             Réf. {log.dossier_ref}
                             {log.lawyer ? ` — ${log.lawyer}` : ''}
                           </p>
+                          {log.dossier_id && process.env.NEXT_PUBLIC_KLEOS_WEB_URL && (
+                            <a
+                              href={`${process.env.NEXT_PUBLIC_KLEOS_WEB_URL}/case/${log.dossier_id}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 mt-1.5 text-[11px] font-medium text-[var(--accent)] hover:underline"
+                            >
+                              <ExternalLink className="w-3 h-3" strokeWidth={2} />
+                              Ouvrir dans Kleos
+                            </a>
+                          )}
                         </div>
                         <ConfidenceBadge confidence={log.confidence} matched={log.matched} />
                       </div>
@@ -528,8 +592,98 @@ export default function MatchDetailDrawer({ log, open, onClose, onReview }: Prop
                   </motion.div>
                 )}
 
+                {/* Dossier AI assistant — only when matched to a dossier */}
+                {log.matched && log.dossier_id && (
+                  <motion.div
+                    variants={SECTION}
+                    className="px-5 py-4 border-b border-[var(--border)]"
+                  >
+                    <div className="flex items-center gap-2 mb-3">
+                      <Sparkles className="w-3.5 h-3.5 text-[var(--accent)]" strokeWidth={1.8} />
+                      <p className="text-[11px] font-semibold uppercase tracking-wider text-[var(--muted-foreground)]">
+                        Assistant dossier
+                      </p>
+                      <span className="ml-auto text-[10px] text-[var(--muted-foreground)] bg-[var(--muted)] px-2 py-0.5 rounded-md">
+                        {log.dossier_ref}
+                      </span>
+                    </div>
+
+                    {/* Q&A history */}
+                    {chatHistory.length > 0 && (
+                      <div className="space-y-3 mb-3 max-h-72 overflow-y-auto overscroll-contain">
+                        {chatHistory.map((msg, i) => (
+                          <div key={i} className="space-y-1.5">
+                            <div className="flex justify-end">
+                              <div className="max-w-[85%] bg-[var(--accent)] text-white text-[12px] leading-relaxed rounded-2xl rounded-tr-md px-3.5 py-2">
+                                {msg.q}
+                              </div>
+                            </div>
+                            <div className="flex justify-start">
+                              <div className="max-w-[90%] bg-[var(--muted)] text-[var(--foreground)] text-[12px] leading-relaxed rounded-2xl rounded-tl-md px-3.5 py-2.5 whitespace-pre-wrap">
+                                {msg.a}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                        {chatLoading && (
+                          <div className="flex justify-start">
+                            <div className="bg-[var(--muted)] rounded-2xl rounded-tl-md px-3.5 py-2.5 flex items-center gap-1.5">
+                              <span className="w-1.5 h-1.5 rounded-full bg-[var(--muted-foreground)] animate-bounce" style={{ animationDelay: '0ms' }} />
+                              <span className="w-1.5 h-1.5 rounded-full bg-[var(--muted-foreground)] animate-bounce" style={{ animationDelay: '120ms' }} />
+                              <span className="w-1.5 h-1.5 rounded-full bg-[var(--muted-foreground)] animate-bounce" style={{ animationDelay: '240ms' }} />
+                            </div>
+                          </div>
+                        )}
+                        <div ref={chatEndRef} />
+                      </div>
+                    )}
+
+                    {/* Quick questions — shown only before first message */}
+                    {chatHistory.length === 0 && !chatLoading && (
+                      <div className="flex flex-wrap gap-1.5 mb-3">
+                        {[
+                          'Y a-t-il une réunion prévue ?',
+                          'Quels sont les derniers échanges ?',
+                          'Y a-t-il des documents manquants ?',
+                        ].map(q => (
+                          <button
+                            key={q}
+                            onClick={() => handleChatQuestion(q)}
+                            className="flex items-center gap-1 text-[11px] px-2.5 py-1.5 rounded-lg border border-[var(--border)] text-[var(--muted-foreground)] hover:border-[var(--accent)] hover:text-[var(--accent)] hover:bg-blue-50/50 transition-all duration-150"
+                          >
+                            <MessageSquare className="w-3 h-3 flex-shrink-0" strokeWidth={1.8} />
+                            {q}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Input row */}
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={chatInput}
+                        onChange={e => setChatInput(e.target.value)}
+                        onKeyDown={e => { if (e.key === 'Enter' && chatInput.trim() && !chatLoading) handleChatQuestion(chatInput); }}
+                        placeholder="Poser une question sur ce dossier…"
+                        disabled={chatLoading}
+                        className="flex-1 text-[12px] px-3 py-2 rounded-xl border border-[var(--border)] bg-[var(--muted)] focus:outline-none focus:border-[var(--accent)] placeholder:text-[var(--muted-foreground)] disabled:opacity-50 transition-colors duration-150"
+                      />
+                      <button
+                        onClick={() => { if (chatInput.trim() && !chatLoading) handleChatQuestion(chatInput); }}
+                        disabled={chatLoading || !chatInput.trim()}
+                        className="p-2 rounded-xl bg-[var(--accent)] text-white disabled:opacity-40 transition-opacity duration-150 flex-shrink-0"
+                      >
+                        {chatLoading
+                          ? <Loader2 className="w-4 h-4 animate-spin" strokeWidth={2} />
+                          : <Send className="w-4 h-4" strokeWidth={2} />}
+                      </button>
+                    </div>
+                  </motion.div>
+                )}
+
                 {/* Draft reply */}
-                <motion.div variants={SECTION} className="px-5 py-4">
+                <motion.div ref={draftSectionRef} variants={SECTION} className="px-5 py-4">
                   <p className="text-[11px] font-semibold uppercase tracking-wider text-[var(--muted-foreground)] mb-3">
                     Réponse IA
                   </p>
@@ -576,10 +730,20 @@ export default function MatchDetailDrawer({ log, open, onClose, onReview }: Prop
                       {sent ? (
                         <div className="flex items-center gap-2 px-4 py-3 bg-emerald-50 border border-emerald-200 rounded-xl text-[13px] font-medium text-emerald-700">
                           <CheckCircle className="w-4 h-4 flex-shrink-0" strokeWidth={1.8} />
-                          Réponse envoyée avec votre signature
+                          Réponse envoyée à {log.sender_email}
                         </div>
                       ) : (
                         <>
+                          {/* Recipient + signature notice */}
+                          <div className="flex items-center justify-between gap-2 mb-2 flex-wrap">
+                            <p className="text-[11px] text-[var(--muted-foreground)]">
+                              À : <span className="font-medium text-[var(--foreground)]">{log.sender_name ? `${log.sender_name} <${log.sender_email}>` : log.sender_email}</span>
+                            </p>
+                            <span className="text-[10px] text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-100 flex-shrink-0">
+                              Votre signature sera incluse
+                            </span>
+                          </div>
+
                           <textarea
                             value={editedDraft}
                             onChange={e => { setEditedDraft(e.target.value); setSendError(null); }}
@@ -588,23 +752,25 @@ export default function MatchDetailDrawer({ log, open, onClose, onReview }: Prop
                             className="w-full text-[13px] text-[var(--foreground)] leading-relaxed bg-[var(--muted)] border border-transparent focus:border-[var(--accent)] focus:outline-none rounded-xl p-4 resize-none disabled:opacity-60 transition-colors duration-150"
                           />
                           {sendError && (
-                            <div className="flex items-center gap-1.5 text-[12px] text-red-500">
+                            <div className="flex items-center gap-1.5 text-[12px] text-red-500 mt-1">
                               <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" strokeWidth={1.8} />
                               {sendError}
                             </div>
                           )}
-                          <div className="flex gap-2 flex-wrap">
+
+                          {/* Primary action row */}
+                          <div className="flex gap-2 flex-wrap mt-2.5">
                             <button
                               onClick={handleSend}
                               disabled={sending || !editedDraft.trim()}
-                              className="flex items-center gap-1.5 px-3.5 py-2 text-[12px] font-medium rounded-xl bg-[var(--accent)] text-white hover:opacity-90 transition-opacity duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
+                              className="flex items-center gap-2 px-4 py-2.5 text-[13px] font-semibold rounded-xl bg-emerald-600 text-white hover:bg-emerald-700 transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
                             >
                               {sending ? (
-                                <Loader2 className="w-3.5 h-3.5 animate-spin" strokeWidth={1.8} />
+                                <Loader2 className="w-4 h-4 animate-spin" strokeWidth={2} />
                               ) : (
-                                <Send className="w-3.5 h-3.5" strokeWidth={1.8} />
+                                <Send className="w-4 h-4" strokeWidth={2} />
                               )}
-                              {sending ? 'Envoi…' : 'Envoyer avec signature'}
+                              {sending ? 'Envoi en cours…' : 'Envoyer'}
                             </button>
                             <button
                               onClick={handleCopy}
