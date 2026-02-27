@@ -468,9 +468,9 @@ export default function MatchDetailDrawer({ log, open, onClose, onReview }: Prop
                             Réf. {log.dossier_ref}
                             {log.lawyer ? ` — ${log.lawyer}` : ''}
                           </p>
-                          {log.dossier_id && process.env.NEXT_PUBLIC_KLEOS_WEB_URL && (
+                          {log.dossier_id && (
                             <a
-                              href={`${process.env.NEXT_PUBLIC_KLEOS_WEB_URL}/case/${log.dossier_id}`}
+                              href={`${process.env.NEXT_PUBLIC_KLEOS_WEB_URL ?? 'https://app.kleos.fr'}/case/${log.dossier_id}`}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="inline-flex items-center gap-1 mt-1.5 text-[11px] font-medium text-[var(--accent)] hover:underline"
