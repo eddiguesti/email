@@ -7,6 +7,7 @@ import { motion } from 'framer-motion';
 import Sidebar from '@/components/Sidebar';
 import NotificationBell from '@/components/NotificationBell';
 import { useAuth } from '@/context/AuthContext';
+import { TourProvider } from '@/context/TourContext';
 import { getUserPreferences } from '@/lib/pipeline-api';
 import { Loader2 } from 'lucide-react';
 
@@ -15,6 +16,7 @@ import { Loader2 } from 'lucide-react';
 // appears for first-time users.
 const AIChatPanel     = dynamic(() => import('@/components/AIChatPanel'),    { ssr: false });
 const OnboardingModal = dynamic(() => import('@/components/OnboardingModal'), { ssr: false });
+const TourOverlay     = dynamic(() => import('@/components/TourOverlay'),     { ssr: false });
 
 export default function DashboardLayout({
   children,
@@ -79,26 +81,29 @@ export default function DashboardLayout({
   }
 
   return (
-    <div className="min-h-screen bg-white">
-      <Sidebar />
-      <main className="pl-[260px]">
-        <div className="flex items-center justify-end px-10 pt-6 pb-2">
-          <NotificationBell compact />
-        </div>
-        <motion.div
-          key={pathname}
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.38, ease: [0.25, 0.46, 0.45, 0.94] }}
-          className="px-10 py-4 max-w-[1400px]"
-        >
-          {children}
-        </motion.div>
-      </main>
-      <AIChatPanel />
+    <TourProvider>
+      <div className="min-h-screen bg-white">
+        <Sidebar />
+        <main className="pl-[260px]">
+          <div className="flex items-center justify-end px-10 pt-6 pb-2">
+            <NotificationBell compact />
+          </div>
+          <motion.div
+            key={pathname}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.38, ease: [0.25, 0.46, 0.45, 0.94] }}
+            className="px-10 py-4 max-w-[1400px]"
+          >
+            {children}
+          </motion.div>
+        </main>
+        <AIChatPanel />
+        <TourOverlay />
 
-      {/* First-login onboarding wizard */}
-      {showOnboarding && <OnboardingModal onComplete={handleOnboardingComplete} />}
-    </div>
+        {/* First-login onboarding wizard */}
+        {showOnboarding && <OnboardingModal onComplete={handleOnboardingComplete} />}
+      </div>
+    </TourProvider>
   );
 }

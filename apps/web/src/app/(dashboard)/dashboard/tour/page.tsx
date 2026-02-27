@@ -19,7 +19,11 @@ import {
   Compass,
   MessageSquare,
   Bell,
+  Play,
+  Zap,
+  Shield,
 } from 'lucide-react';
+import { useTour } from '@/context/TourContext';
 
 const stagger = {
   hidden: {},
@@ -158,7 +162,27 @@ const sections: Section[] = [
   },
 ];
 
+const highlights = [
+  {
+    icon: <Zap className="w-4 h-4" strokeWidth={1.8} />,
+    label: 'Classement automatique',
+    detail: '85 % des emails classés sans intervention',
+  },
+  {
+    icon: <MessageSquare className="w-4 h-4" strokeWidth={1.8} />,
+    label: 'Réponses IA',
+    detail: 'Brouillons dans votre style personnel',
+  },
+  {
+    icon: <Shield className="w-4 h-4" strokeWidth={1.8} />,
+    label: 'Aucune donnée partagée',
+    detail: 'Tout reste dans votre tenant Azure',
+  },
+];
+
 export default function TourPage() {
+  const { start } = useTour();
+
   return (
     <motion.div
       variants={stagger}
@@ -166,23 +190,85 @@ export default function TourPage() {
       animate="show"
       className="space-y-10 max-w-4xl"
     >
-      {/* Header */}
+      {/* ── Interactive hero ──────────────────────────────────────────────── */}
       <motion.div variants={fadeUp}>
-        <div className="flex items-center gap-3 mb-3">
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-900 to-slate-700 text-white shadow-[0_20px_60px_rgba(0,0,0,0.2)]">
+          {/* Subtle grid pattern */}
+          <div
+            className="absolute inset-0 opacity-[0.06]"
+            style={{
+              backgroundImage:
+                'linear-gradient(rgba(255,255,255,0.6) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.6) 1px, transparent 1px)',
+              backgroundSize: '32px 32px',
+            }}
+          />
+
+          {/* Glow accent */}
+          <div className="absolute -top-24 -right-24 w-64 h-64 rounded-full bg-indigo-500/20 blur-3xl pointer-events-none" />
+          <div className="absolute -bottom-16 -left-16 w-48 h-48 rounded-full bg-violet-500/15 blur-3xl pointer-events-none" />
+
+          <div className="relative px-8 pt-8 pb-6">
+            {/* Eyebrow */}
+            <div className="inline-flex items-center gap-2 bg-white/10 border border-white/20 text-white/80 text-[11px] font-medium rounded-full px-3 py-1 mb-5">
+              <Compass className="w-3.5 h-3.5" strokeWidth={2} />
+              Visite guidée interactive
+            </div>
+
+            <h1 className="text-[30px] font-bold tracking-[-0.03em] leading-tight mb-2">
+              Découvrez LB-Bot en 2 minutes
+            </h1>
+            <p className="text-[14px] text-white/70 leading-relaxed max-w-xl mb-7">
+              Une visite pas-à-pas de chaque module clé — classement IA, file de revue,
+              calendrier, assistant dossier. On vous montre tout en contexte.
+            </p>
+
+            {/* Highlights row */}
+            <div className="flex flex-wrap gap-3 mb-7">
+              {highlights.map(h => (
+                <div
+                  key={h.label}
+                  className="flex items-center gap-2.5 bg-white/10 border border-white/15 rounded-xl px-3.5 py-2.5 text-white/90"
+                >
+                  <div className="text-white/60">{h.icon}</div>
+                  <div>
+                    <p className="text-[12px] font-semibold leading-none mb-0.5">{h.label}</p>
+                    <p className="text-[11px] text-white/55 leading-none">{h.detail}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* CTA */}
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => start(0)}
+                className="inline-flex items-center gap-2.5 px-6 py-3 rounded-xl bg-white text-slate-900 text-[14px] font-bold shadow-lg hover:bg-white/90 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+              >
+                <Play className="w-4 h-4" strokeWidth={2.5} fill="currentColor" />
+                Lancer la visite guidée
+              </button>
+              <span className="text-[12px] text-white/40">← ~2 minutes · 5 étapes</span>
+            </div>
+          </div>
+        </div>
+      </motion.div>
+
+      {/* ── Section header ────────────────────────────────────────────────── */}
+      <motion.div variants={fadeUp}>
+        <div className="flex items-center gap-3 mb-1">
           <div className="p-2.5 rounded-xl bg-[var(--muted)] text-[var(--foreground)]">
             <Compass className="w-5 h-5" strokeWidth={1.8} />
           </div>
-          <h1 className="text-[28px] font-light tracking-[-0.02em] text-[var(--foreground)]">
-            Guide de la plateforme
-          </h1>
+          <h2 className="text-[20px] font-semibold tracking-[-0.02em] text-[var(--foreground)]">
+            Référence complète
+          </h2>
         </div>
-        <p className="text-[14px] text-[var(--muted-foreground)] leading-relaxed max-w-2xl">
-          Découvrez toutes les fonctionnalités de LB-Bot. Chaque section explique ce qu&apos;elle fait,
-          comment s&apos;en servir, et vous donne accès direct à la page correspondante.
+        <p className="text-[13px] text-[var(--muted-foreground)] leading-relaxed ml-[52px]">
+          Documentation détaillée de chaque module. Cliquez sur un lien pour y accéder directement.
         </p>
       </motion.div>
 
-      {/* Sections */}
+      {/* ── Reference sections ────────────────────────────────────────────── */}
       {sections.map((s) => (
         <motion.div
           key={s.number}
@@ -206,9 +292,9 @@ export default function TourPage() {
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between gap-4 flex-wrap">
                 <div>
-                  <h2 className="text-[16px] font-semibold tracking-[-0.01em] text-[var(--foreground)]">
+                  <h3 className="text-[16px] font-semibold tracking-[-0.01em] text-[var(--foreground)]">
                     {s.title}
-                  </h2>
+                  </h3>
                   <p className="text-[12px] text-[var(--muted-foreground)] mt-0.5">{s.subtitle}</p>
                 </div>
                 {s.link && (
@@ -246,16 +332,23 @@ export default function TourPage() {
         </motion.div>
       ))}
 
-      {/* Footer tip */}
+      {/* Footer */}
       <motion.div
         variants={fadeUp}
-        className="p-5 rounded-2xl border border-dashed border-[var(--border)] text-center"
+        className="flex items-center justify-between p-5 rounded-2xl border border-dashed border-[var(--border)]"
       >
         <p className="text-[13px] text-[var(--muted-foreground)]">
           Ce guide est toujours accessible depuis l&apos;icône{' '}
           <Compass className="w-3.5 h-3.5 inline-block -mt-0.5" strokeWidth={1.8} /> dans la barre
           latérale.
         </p>
+        <button
+          onClick={() => start(0)}
+          className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-[12px] font-semibold bg-[var(--foreground)] text-white hover:opacity-80 transition-opacity flex-shrink-0 ml-4"
+        >
+          <Play className="w-3.5 h-3.5" strokeWidth={2.5} fill="currentColor" />
+          Relancer la visite
+        </button>
       </motion.div>
     </motion.div>
   );
