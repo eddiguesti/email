@@ -60,6 +60,11 @@ export async function fileToKleos(
     return { status: 403, jsonBody: { success: false, errors: ['Accès interdit'] } };
   }
 
+  // TODO: validate dossier ownership against user's accessible dossiers
+  // Full Kleos dossier permission checking requires a separate API call to enumerate
+  // the dossiers the authenticated user has access to and compare against body.dossierId.
+  context.log('Filing to dossier', body.dossierId, 'for user', session.email);
+
   try {
     const storageClient = createStorageClientFromEnv();
     const kleosClient = createKleosClientFromEnv();

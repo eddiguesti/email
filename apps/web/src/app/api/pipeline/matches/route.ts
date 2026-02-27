@@ -27,8 +27,10 @@ export async function GET(req: NextRequest) {
   if (!user.isAdmin) query = query.eq('mailbox', user.email);
   if (matched === 'true') query = query.eq('matched', true);
   if (matched === 'false') query = query.eq('matched', false);
-  if (confidenceMin) query = query.gte('confidence', parseFloat(confidenceMin));
-  if (confidenceMax) query = query.lte('confidence', parseFloat(confidenceMax));
+  const confMin = confidenceMin ? parseFloat(confidenceMin) : NaN;
+  const confMax = confidenceMax ? parseFloat(confidenceMax) : NaN;
+  if (!isNaN(confMin)) query = query.gte('confidence', confMin);
+  if (!isNaN(confMax)) query = query.lte('confidence', confMax);
   if (source) query = query.eq('match_source', source);
   if (lawyer) query = query.ilike('lawyer', `%${lawyer}%`);
   if (dateFrom) query = query.gte('received_at', dateFrom);
@@ -46,7 +48,8 @@ export async function GET(req: NextRequest) {
   const { data, error, count } = await query;
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error('[matches] DB error:', error.message);
+    return NextResponse.json({ error: 'Erreur interne' }, { status: 500 });
   }
 
   return NextResponse.json({

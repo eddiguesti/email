@@ -138,7 +138,17 @@ Analyze their writing style and return ONLY the JSON object.`;
       .replace(/^```json?\s*/i, '')
       .replace(/```\s*$/i, '')
       .trim();
-    const parsed = JSON.parse(jsonStr);
+
+    let parsed: Record<string, unknown>;
+    try {
+      parsed = JSON.parse(jsonStr);
+    } catch (parseErr) {
+      console.error(
+        'Style extraction failed, using default profile. Error:',
+        parseErr instanceof Error ? parseErr.message : String(parseErr)
+      );
+      return defaultStyleProfile(lawyerEmail, displayName);
+    }
 
     const expiresAt = new Date(
       Date.now() + 30 * 24 * 60 * 60 * 1000
@@ -147,7 +157,7 @@ Analyze their writing style and return ONLY the JSON object.`;
     return {
       email: lawyerEmail,
       displayName,
-      styleSummary: parsed.styleSummary || 'Style professionnel français standard',
+      styleSummary: typeof parsed.styleSummary === 'string' ? parsed.styleSummary : 'Style professionnel français standard',
       sampleGreetings: Array.isArray(parsed.sampleGreetings)
         ? parsed.sampleGreetings.slice(0, 5)
         : ['Maître,'],
@@ -163,8 +173,9 @@ Analyze their writing style and return ONLY the JSON object.`;
       expiresAt,
     };
   } catch (err) {
-    console.log(
-      `Style extraction failed: ${(err as Error).message?.slice(0, 80)}`
+    console.error(
+      'Style extraction failed, using default profile. Error:',
+      err instanceof Error ? err.message : String(err)
     );
     return defaultStyleProfile(lawyerEmail, displayName);
   }

@@ -48,7 +48,10 @@ export class GraphClient {
   }
 
   /**
-   * Get app-only token using client credentials flow
+   * Get app-only token using client credentials flow.
+   * Retries up to 3 times on network errors or 429/503 responses,
+   * with exponential backoff starting at 1 second.
+   * Each attempt is bounded by a 30-second AbortController timeout.
    */
   private async getAppToken(): Promise<string> {
     const tokenEndpoint = `https://login.microsoftonline.com/${this.config.tenantId}/oauth2/v2.0/token`;
@@ -60,19 +63,49 @@ export class GraphClient {
       grant_type: 'client_credentials',
     });
 
-    const response = await fetch(tokenEndpoint, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: params.toString(),
-    });
+    const maxAttempts = 3;
+    let lastError: Error | null = null;
 
-    if (!response.ok) {
-      const error = await response.text();
-      throw new Error(`Failed to get Graph token: ${error}`);
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30000);
+
+      try {
+        const response = await fetch(tokenEndpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: params.toString(),
+          signal: controller.signal,
+        });
+
+        clearTimeout(timeoutId);
+
+        if (response.status === 429 || response.status === 503) {
+          lastError = new Error(`Graph token endpoint returned ${response.status}`);
+          if (attempt < maxAttempts - 1) {
+            await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt) * 1000));
+          }
+          continue;
+        }
+
+        if (!response.ok) {
+          throw new Error(`Failed to get Graph token: HTTP ${response.status}`);
+        }
+
+        const data = await response.json() as { access_token: string };
+        return data.access_token;
+      } catch (error) {
+        clearTimeout(timeoutId);
+        lastError = error as Error;
+        // Do not retry on timeout or non-transient errors
+        if ((error as Error).name === 'AbortError') break;
+        if (attempt < maxAttempts - 1) {
+          await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt) * 1000));
+        }
+      }
     }
 
-    const data = await response.json() as { access_token: string };
-    return data.access_token;
+    throw lastError ?? new Error('Failed to get Graph token after retries');
   }
 
   // ============= Message Operations =============

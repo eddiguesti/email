@@ -2,7 +2,16 @@
 
 import { motion } from 'framer-motion';
 import type { CalendarEvent } from '@/lib/calendar-api';
-import { formatTime, isSameDayParis } from '@/lib/calendar-utils';
+import { formatTime, isSameDayParis, CALENDAR_TZ } from '@/lib/calendar-utils';
+
+/** Day-of-month number for a calendar-cell Date, rendered in Europe/Paris. */
+function parisDayNumber(date: Date): number {
+  const parts = new Intl.DateTimeFormat('fr-FR', {
+    day: 'numeric',
+    timeZone: CALENDAR_TZ,
+  }).formatToParts(date);
+  return parseInt(parts.find(p => p.type === 'day')?.value ?? '1', 10);
+}
 
 const DAYS_FR = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
 const MAX_EVENTS_PER_DAY = 3;
@@ -86,7 +95,7 @@ export default function MonthView({ events, currentDate, onEventClick, onDayClic
                   w-6 h-6 flex items-center justify-center rounded-full text-[12px] font-medium transition-colors
                   ${isToday ? 'bg-[var(--accent)] text-white font-semibold' : 'text-[var(--foreground)] group-hover:bg-[var(--muted)]'}
                 `}>
-                  {day.getDate()}
+                  {parisDayNumber(day)}
                 </span>
               </div>
 

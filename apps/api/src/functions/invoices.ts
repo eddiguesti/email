@@ -148,7 +148,8 @@ async function listInvoices(
 
     let query = supabase
       .from('unpaid_invoices')
-      .select('*', { count: 'exact' });
+      .select('*', { count: 'exact' })
+      .eq('created_by', userId);
 
     // Apply filters
     if (status) {
@@ -213,6 +214,7 @@ async function getInvoice(
       .from('unpaid_invoices')
       .select('*')
       .eq('id', invoiceId)
+      .eq('created_by', userId)
       .single();
 
     if (error || !data) {
@@ -276,11 +278,9 @@ async function updateInvoice(
     };
 
     for (const [key, value] of Object.entries(body)) {
-      // Skip fields that shouldn't be updated directly
-      if (['id', 'createdAt', 'createdBy', 'created_at', 'created_by'].includes(key)) continue;
-
-      const dbField = fieldMap[key] || key;
-      updates[dbField] = value;
+      // Only allow explicitly whitelisted fields — reject unknown keys
+      if (!fieldMap[key]) continue;
+      updates[fieldMap[key]] = value;
     }
 
     updates.updated_at = new Date().toISOString();
@@ -431,7 +431,7 @@ async function getStats(
   }
 
   try {
-    const stats = await getInvoiceStats();
+    const stats = await getInvoiceStats(userId);
     return {
       status: 200,
       jsonBody: stats,
@@ -528,11 +528,20 @@ async function updateSettings(
   try {
     const settings = await request.json() as Record<string, unknown>;
 
-    // Upsert settings
+    // Look up existing active record to reuse its id (prevents INSERT on every PUT)
+    const { data: existing } = await supabase
+      .from('reminder_settings')
+      .select('id')
+      .eq('is_active', true)
+      .limit(1)
+      .single();
+
+    // Upsert settings — include id so Supabase updates the existing row instead of inserting
     const { data, error } = await supabase
       .from('reminder_settings')
       .upsert({
         ...settings,
+        id: existing?.id || crypto.randomUUID(),
         is_active: true,
         updated_at: new Date().toISOString(),
         updated_by: userId,

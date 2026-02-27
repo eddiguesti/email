@@ -1,6 +1,6 @@
 import { app, HttpRequest, HttpResponseInit, InvocationContext } from '@azure/functions';
 import { Client } from '@microsoft/microsoft-graph-client';
-import { authenticateRequest } from '../utils/auth.js';
+import { authenticateRequest, checkRateLimit } from '../utils/auth.js';
 
 const XAI_API_URL = 'https://api.x.ai/v1/chat/completions';
 
@@ -10,6 +10,12 @@ interface ChatMessage {
 }
 
 async function aiSearch(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
+  // Rate limit: 20 AI search queries per IP per minute
+  const clientIp = request.headers.get('x-forwarded-for')?.split(',')[0] || 'unknown';
+  if (!checkRateLimit(`ai-search:${clientIp}`, 20, 60000)) {
+    return { status: 429, jsonBody: { error: 'Trop de requêtes, réessayez dans 1 minute' } };
+  }
+
   try {
     const auth = await authenticateRequest(request);
     if (!auth.success) {
@@ -64,12 +70,17 @@ Catégories d'emails courants:
 - locataires: Locataires, preneurs
 - assurances: Compagnies d'assurance`;
 
+    const xaiApiKey = process.env.XAI_API_KEY;
+    if (!xaiApiKey) {
+      return { status: 500, jsonBody: { error: 'Configuration IA manquante' } };
+    }
+
     // Call xAI Grok API to understand the query
     const xaiResponse = await fetch(XAI_API_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${process.env.XAI_API_KEY}`,
+        'Authorization': `Bearer ${xaiApiKey}`,
       },
       body: JSON.stringify({
         model: 'grok-3-latest',
@@ -81,6 +92,7 @@ Catégories d'emails courants:
         temperature: 0.7,
         max_tokens: 1000,
       }),
+      signal: AbortSignal.timeout(30_000),
     });
 
     if (!xaiResponse.ok) {

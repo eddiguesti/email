@@ -88,8 +88,17 @@ interface Store {
   searchKleos: (query: string) => Promise<KleosSearchResult[]>;
 }
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:7071/api';
-const API_KEY = import.meta.env.VITE_API_KEY || '';
+// API requests are routed through the Next.js web app proxy at the production
+// domain. The proxy adds the Azure Functions key server-side, so no secret is
+// ever shipped in this client bundle.
+//
+// Development: set VITE_API_BASE_URL=http://localhost:3001/api/addin in your
+// .env.local so the dev Vite server proxies through to the local Next.js app.
+// Do NOT fall back to direct Azure Function URLs here — that would re-expose
+// the key in the bundle.
+const API_BASE =
+  import.meta.env.VITE_API_BASE_URL ||
+  'https://app.laurencebrosset-avocats.fr/api/addin';
 
 async function apiRequest<T>(
   endpoint: string,
@@ -101,9 +110,9 @@ async function apiRequest<T>(
     'Content-Type': 'application/json',
   };
 
-  if (API_KEY) {
-    headers['x-functions-key'] = API_KEY;
-  }
+  // No x-functions-key header here. Authentication is handled server-side by
+  // the Next.js proxy route so the Azure Functions key is never exposed in the
+  // client bundle.
 
   const response = await fetch(url, {
     method,

@@ -31,6 +31,7 @@ export default function NotificationBell({ compact = false }: { compact?: boolea
   // Fetch preview items when panel opens
   useEffect(() => {
     if (!open) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setItems([]);
     getMatchLogs({
       matched: true,

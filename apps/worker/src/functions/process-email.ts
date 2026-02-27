@@ -30,11 +30,11 @@ const READ_ONLY_MODE = process.env.READ_ONLY_MODE !== 'false';
 
 // Supabase client (lazy singleton)
 let supabase: SupabaseClient | undefined;
-function getSupabase(): SupabaseClient | undefined {
+function getSupabase(): SupabaseClient {
   if (supabase) return supabase;
   const url = process.env.SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_KEY;
-  if (!url || !key) return undefined;
+  if (!url || !key) throw new Error('SUPABASE_URL and SUPABASE_SERVICE_KEY are required');
   supabase = createClient(url, key, {
     auth: { autoRefreshToken: false, persistSession: false },
   });
@@ -50,7 +50,13 @@ async function getMatcher(
   if (sharedMatcher) return sharedMatcher;
 
   const kb = await getKnowledgeBase();
-  const supabaseClient = getSupabase();
+  let supabaseClient: SupabaseClient | undefined;
+  try {
+    supabaseClient = getSupabase();
+  } catch (err) {
+    // Supabase is optional for the matcher — log and continue without it
+    console.warn('DossierMatcher: Supabase unavailable (missing env vars):', err);
+  }
 
   const aiConfig = process.env.XAI_API_KEY ? {
     apiKey: process.env.XAI_API_KEY,
@@ -384,8 +390,8 @@ export async function processEmail(
     // Step 4: Meeting intent detection — only for non-skipped emails
     // This runs asynchronously and is non-fatal; it must not block email processing.
     if (!emailWasSkipped && cachedMessage) {
-      const db = getSupabase();
-      if (db) {
+      try {
+        const db = getSupabase();
         // Resolve user_id: look up lawyer by mailbox
         const { data: lawyer } = await db
           .from('lawyers')
@@ -394,16 +400,20 @@ export async function processEmail(
           .single();
         const userId = lawyer?.microsoft_id || message.mailbox;
         await createCalendarSuggestionIfNeeded(db, context, cachedMessage, message.mailbox, userId);
+      } catch (err) {
+        context.warn('Meeting detection skipped (non-fatal):', err);
       }
     }
 
     // Send push notification if this email needs review
     if (needsReview && topMatch) {
-      const db = getSupabase();
-      if (db) {
+      try {
+        const db = getSupabase();
         const senderName = record.extractedSignals?.senderEmail?.split('@')[0] || record.mailbox.split('@')[0];
         await sendPushNotifications(db, context, message.mailbox, senderName, topMatch.dossierName, topMatch.confidence);
         context.log('Push notification sent for review-needed match');
+      } catch (err) {
+        context.warn('Push notification skipped (non-fatal):', err);
       }
     }
 

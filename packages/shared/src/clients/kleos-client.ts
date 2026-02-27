@@ -145,7 +145,7 @@ export class KleosClient {
               error: { code: `HTTP_${response.status}`, message: errorData.message || response.statusText },
             };
           }
-          throw new Error(`HTTP ${response.status}: ${errorData.message || response.statusText}`);
+          throw new Error(`Kleos API error (HTTP ${response.status})`);
         }
 
         const data = await response.json();

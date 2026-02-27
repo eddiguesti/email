@@ -33,7 +33,9 @@ export default function TuningPage() {
   const [days, setDays] = useState(30);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoading(true);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setError(null);
     getAccuracyStats({ days })
       .then(setStats)

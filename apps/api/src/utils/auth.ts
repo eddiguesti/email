@@ -14,6 +14,10 @@ import { refreshUserTokens, tokensNeedRefresh } from '../functions/auth-refresh.
 // Singleton Supabase client
 let supabaseInstance: SupabaseClient | null = null;
 
+// Per-user in-flight token refresh promises (keyed by lawyer.id)
+// Prevents concurrent requests for the same user from all hitting the token endpoint simultaneously
+const tokenRefreshPromises = new Map<string, Promise<Awaited<ReturnType<typeof refreshUserTokens>>>>();
+
 function getSupabase(): SupabaseClient {
   if (!supabaseInstance) {
     const url = process.env.SUPABASE_URL;
@@ -136,10 +140,11 @@ export async function authenticateRequest(request: HttpRequest): Promise<AuthRes
     const supabase = getSupabase();
 
     // Get user with access token from database
+    // session.userId stores graphUser.id (Azure AD object ID = microsoft_id column)
     const { data: lawyer, error } = await supabase
       .from('lawyers')
       .select('id, email, display_name, access_token, refresh_token, token_expires_at, is_active')
-      .eq('id', session.userId)
+      .eq('microsoft_id', session.userId)
       .single();
 
     if (error || !lawyer) {
@@ -161,7 +166,16 @@ export async function authenticateRequest(request: HttpRequest): Promise<AuthRes
     let rawAccessToken = lawyer.access_token;
     if (tokensNeedRefresh(lawyerAsDbUser)) {
       try {
-        const newTokens = await refreshUserTokens(lawyerAsDbUser);
+        // Singleton guard: if a refresh is already in-flight for this user, await the same
+        // promise instead of starting a redundant parallel request to the token endpoint.
+        let refreshPromise = tokenRefreshPromises.get(lawyer.id);
+        if (!refreshPromise) {
+          refreshPromise = refreshUserTokens(lawyerAsDbUser).finally(() => {
+            tokenRefreshPromises.delete(lawyer.id);
+          });
+          tokenRefreshPromises.set(lawyer.id, refreshPromise);
+        }
+        const newTokens = await refreshPromise;
         if (newTokens) {
           const storageClient = createStorageClientFromEnv();
           await storageClient.updateUserTokens(lawyer.id, newTokens);

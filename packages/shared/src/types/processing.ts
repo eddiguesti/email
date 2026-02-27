@@ -93,6 +93,7 @@ export interface AttachmentInfo {
   filed: boolean;
   filedAt?: string;
   kleosDocumentId?: string;
+  failedToDownload?: boolean;
 }
 
 export interface DraftInfo {

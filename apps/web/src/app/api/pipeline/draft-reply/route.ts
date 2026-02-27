@@ -127,7 +127,8 @@ export async function POST(req: NextRequest) {
     }
 
     // 2. Verify the match belongs to the authenticated user's mailbox (admins bypass this)
-    if (!user.isAdmin && match.mailbox && match.mailbox !== user.email) {
+    // Require mailbox to be set and matching — a null mailbox is NOT a pass
+    if (!user.isAdmin && match.mailbox !== user.email) {
       return NextResponse.json({ error: 'Accès interdit' }, { status: 403 });
     }
 
@@ -179,7 +180,7 @@ export async function POST(req: NextRequest) {
   } catch (err) {
     console.error('Draft reply error:', err);
     return NextResponse.json(
-      { error: (err as Error).message || 'Failed to generate draft' },
+      { error: 'Impossible de générer le brouillon' },
       { status: 500 }
     );
   }

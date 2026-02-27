@@ -1,0 +1,82 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build outputs
+dist/
+build/
+.next/
+out/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Testing
+coverage/
+.nyc_output/
+
+# TypeScript
+*.tsbuildinfo
+
+# Turbo
+.turbo/
+
+# Docker volumes (local development)
+postgres_data/
+redis_data/
+pgadmin_data/
+
+# Certificates (development)
+*.pem
+*.key
+*.crt
+*.pfx
+ssl/
+
+# Office Add-in
+*.xml.bak
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Drizzle
+drizzle/meta/
+
+# Secrets (never commit)
+secrets/
+*.secret
+credentials.json
+service-account.json
+config/kleos-config.txt
+config/.env
+kleos-knowledge.json
+local.settings.json
+
+# Package lock files (we use pnpm)
+package-lock.json
+yarn.lock
+.vercel

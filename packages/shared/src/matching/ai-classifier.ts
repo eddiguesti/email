@@ -84,7 +84,7 @@ Return ONLY the JSON object.`;
 
     if (!resp.ok) {
       console.log(`   ⚠️  Grok classifier error: ${resp.status}`);
-      return null;
+      return { dossierRef: null, confidence: 0, reasoning: 'ai_error', error: true };
     }
 
     const data = await resp.json() as { choices: Array<{ message: { content: string } }> };
@@ -107,6 +107,6 @@ Return ONLY the JSON object.`;
     return result;
   } catch (err) {
     console.log(`   ⚠️  AI classification failed: ${(err as Error).message?.slice(0, 80)}`);
-    return null;
+    return { dossierRef: null, confidence: 0, reasoning: 'ai_error', error: true };
   }
 }

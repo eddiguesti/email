@@ -1,0 +1,27 @@
+{
+  "name": "@lb-bot/config",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "db:migrate": "tsx scripts/run-migrations.ts",
+    "db:seed": "tsx scripts/seed-test-data.ts",
+    "setup:subscription": "tsx scripts/setup-graph-subscription.ts",
+    "test:webhook": "tsx scripts/test-webhook.ts",
+    "tunnel": "ngrok http 7071 --domain your-domain.ngrok-free.app"
+  },
+  "dependencies": {
+    "@azure/identity": "^4.2.0",
+    "@azure/service-bus": "^7.9.0",
+    "@azure/storage-blob": "^12.17.0",
+    "@lb-bot/shared": "workspace:*",
+    "@microsoft/microsoft-graph-client": "^3.0.7",
+    "@supabase/supabase-js": "^2.39.0",
+    "dotenv": "^16.3.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "tsx": "^4.7.0",
+    "typescript": "^5.3.0"
+  }
+}

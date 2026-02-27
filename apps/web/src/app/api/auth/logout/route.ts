@@ -21,7 +21,8 @@ export async function POST(req: NextRequest) {
   response.cookies.set('lb_session', '', {
     path: '/',
     httpOnly: true,
-    sameSite: 'lax',
+    sameSite: 'strict',
+    secure: true,
     maxAge: 0,
   });
   return response;

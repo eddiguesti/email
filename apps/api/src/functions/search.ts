@@ -11,6 +11,7 @@ import {
   type SearchResponse,
   type SearchResultItem,
 } from '@lb-bot/shared';
+import { extractSessionToken, decodeSessionToken } from '../utils/auth.js';
 
 const RequestSchema = z.object({
   query: z.string().min(1),
@@ -35,6 +36,13 @@ export async function search(
   request: HttpRequest,
   context: InvocationContext
 ): Promise<HttpResponseInit> {
+  // Authenticate the session before processing any request
+  const token = extractSessionToken(request);
+  const session = token ? decodeSessionToken(token) : null;
+  if (!session) {
+    return { status: 401, jsonBody: { error: 'Non authentifié' } };
+  }
+
   let body: SearchRequest;
 
   try {
@@ -47,6 +55,9 @@ export async function search(
       jsonBody: { error: 'Invalid request body' },
     };
   }
+
+  // Always scope searches to the authenticated user's own mailbox
+  body = { ...body, mailbox: session.email };
 
   try {
     const storageClient = createStorageClientFromEnv();

@@ -62,6 +62,23 @@ export async function PATCH(
   const attendees   = (overrides.attendees   as { email: string; name?: string }[] | undefined)
                       || suggestion.attendees || [];
 
+  // Validate date ordering before hitting the Graph API.
+  const startDate = new Date(startAt);
+  const endDate   = endAt ? new Date(endAt) : new Date(startDate.getTime() + 3600_000);
+
+  if (isNaN(startDate.getTime())) {
+    return NextResponse.json({ error: 'Date de début invalide' }, { status: 400 });
+  }
+  if (isNaN(endDate.getTime())) {
+    return NextResponse.json({ error: 'Date de fin invalide' }, { status: 400 });
+  }
+  if (startDate >= endDate) {
+    return NextResponse.json(
+      { error: 'La date de fin doit être après la date de début' },
+      { status: 400 }
+    );
+  }
+
   const accessToken = await getAccessToken(user.userId);
   if (!accessToken) {
     return NextResponse.json({ error: 'Token Microsoft introuvable' }, { status: 401 });
@@ -69,8 +86,8 @@ export async function PATCH(
 
   let eventId: string;
   try {
-    const start = new Date(startAt);
-    const end   = endAt ? new Date(endAt) : new Date(start.getTime() + 3600_000);
+    const start = startDate;
+    const end   = endDate;
 
     const newEvent = {
       subject: title,
@@ -91,6 +108,7 @@ export async function PATCH(
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(newEvent),
+      signal: AbortSignal.timeout(15_000),
     });
 
     if (!graphRes.ok) {
@@ -100,7 +118,8 @@ export async function PATCH(
       throw new Error(`Graph ${graphRes.status}`);
     }
 
-    const created = await graphRes.json() as { id: string };
+    const created = await graphRes.json() as { id?: string };
+    if (!created.id) throw new Error('Missing event ID in Graph response');
     eventId = created.id;
   } catch (err) {
     console.error('Outlook event creation failed:', err);
@@ -131,7 +150,10 @@ export async function PATCH(
     .eq('status', 'pending')
     .select('id');
 
-  if (updateErr) return NextResponse.json({ error: updateErr.message }, { status: 500 });
+  if (updateErr) {
+    console.error('[accept] DB error:', updateErr.message);
+    return NextResponse.json({ error: 'Erreur interne' }, { status: 500 });
+  }
   if (!updatedRows || updatedRows.length === 0) {
     return NextResponse.json({ error: 'Suggestion déjà traitée' }, { status: 409 });
   }

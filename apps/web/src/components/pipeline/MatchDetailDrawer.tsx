@@ -137,6 +137,9 @@ export default function MatchDetailDrawer({ log, open, onClose, onReview }: Prop
   const [draftError,   setDraftError]   = useState<string | null>(null);
   const [copied,       setCopied]       = useState(false);
 
+  const [reviewLoading, setReviewLoading] = useState(false);
+  const [reviewError,   setReviewError]   = useState<string | null>(null);
+
   const fetchEmail = useCallback(async (l: MatchLog) => {
     setMessage(null);
     setThread([]);
@@ -151,7 +154,13 @@ export default function MatchDetailDrawer({ log, open, onClose, onReview }: Prop
       const msgUrl = new URL('/api/messages', window.location.origin);
       msgUrl.searchParams.set('id', l.email_id);
       if (l.mailbox) msgUrl.searchParams.set('mailbox', l.mailbox);
-      const res  = await fetch(msgUrl.toString());
+      const res = await fetch(msgUrl.toString());
+
+      if (!res.ok) {
+        setMsgError('Impossible de charger cet email');
+        return;
+      }
+
       const data = await res.json();
 
       if (data.notFound) {
@@ -164,9 +173,9 @@ export default function MatchDetailDrawer({ log, open, onClose, onReview }: Prop
           threadUrl.searchParams.set('conversationId', convId);
           if (l.mailbox) threadUrl.searchParams.set('mailbox', l.mailbox);
           fetch(threadUrl.toString())
-            .then(r => r.json())
+            .then(r => r.ok ? r.json() : Promise.reject(r.status))
             .then(d => setThread((d.thread || []).filter((t: ThreadItem) => t.id !== l.email_id)))
-            .catch(() => {});
+            .catch((err) => console.warn('[MatchDetailDrawer] thread fetch failed:', err));
         }
       }
     } catch {
@@ -205,6 +214,20 @@ export default function MatchDetailDrawer({ log, open, onClose, onReview }: Prop
     await navigator.clipboard.writeText(draft.draft);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  }
+
+  async function handleReview(approved: boolean) {
+    if (!log || !onReview) return;
+    setReviewLoading(true);
+    setReviewError(null);
+    try {
+      await Promise.resolve(onReview(log.id, approved));
+      onClose();
+    } catch (err) {
+      setReviewError((err as Error).message || 'Erreur lors de la validation');
+    } finally {
+      setReviewLoading(false);
+    }
   }
 
   const subject     = message?.subject ?? (msgLoad ? '…' : '(Sans objet)');
@@ -541,24 +564,42 @@ export default function MatchDetailDrawer({ log, open, onClose, onReview }: Prop
               {(canReview || log.reviewed_by) && (
                 <motion.div
                   variants={SECTION}
-                  className="flex items-center gap-3 px-5 py-4 border-t border-[var(--border)] bg-[var(--muted)] flex-shrink-0"
+                  className="flex flex-col gap-2 px-5 py-4 border-t border-[var(--border)] bg-[var(--muted)] flex-shrink-0"
                 >
-                  {canReview && onReview ? (
+                  {canReview ? (
                     <>
-                      <button
-                        onClick={() => { onReview(log.id, true); onClose(); }}
-                        className="flex items-center gap-2 px-4 py-2.5 text-[13px] font-medium rounded-xl bg-[var(--foreground)] text-white hover:opacity-90 transition-opacity duration-150"
-                      >
-                        <CheckCircle className="w-4 h-4" strokeWidth={1.8} />
-                        Approuver
-                      </button>
-                      <button
-                        onClick={() => { onReview(log.id, false); onClose(); }}
-                        className="flex items-center gap-2 px-4 py-2.5 text-[13px] font-medium rounded-xl border border-red-200 text-red-500 hover:bg-red-50 transition-colors duration-150"
-                      >
-                        <XCircle className="w-4 h-4" strokeWidth={1.8} />
-                        Rejeter
-                      </button>
+                      <div className="flex items-center gap-3">
+                        <button
+                          onClick={() => handleReview(true)}
+                          disabled={reviewLoading}
+                          className="flex items-center gap-2 px-4 py-2.5 text-[13px] font-medium rounded-xl bg-[var(--foreground)] text-white hover:opacity-90 transition-opacity duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {reviewLoading ? (
+                            <Loader2 className="w-4 h-4 animate-spin" strokeWidth={1.8} />
+                          ) : (
+                            <CheckCircle className="w-4 h-4" strokeWidth={1.8} />
+                          )}
+                          Approuver
+                        </button>
+                        <button
+                          onClick={() => handleReview(false)}
+                          disabled={reviewLoading}
+                          className="flex items-center gap-2 px-4 py-2.5 text-[13px] font-medium rounded-xl border border-red-200 text-red-500 hover:bg-red-50 transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {reviewLoading ? (
+                            <Loader2 className="w-4 h-4 animate-spin" strokeWidth={1.8} />
+                          ) : (
+                            <XCircle className="w-4 h-4" strokeWidth={1.8} />
+                          )}
+                          Rejeter
+                        </button>
+                      </div>
+                      {reviewError && (
+                        <div className="flex items-center gap-1.5 text-[12px] text-red-500">
+                          <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" strokeWidth={1.8} />
+                          {reviewError}
+                        </div>
+                      )}
                     </>
                   ) : log.reviewed_by ? (
                     <div className="flex items-center gap-2 text-[12px] text-[var(--muted-foreground)]">

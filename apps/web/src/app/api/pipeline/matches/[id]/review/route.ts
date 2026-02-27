@@ -33,7 +33,7 @@ export async function PATCH(
     );
   }
 
-  const { data, error } = await supabaseAdmin
+  let updateQuery = supabaseAdmin
     .from('match_logs')
     .update({
       review_approved: approved,
@@ -41,15 +41,22 @@ export async function PATCH(
       reviewed_at: new Date().toISOString(),
     })
     .eq('id', id)
-    .select()
-    .single();
+    .is('review_approved', null); // atomic: only update if not already reviewed
 
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  // Non-admin lawyers can only review their own mailbox
+  if (!user.isAdmin) {
+    updateQuery = updateQuery.eq('mailbox', user.email);
   }
 
-  // Log user activity
-  supabaseAdmin.from('activity_logs').insert({
+  const { data, error } = await updateQuery.select().single();
+
+  if (error) {
+    console.error('[review] DB error:', error.message);
+    return NextResponse.json({ error: 'Erreur interne' }, { status: 500 });
+  }
+
+  // Log user activity (fire-and-forget, non-blocking)
+  void Promise.resolve(supabaseAdmin.from('activity_logs').insert({
     user_id: user.userId,
     user_email: user.email,
     user_name: user.name,
@@ -62,7 +69,7 @@ export async function PATCH(
     },
     resource_type: 'match_log',
     resource_id: id,
-  }).then(() => {});
+  })).catch(err => console.error('Failed to log activity:', err));
 
   return NextResponse.json({ match: data });
 }

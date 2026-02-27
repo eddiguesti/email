@@ -30,6 +30,7 @@ export default function AnalyticsPage() {
   const [days, setDays] = useState(30);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoading(true);
     getPipelineStats({ days })
       .then(setStats)

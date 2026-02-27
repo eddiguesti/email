@@ -55,22 +55,38 @@ export async function GET(req: NextRequest) {
     const url = new URL(`${GRAPH_BASE}/me/calendar/events`);
     url.searchParams.set('$filter', filter);
     url.searchParams.set('$orderby', 'start/dateTime');
-    url.searchParams.set('$top', '200');
+    url.searchParams.set('$top', '100');
     url.searchParams.set('$select', select);
 
-    const response = await fetch(url.toString(), {
-      headers: { Authorization: `Bearer ${accessToken}`, Accept: 'application/json' },
-      cache: 'no-store',
-    });
+    // Paginate through @odata.nextLink until all events are fetched (max 5 pages / 500 events).
+    const MAX_PAGES = 5;
+    const rawEvents: Record<string, unknown>[] = [];
+    let nextUrl: string | null = url.toString();
+    let page = 0;
 
-    if (!response.ok) {
-      console.error('Graph API error:', response.status);
-      return NextResponse.json({ error: 'Erreur Microsoft Graph' }, { status: 502 });
+    while (nextUrl && page < MAX_PAGES) {
+      const response = await fetch(nextUrl, {
+        headers: { Authorization: `Bearer ${accessToken}`, Accept: 'application/json' },
+        cache: 'no-store',
+        signal: AbortSignal.timeout(15_000),
+      });
+
+      if (!response.ok) {
+        console.error('Graph API error:', response.status);
+        return NextResponse.json({ error: 'Erreur Microsoft Graph' }, { status: 502 });
+      }
+
+      const data = await response.json() as {
+        value?: Record<string, unknown>[];
+        '@odata.nextLink'?: string;
+      };
+
+      if (data.value) rawEvents.push(...data.value);
+      nextUrl = data['@odata.nextLink'] ?? null;
+      page++;
     }
 
-    const data = await response.json() as { value?: Record<string, unknown>[] };
-
-    const events = (data.value || []).map(e => ({
+    const events = rawEvents.map(e => ({
       id:          e.id as string,
       source:      'microsoft' as const,
       subject:     (e.subject as string) || 'Sans titre',
@@ -83,7 +99,7 @@ export async function GET(req: NextRequest) {
                    ?? `${(e.end   as { date?: string } | null)?.date}T00:00:00.000Z`,
       location:    (e.location as { displayName?: string } | null)?.displayName || undefined,
       isAllDay:    (e.isAllDay as boolean) || false,
-      attendees:   ((e.attendees as { emailAddress: { name?: string; address?: string } }[]) || []).map(a => ({
+      attendees:   ((e.attendees as { emailAddress: { name?: string; address?: string } }[]) || []).map((a: { emailAddress: { name?: string; address?: string } }) => ({
         name:  a.emailAddress?.name,
         email: a.emailAddress?.address,
       })),

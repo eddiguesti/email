@@ -33,8 +33,8 @@ export class SignalExtractor {
       await this.storageClient.upsertProcessingRecord(record);
 
       // Get email body
-      const bodyContent = message.body.content;
-      const bodyContentType = message.body.contentType;
+      const bodyContent = message.body?.content ?? '';
+      const bodyContentType = message.body?.contentType ?? 'text';
 
       // Convert HTML to plain text if needed
       const plainBody = bodyContentType === 'html' ? stripHtml(bodyContent) : bodyContent;

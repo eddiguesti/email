@@ -26,6 +26,14 @@ export async function webhookGraph(
 ): Promise<HttpResponseInit> {
   context.log('Graph webhook received');
 
+  // Guard: refuse to operate without a configured client state secret.
+  // Without this check, an empty WEBHOOK_CLIENT_STATE would cause every
+  // incoming notification to pass validation ('' === '').
+  if (!WEBHOOK_CLIENT_STATE) {
+    context.error('WEBHOOK_CLIENT_STATE is not configured — refusing to process webhook');
+    return { status: 500, jsonBody: { error: 'Webhook client state secret is not configured' } };
+  }
+
   // Handle validation request (subscription creation)
   const validationToken = request.query.get('validationToken');
   if (validationToken) {

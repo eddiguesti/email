@@ -94,7 +94,8 @@ export class EmailFetcher {
               }
             } catch (error) {
               console.error(`Error processing attachment ${att.id}:`, error);
-              // Continue with other attachments
+              // Mark as failed so downstream stages know the attachment exists but couldn't be fetched
+              attachmentInfo.failedToDownload = true;
             }
           }
 

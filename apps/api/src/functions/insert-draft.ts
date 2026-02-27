@@ -5,6 +5,7 @@
 
 import { app, HttpRequest, HttpResponseInit, InvocationContext } from '@azure/functions';
 import { z } from 'zod';
+import { extractSessionToken, decodeSessionToken } from '../utils/auth.js';
 import {
   createStorageClientFromEnv,
   GraphClient,
@@ -26,6 +27,13 @@ export async function insertDraft(
   request: HttpRequest,
   context: InvocationContext
 ): Promise<HttpResponseInit> {
+  // Session authentication — must come before any body parsing
+  const token = extractSessionToken(request);
+  const session = token ? decodeSessionToken(token) : null;
+  if (!session) {
+    return { status: 401, jsonBody: { success: false, error: 'Non authentifié' } };
+  }
+
   let body: InsertDraftRequest;
 
   try {
@@ -37,6 +45,11 @@ export async function insertDraft(
       status: 400,
       jsonBody: { success: false, error: 'Invalid request body' },
     };
+  }
+
+  // Ownership check — users may only insert drafts into their own mailbox
+  if (body.mailbox !== session.email) {
+    return { status: 403, jsonBody: { success: false, error: 'Accès interdit' } };
   }
 
   try {

@@ -73,6 +73,7 @@ async function notificationsStream(
 
   // Create a readable stream for SSE
   let controller: ReadableStreamDefaultController;
+  let heartbeatInterval: ReturnType<typeof setInterval> | null = null;
   const stream = new ReadableStream({
     start(ctrl) {
       controller = ctrl;
@@ -92,15 +93,23 @@ async function notificationsStream(
       );
 
       // Send heartbeat every 30 seconds to keep connection alive
-      const heartbeat = setInterval(() => {
+      heartbeatInterval = setInterval(() => {
         try {
           controller.enqueue(encoder.encode(`: heartbeat\n\n`));
         } catch {
-          clearInterval(heartbeat);
+          if (heartbeatInterval) {
+            clearInterval(heartbeatInterval);
+            heartbeatInterval = null;
+          }
         }
       }, 30000);
     },
     cancel() {
+      // Clear heartbeat to prevent memory leak
+      if (heartbeatInterval) {
+        clearInterval(heartbeatInterval);
+        heartbeatInterval = null;
+      }
       // Cleanup on disconnect
       if (connections.has(userId)) {
         connections.get(userId)!.delete(controller);

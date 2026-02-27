@@ -42,6 +42,7 @@ export default function ReviewLayout({ children }: { children: React.ReactNode }
 function CountUp({ to }: { to: number }) {
   const [val, setVal] = useState(0);
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (!to) { setVal(0); return; }
     const duration = 900;
     const start = performance.now();

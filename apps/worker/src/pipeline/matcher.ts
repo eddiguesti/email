@@ -165,8 +165,23 @@ export class DossierMatcher {
       // Run the 8-tier matching engine
       const pipelineResults = await this.engine.matchEmail(matchSignals, mailboxOwner, kleosSearchFn);
 
+      // Guard against AI returning a ref that was not in the candidate list passed to it.
+      // The hallucination check in ai-classifier.ts validates against the full KB, so a ref that
+      // exists in the KB but was outside the candidate window (e.g. another lawyer's dossier when
+      // scoped) would pass that check but is still an invalid result here.
+      const candidateDossiers = mailboxOwner?.dossiers || this.kb.dossiers.slice(0, 300);
+      const candidateRefSet = new Set(candidateDossiers.map(d => d.reference));
+      const validatedPipelineResults = pipelineResults.filter(pr => {
+        const isAiSource = pr.source === 'ai_classifier_scoped' || pr.source === 'ai_classifier_global';
+        if (isAiSource && pr.dossierRef && !candidateRefSet.has(pr.dossierRef)) {
+          console.warn(`[matcher] AI returned ref "${pr.dossierRef}" not in candidate list — discarded`);
+          return false;
+        }
+        return true;
+      });
+
       // Convert PipelineMatchResult (dossierId: number) to MatchResult (dossierId: string)
-      const results: MatchResult[] = pipelineResults.map(pr => ({
+      const results: MatchResult[] = validatedPipelineResults.map(pr => ({
         dossierId: String(pr.dossierId),
         dossierName: pr.dossierName,
         dossierRef: pr.dossierRef,
@@ -176,11 +191,11 @@ export class DossierMatcher {
         lawyer: pr.lawyer,
       }));
 
-      // Persist match results
-      if (pipelineResults.length > 0 && pipelineResults[0].confidence >= 0.60) {
-        this.engine.updateSenderHistory(signals.senderEmail, pipelineResults[0]);
+      // Persist match results (use the validated list so a discarded AI result is not persisted)
+      if (validatedPipelineResults.length > 0 && validatedPipelineResults[0].confidence >= 0.60) {
+        this.engine.updateSenderHistory(signals.senderEmail, validatedPipelineResults[0]);
         await this.engine.persistMatch(
-          pipelineResults[0],
+          validatedPipelineResults[0],
           signals.senderEmail,
           record.conversationId || undefined
         );
@@ -195,8 +210,6 @@ export class DossierMatcher {
         nextStatus = 'READY_FOR_REVIEW';
       } else if (autoApproved) {
         nextStatus = 'MATCHED'; // READ-ONLY: don't advance to READY_TO_FILE
-      } else if (results[0].confidence >= REVIEW_THRESHOLD) {
-        nextStatus = 'READY_FOR_REVIEW';
       } else {
         nextStatus = 'READY_FOR_REVIEW';
       }

@@ -245,7 +245,7 @@ export default function OnboardingModal({ onComplete }: OnboardingModalProps) {
                   Quels emails traiter ?
                 </h2>
                 <p className="text-[13px] text-[var(--muted-foreground)] mb-5">
-                  Définissez le périmètre d'analyse de votre boîte mail.
+                  Définissez le périmètre d&apos;analyse de votre boîte mail.
                 </p>
                 <div className="space-y-2.5">
                   {EMAIL_FILTERS.map(filter => (

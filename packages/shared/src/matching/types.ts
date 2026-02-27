@@ -79,6 +79,8 @@ export interface AIClassification {
   dossierRef: string | null;
   confidence: number;
   reasoning: string;
+  /** Present (and true) when the result represents a classifier error rather than a genuine no-match. */
+  error?: boolean;
 }
 
 export interface AIExtraction {

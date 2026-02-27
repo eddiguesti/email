@@ -11,6 +11,7 @@
  */
 
 import { app, HttpRequest, HttpResponseInit, InvocationContext } from '@azure/functions';
+import { timingSafeEqual } from 'crypto';
 import {
   GraphClient,
   createQueueClientFromEnv,
@@ -28,9 +29,14 @@ async function pipelineBackfill(
   request: HttpRequest,
   context: InvocationContext
 ): Promise<HttpResponseInit> {
-  // Simple API key auth
-  const authHeader = request.headers.get('x-api-key') || request.query.get('code') || '';
-  if (!API_KEY || authHeader !== API_KEY) {
+  // API key auth — header only; query string is intentionally not accepted
+  // because query parameters appear in access logs and browser history.
+  const authHeader = request.headers.get('x-api-key') || '';
+  if (
+    !API_KEY ||
+    authHeader.length !== API_KEY.length ||
+    !timingSafeEqual(Buffer.from(authHeader), Buffer.from(API_KEY))
+  ) {
     return { status: 401, jsonBody: { error: 'Unauthorized' } };
   }
 

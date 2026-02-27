@@ -854,8 +854,11 @@ export async function processReminder(
     return { success: false, error: 'Token d\'accès manquant pour l\'envoi' };
   }
 
+  const currentReminderCount = invoice.reminder_count || 0;
   const mappedInvoice = mapDbToInvoice(invoice);
-  const reminderNumber = (invoice.reminder_count || 0) + 1;
+  // reminderNumber is optimistic — used for template selection and history record.
+  // The actual DB increment is done atomically below with a concurrency check.
+  const reminderNumber = currentReminderCount + 1;
 
   // Generate email content
   const { subject, body } = await generateReminderEmail(mappedInvoice, reminderNumber);
@@ -891,6 +894,22 @@ export async function processReminder(
   if (!graphResponse.ok) {
     const errText = await graphResponse.text();
     return { success: false, error: `Échec envoi: ${errText}` };
+  }
+
+  // Atomically increment reminder_count — only succeeds if no concurrent call already did so.
+  // The .eq('reminder_count', currentReminderCount) condition acts as an optimistic lock:
+  // if a concurrent request already incremented the counter, this update matches 0 rows
+  // and we abort to avoid double-recording.
+  const { data: updatedRows } = await supabase
+    .from('unpaid_invoices')
+    .update({ reminder_count: reminderNumber, last_reminder_at: new Date().toISOString(), status: 'reminded' })
+    .eq('id', invoiceId)
+    .eq('reminder_count', currentReminderCount)
+    .select('id');
+
+  if (!updatedRows || updatedRows.length === 0) {
+    // A concurrent call already incremented reminder_count — email was already sent, abort.
+    return { success: false, error: 'Relance déjà traitée par une requête concurrente' };
   }
 
   // Record in DB (Graph sendMail returns 202 with no body — no message ID available)
@@ -958,7 +977,7 @@ export async function updateInvoiceStatus(
 /**
  * Get invoice statistics for dashboard
  */
-export async function getInvoiceStats(): Promise<{
+export async function getInvoiceStats(userId: string): Promise<{
   pending: { count: number; amount: number };
   reminded: { count: number; amount: number };
   paid: { count: number; amount: number };
@@ -969,7 +988,8 @@ export async function getInvoiceStats(): Promise<{
 }> {
   const { data: stats } = await supabase
     .from('unpaid_invoices')
-    .select('status, amount, next_reminder_at, due_date');
+    .select('status, amount, next_reminder_at, due_date')
+    .eq('created_by', userId);
 
   const result = {
     pending: { count: 0, amount: 0 },

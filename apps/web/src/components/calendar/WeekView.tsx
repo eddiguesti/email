@@ -32,6 +32,15 @@ function isSameDay(a: Date, b: Date): boolean {
     a.getDate()     === b.getDate();
 }
 
+/** Day-of-month number for a calendar-cell Date, rendered in Europe/Paris. */
+function parisDayNumber(date: Date): number {
+  const parts = new Intl.DateTimeFormat('fr-FR', {
+    day: 'numeric',
+    timeZone: 'Europe/Paris',
+  }).formatToParts(date);
+  return parseInt(parts.find(p => p.type === 'day')?.value ?? '1', 10);
+}
+
 function eventTopPx(startIso: string): number {
   const { hours, minutes } = parseParisTime(startIso);
   return (hours + minutes / 60) * SLOT_HEIGHT;
@@ -91,7 +100,7 @@ export default function WeekView({ events, currentDate, onEventClick }: Props) {
                 w-7 h-7 mx-auto mt-0.5 flex items-center justify-center rounded-full text-[14px] font-medium
                 ${isToday ? 'bg-[var(--accent)] text-white' : 'text-[var(--foreground)]'}
               `}>
-                {day.getDate()}
+                {parisDayNumber(day)}
               </div>
             </div>
           );

@@ -37,8 +37,8 @@ CREATE TABLE IF NOT EXISTS unpaid_invoices (
   import_batch_id UUID,
   created_at TIMESTAMP DEFAULT NOW(),
   updated_at TIMESTAMP DEFAULT NOW(),
-  created_by UUID REFERENCES lawyers(id),
-  updated_by UUID REFERENCES lawyers(id)
+  created_by UUID REFERENCES lawyers(id) ON DELETE SET NULL,
+  updated_by UUID REFERENCES lawyers(id) ON DELETE SET NULL
 );
 
 CREATE INDEX IF NOT EXISTS idx_unpaid_invoices_status ON unpaid_invoices(status);
@@ -74,7 +74,7 @@ CREATE TABLE IF NOT EXISTS reminder_history (
   payment_promise BOOLEAN DEFAULT FALSE,
   payment_promise_date DATE,
   payment_promise_amount DECIMAL(10,2),
-  created_by UUID REFERENCES lawyers(id),
+  created_by UUID REFERENCES lawyers(id) ON DELETE SET NULL,
   created_at TIMESTAMP DEFAULT NOW()
 );
 
@@ -119,3 +119,24 @@ CREATE TABLE IF NOT EXISTS reminder_templates (
   created_at TIMESTAMP DEFAULT NOW(),
   updated_at TIMESTAMP DEFAULT NOW()
 );
+
+-- RLS for all tables created in this migration
+ALTER TABLE unpaid_invoices ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Service role full access" ON unpaid_invoices
+  FOR ALL TO service_role USING (true) WITH CHECK (true);
+
+ALTER TABLE reminder_history ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Service role full access" ON reminder_history
+  FOR ALL TO service_role USING (true) WITH CHECK (true);
+
+ALTER TABLE invoice_groups ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Service role full access" ON invoice_groups
+  FOR ALL TO service_role USING (true) WITH CHECK (true);
+
+ALTER TABLE invoice_group_members ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Service role full access" ON invoice_group_members
+  FOR ALL TO service_role USING (true) WITH CHECK (true);
+
+ALTER TABLE reminder_templates ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Service role full access" ON reminder_templates
+  FOR ALL TO service_role USING (true) WITH CHECK (true);

@@ -20,6 +20,16 @@ interface UseNotificationsOptions {
 const BASE_RECONNECT_MS = 1_000;
 const MAX_RECONNECT_MS = 30_000;
 
+/**
+ * Manages a single SSE connection to the notifications stream.
+ *
+ * IMPORTANT: This hook must only be mounted ONCE at the layout level (e.g. the
+ * dashboard layout). Mounting it in multiple components simultaneously will open
+ * multiple SSE connections to the server — one per hook instance — because each
+ * instance maintains its own EventSource ref. If you need notification data in a
+ * child component, lift the state up and pass it down as props, or use a shared
+ * context/store that calls this hook once at the root.
+ */
 export function useNotifications(options: UseNotificationsOptions = {}) {
   const { enabled = true, onNotification } = options;
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -28,6 +38,14 @@ export function useNotifications(options: UseNotificationsOptions = {}) {
   const eventSourceRef = useRef<EventSource | null>(null);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const reconnectAttemptsRef = useRef(0);
+
+  const addNotification = useCallback((notification: Notification) => {
+    setNotifications((prev) => {
+      if (prev.some(n => n.id === notification.id)) return prev;
+      return [notification, ...prev].slice(0, 50);
+    });
+    onNotification?.(notification);
+  }, [onNotification]);
 
   const connect = useCallback(() => {
     if (!enabled || eventSourceRef.current) return;
@@ -67,6 +85,7 @@ export function useNotifications(options: UseNotificationsOptions = {}) {
         reconnectTimeoutRef.current = setTimeout(() => {
           eventSourceRef.current?.close();
           eventSourceRef.current = null;
+          // eslint-disable-next-line react-hooks/immutability
           connect();
         }, delay);
       };
@@ -139,12 +158,7 @@ export function useNotifications(options: UseNotificationsOptions = {}) {
       setError('Erreur de connexion');
       console.error('SSE connection error:', err);
     }
-  }, [enabled]);
-
-  const addNotification = useCallback((notification: Notification) => {
-    setNotifications((prev) => [notification, ...prev].slice(0, 50));
-    onNotification?.(notification);
-  }, [onNotification]);
+  }, [enabled, addNotification]);
 
   const disconnect = useCallback(() => {
     if (eventSourceRef.current) {

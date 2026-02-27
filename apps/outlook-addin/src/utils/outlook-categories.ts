@@ -56,22 +56,40 @@ export function applyEmailCategory(category: string): void {
     ) return;
 
     // 1. Ensure all LB categories exist in the master list
-    Office.context.mailbox.masterCategories.addAsync(LB_CATEGORIES, () => {
+    Office.context.mailbox.masterCategories.addAsync(LB_CATEGORIES, masterResult => {
+      if (masterResult.status !== Office.AsyncResultStatus.Succeeded) {
+        console.error('Office.js category operation failed:', masterResult.error?.message);
+        return;
+      }
+
       // 2. Read existing categories on this email
       Office.context.mailbox.item!.categories.getAsync(getResult => {
-        if (getResult.status !== Office.AsyncResultStatus.Succeeded) return;
+        if (getResult.status !== Office.AsyncResultStatus.Succeeded) {
+          console.error('Office.js category operation failed:', getResult.error?.message);
+          return;
+        }
 
         const existingLB = getResult.value
           .filter(c => ALL_LB_NAMES.includes(c.displayName))
           .map(c => c.displayName);
 
         const addCategory = () => {
-          Office.context.mailbox.item!.categories.addAsync([category], () => {});
+          Office.context.mailbox.item!.categories.addAsync([category], addResult => {
+            if (addResult.status !== Office.AsyncResultStatus.Succeeded) {
+              console.error('Office.js category operation failed:', addResult.error?.message);
+            }
+          });
         };
 
         // 3. Remove stale LB categories, then apply the new one
         if (existingLB.length > 0) {
-          Office.context.mailbox.item!.categories.removeAsync(existingLB, addCategory);
+          Office.context.mailbox.item!.categories.removeAsync(existingLB, removeResult => {
+            if (removeResult.status !== Office.AsyncResultStatus.Succeeded) {
+              console.error('Office.js category operation failed:', removeResult.error?.message);
+              return;
+            }
+            addCategory();
+          });
         } else {
           addCategory();
         }

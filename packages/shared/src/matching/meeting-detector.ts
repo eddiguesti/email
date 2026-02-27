@@ -121,11 +121,56 @@ const DATE_PATTERNS = [
   },
 ];
 
+/** Named time keywords → fixed clock values (Europe/Paris assumed) */
+const NAMED_TIMES: Record<string, { hours: number; minutes: number }> = {
+  midi:   { hours: 12, minutes: 0 },
+  minuit: { hours: 0,  minutes: 0 },
+};
+
 /**
- * Time patterns: 14h30, 14:30, 14H, 14h, 9h00
+ * Single-time extraction patterns — tried in order, first match wins.
+ * Covers: 14h30 · 14H30 · 14:30 · 14h · 9h00 · 14 heures · 14 HEURES 30
+ *         · 14 heure · 14 h · midi · minuit
  */
-const TIME_RE = /\b(\d{1,2})[h:](\d{2})?\b/gi;
-const TIME_RANGE_RE = /\b(\d{1,2})[h:](\d{2})?\s*[-à–]\s*(\d{1,2})[h:](\d{2})?\b/gi;
+const SINGLE_TIME_PATTERNS: Array<{
+  re: RegExp;
+  parse: (m: RegExpMatchArray) => { hours: number; minutes: number };
+}> = [
+  // 14h30 / 14H30 / 14:30 / 14h / 9h00
+  { re: /\b(\d{1,2})[hH:](\d{2})?\b/g,
+    parse: m => ({ hours: parseInt(m[1]), minutes: parseInt(m[2] || '0') }) },
+  // "14 heures 30" / "14 HEURES" / "9 heure"
+  { re: /\b(\d{1,2})\s+heures?\s*(\d{2})?\b/gi,
+    parse: m => ({ hours: parseInt(m[1]), minutes: parseInt(m[2] || '0') }) },
+  // "14 h" (space before isolated h)
+  { re: /\b(\d{1,2})\s+h\b/gi,
+    parse: m => ({ hours: parseInt(m[1]), minutes: 0 }) },
+  // "midi" / "minuit"
+  { re: /\b(midi|minuit)\b/gi,
+    parse: m => NAMED_TIMES[m[1].toLowerCase()] ?? { hours: 12, minutes: 0 } },
+];
+
+/**
+ * Time-range extraction patterns — tried in order, first match wins.
+ * Covers: 14h–16h · 14:30 à 16:30 · 14 heures à 16 heures · 9h à midi
+ */
+const TIME_RANGE_PATTERNS: Array<{
+  re: RegExp;
+  parse: (m: RegExpMatchArray) => { startH: number; startM: number; endH: number; endM: number };
+}> = [
+  // "14h30 - 16h00" / "14:30 à 16:30" / "9h–17h"
+  { re: /\b(\d{1,2})[hH:](\d{2})?\s*[-à–]\s*(\d{1,2})[hH:](\d{2})?\b/g,
+    parse: m => ({ startH: parseInt(m[1]), startM: parseInt(m[2] || '0'), endH: parseInt(m[3]), endM: parseInt(m[4] || '0') }) },
+  // "14 heures à 16 heures 30" / "9 heures - 17 heures"
+  { re: /\b(\d{1,2})\s+heures?\s*(\d{2})?\s*[-à–]\s*(\d{1,2})\s+heures?\s*(\d{2})?\b/gi,
+    parse: m => ({ startH: parseInt(m[1]), startM: parseInt(m[2] || '0'), endH: parseInt(m[3]), endM: parseInt(m[4] || '0') }) },
+  // "midi à 14h" / "minuit à 1h"
+  { re: /\b(midi|minuit)\s*[-à–]\s*(\d{1,2})[hH:](\d{2})?\b/gi,
+    parse: m => { const s = NAMED_TIMES[m[1].toLowerCase()]!; return { startH: s.hours, startM: s.minutes, endH: parseInt(m[2]), endM: parseInt(m[3] || '0') }; } },
+  // "9h à midi" / "11h à minuit"
+  { re: /\b(\d{1,2})[hH:](\d{2})?\s*[-à–]\s*(midi|minuit)\b/gi,
+    parse: m => { const e = NAMED_TIMES[m[3].toLowerCase()]!; return { startH: parseInt(m[1]), startM: parseInt(m[2] || '0'), endH: e.hours, endM: e.minutes }; } },
+];
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -173,24 +218,29 @@ function extractFirstDate(text: string): Date | null {
 }
 
 function extractFirstTime(text: string): { hours: number; minutes: number } | null {
-  TIME_RE.lastIndex = 0;
-  const m = TIME_RE.exec(text);
-  if (!m) return null;
-  return { hours: parseInt(m[1]), minutes: parseInt(m[2] || '0') };
+  for (const { re, parse } of SINGLE_TIME_PATTERNS) {
+    re.lastIndex = 0;
+    const m = re.exec(text);
+    if (m) {
+      const t = parse(m);
+      if (t.hours >= 0 && t.hours <= 23 && t.minutes >= 0 && t.minutes <= 59) return t;
+    }
+  }
+  return null;
 }
 
 function extractTimeRange(
   text: string
 ): { startH: number; startM: number; endH: number; endM: number } | null {
-  TIME_RANGE_RE.lastIndex = 0;
-  const m = TIME_RANGE_RE.exec(text);
-  if (!m) return null;
-  return {
-    startH: parseInt(m[1]),
-    startM: parseInt(m[2] || '0'),
-    endH: parseInt(m[3]),
-    endM: parseInt(m[4] || '0'),
-  };
+  for (const { re, parse } of TIME_RANGE_PATTERNS) {
+    re.lastIndex = 0;
+    const m = re.exec(text);
+    if (m) {
+      const r = parse(m);
+      if (r.startH >= 0 && r.startH <= 23 && r.endH >= 0 && r.endH <= 23) return r;
+    }
+  }
+  return null;
 }
 
 function extractEvidence(subject: string, bodySnippet: string, maxLen = 500): string {

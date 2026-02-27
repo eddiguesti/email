@@ -10,7 +10,8 @@ interface SessionUser {
 
 function checkIsAdmin(userId: string): boolean {
   const adminIds = process.env.ADMIN_USER_IDS || '';
-  return adminIds.split(',').map(s => s.trim()).includes(userId);
+  const lc = userId.toLowerCase();
+  return adminIds.split(',').map(s => s.trim().toLowerCase()).includes(lc);
 }
 
 /**

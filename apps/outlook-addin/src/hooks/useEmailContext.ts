@@ -22,8 +22,16 @@ export function useEmailContext() {
     setError(null);
 
     try {
-      // Check if Office.js is ready
-      if (!Office?.context?.mailbox?.item) {
+      // Guard: Office.js global must exist and have completed its initialisation
+      // before we can safely access Office.context. This can happen if the hook
+      // is evaluated before Office.onReady() has resolved (e.g. during SSR, hot
+      // reload, or when taskpane.html loads before the Office.js CDN script).
+      if (typeof Office === 'undefined' || !Office.context) {
+        throw new Error('Office.js not initialized');
+      }
+
+      // Check if an email item is currently selected
+      if (!Office.context.mailbox?.item) {
         throw new Error('No email selected');
       }
 

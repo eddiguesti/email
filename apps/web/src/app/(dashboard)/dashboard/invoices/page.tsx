@@ -664,7 +664,8 @@ function InvoiceDetailModal({
   onClose: () => void;
   onUpdate: () => void;
 }) {
-  const [reminderHistory, setReminderHistory] = useState<any[]>([]);
+  type ReminderHistoryItem = { id: string; reminder_type: string; reminder_number: number; sent_at: string; email_to?: string };
+  const [reminderHistory, setReminderHistory] = useState<ReminderHistoryItem[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -754,7 +755,7 @@ function InvoiceDetailModal({
             </div>
           ) : reminderHistory.length > 0 ? (
             <div className="space-y-2">
-              {reminderHistory.map((reminder: any) => (
+              {reminderHistory.map((reminder) => (
                 <div key={reminder.id} className="flex items-center gap-3 p-3 bg-[var(--muted)] rounded-xl">
                   {reminder.reminder_type === 'email' ? (
                     <Mail className="w-4 h-4 text-[var(--accent)]" strokeWidth={1.8} />

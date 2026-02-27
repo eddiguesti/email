@@ -177,8 +177,8 @@ export default function TourPage() {
           </h1>
         </div>
         <p className="text-[14px] text-[var(--muted-foreground)] leading-relaxed max-w-2xl">
-          Découvrez toutes les fonctionnalités de LB-Bot. Chaque section explique ce qu'elle fait,
-          comment s'en servir, et vous donne accès direct à la page correspondante.
+          Découvrez toutes les fonctionnalités de LB-Bot. Chaque section explique ce qu&apos;elle fait,
+          comment s&apos;en servir, et vous donne accès direct à la page correspondante.
         </p>
       </motion.div>
 
@@ -252,7 +252,7 @@ export default function TourPage() {
         className="p-5 rounded-2xl border border-dashed border-[var(--border)] text-center"
       >
         <p className="text-[13px] text-[var(--muted-foreground)]">
-          Ce guide est toujours accessible depuis l'icône{' '}
+          Ce guide est toujours accessible depuis l&apos;icône{' '}
           <Compass className="w-3.5 h-3.5 inline-block -mt-0.5" strokeWidth={1.8} /> dans la barre
           latérale.
         </p>

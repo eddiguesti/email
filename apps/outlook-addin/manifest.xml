@@ -1,4 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!--
+  PRODUCTION MANIFEST — all URLs point to https://app.laurencebrosset-avocats.fr
+  ============================================================================
+  If you need a LOCAL DEVELOPMENT version, replace every occurrence of
+  "https://app.laurencebrosset-avocats.fr" in this file with
+  "https://localhost:3000" (7 occurrences total — see IconUrl, HighResolutionIconUrl,
+  AppDomain, FormSettings SourceLocation, bt:Image ×3, bt:Url ×2).
+
+  There is no build-time injection for these URLs. Edit the strings manually,
+  or maintain a separate manifest.dev.xml alongside this file.
+-->
 <OfficeApp
   xmlns="http://schemas.microsoft.com/office/appforoffice/1.1"
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -13,12 +24,12 @@
   <DisplayName DefaultValue="LB-BOT - Classement Intelligent"/>
   <Description DefaultValue="Classement automatique des emails et intégration Kleos pour SELARL Brosset-Techer"/>
 
-  <IconUrl DefaultValue="https://localhost:3000/assets/icon-32.png"/>
-  <HighResolutionIconUrl DefaultValue="https://localhost:3000/assets/icon-80.png"/>
+  <IconUrl DefaultValue="https://app.laurencebrosset-avocats.fr/assets/icon-32.png"/>
+  <HighResolutionIconUrl DefaultValue="https://app.laurencebrosset-avocats.fr/assets/icon-80.png"/>
   <SupportUrl DefaultValue="https://www.lbrosset.com"/>
 
   <AppDomains>
-    <AppDomain>https://localhost:3000</AppDomain>
+    <AppDomain>https://app.laurencebrosset-avocats.fr</AppDomain>
   </AppDomains>
 
   <Hosts>
@@ -34,7 +45,7 @@
   <FormSettings>
     <Form xsi:type="ItemRead">
       <DesktopSettings>
-        <SourceLocation DefaultValue="https://localhost:3000/taskpane.html"/>
+        <SourceLocation DefaultValue="https://app.laurencebrosset-avocats.fr/taskpane.html"/>
         <RequestedHeight>450</RequestedHeight>
       </DesktopSettings>
     </Form>
@@ -148,13 +159,13 @@
 
       <Resources>
         <bt:Images>
-          <bt:Image id="Icon.16x16" DefaultValue="https://localhost:3000/assets/icon-16.png"/>
-          <bt:Image id="Icon.32x32" DefaultValue="https://localhost:3000/assets/icon-32.png"/>
-          <bt:Image id="Icon.80x80" DefaultValue="https://localhost:3000/assets/icon-80.png"/>
+          <bt:Image id="Icon.16x16" DefaultValue="https://app.laurencebrosset-avocats.fr/assets/icon-16.png"/>
+          <bt:Image id="Icon.32x32" DefaultValue="https://app.laurencebrosset-avocats.fr/assets/icon-32.png"/>
+          <bt:Image id="Icon.80x80" DefaultValue="https://app.laurencebrosset-avocats.fr/assets/icon-80.png"/>
         </bt:Images>
         <bt:Urls>
-          <bt:Url id="functionFile" DefaultValue="https://localhost:3000/taskpane.html"/>
-          <bt:Url id="Taskpane.Url" DefaultValue="https://localhost:3000/taskpane.html"/>
+          <bt:Url id="functionFile" DefaultValue="https://app.laurencebrosset-avocats.fr/taskpane.html"/>
+          <bt:Url id="Taskpane.Url" DefaultValue="https://app.laurencebrosset-avocats.fr/taskpane.html"/>
         </bt:Urls>
         <bt:ShortStrings>
           <bt:String id="GroupLabel" DefaultValue="LB-BOT"/>

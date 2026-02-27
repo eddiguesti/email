@@ -1,6 +1,9 @@
 // Types
 export * from './types/index.js';
 
+// Drafting
+export * from './drafting/index.js';
+
 // Clients
 export * from './clients/index.js';
 

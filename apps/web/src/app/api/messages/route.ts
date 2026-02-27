@@ -35,6 +35,7 @@ async function getAppToken(): Promise<string | null> {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: body.toString(),
+    signal: AbortSignal.timeout(10_000),
   });
   if (!res.ok) return null;
 
@@ -58,6 +59,11 @@ export async function GET(req: NextRequest) {
   // App token lets us read any mailbox in the tenant (shared mailboxes included)
   const accessToken = await getAppToken();
   if (!accessToken) return NextResponse.json({ error: 'Token introuvable' }, { status: 401 });
+
+  // Non-admin lawyers may only request their own mailbox
+  if (mailbox && !user.isAdmin && mailbox.toLowerCase() !== user.email.toLowerCase()) {
+    return NextResponse.json({ error: 'Accès refusé' }, { status: 403 });
+  }
 
   // Route to the specific mailbox; fall back to /me if no mailbox supplied
   const mailboxBase = mailbox
@@ -84,6 +90,10 @@ export async function GET(req: NextRequest) {
 
     // ── Thread (by conversationId) ────────────────────────────────────────
     if (conversationId) {
+      // Sanitise: Graph conversation IDs are base64url strings — reject anything else
+      if (!/^[A-Za-z0-9+/=_-]{1,500}$/.test(conversationId)) {
+        return NextResponse.json({ error: 'conversationId invalide' }, { status: 400 });
+      }
       const url = new URL(`${mailboxBase}/messages`);
       url.searchParams.set('$filter', `conversationId eq '${conversationId}'`);
       url.searchParams.set('$select', 'id,subject,from,receivedDateTime,bodyPreview,isRead,importance');

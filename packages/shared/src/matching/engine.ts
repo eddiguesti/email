@@ -236,7 +236,7 @@ export class MatchingEngine {
           dossierId: best.dossierId,
           dossierName: best.dossierName,
           dossierRef: best.dossierRef,
-          confidence: Math.min(0.70 + best.count * 0.05, 0.90),
+          confidence: Math.min(0.70 + best.count * 0.05, 0.84),
           reasons: [`Sender previously matched to this dossier (${best.count}x)`],
           source: 'sender_history',
           lawyer: resolveLawyer(best.dossierId),
@@ -297,7 +297,11 @@ export class MatchingEngine {
           console.log(`   🤖 Grok → [${classification.dossierRef}] (${(aiConf * 100).toFixed(0)}%) ${classification.reasoning.slice(0, 60)}`);
         }
       } else if (classification) {
-        console.log(`   🤖 Grok: no match — ${classification.reasoning.slice(0, 60)}`);
+        if (classification.error) {
+          console.log(`   🤖 Grok: classifier error — ${classification.reasoning}`);
+        } else {
+          console.log(`   🤖 Grok: no match — ${classification.reasoning.slice(0, 60)}`);
+        }
       }
     }
 

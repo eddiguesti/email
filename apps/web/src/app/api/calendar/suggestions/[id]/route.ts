@@ -45,8 +45,29 @@ export async function PUT(
   if (update.end_at && isNaN(new Date(update.end_at as string).getTime())) {
     return NextResponse.json({ error: 'Date de fin invalide' }, { status: 400 });
   }
-  if (update.start_at && update.end_at) {
-    if (new Date(update.end_at as string) <= new Date(update.start_at as string)) {
+  // Validate date ordering — even when only one side is being updated
+  if (update.start_at || update.end_at) {
+    let effectiveStart: Date | null = null;
+    let effectiveEnd: Date | null = null;
+
+    if (update.start_at && update.end_at) {
+      effectiveStart = new Date(update.start_at as string);
+      effectiveEnd   = new Date(update.end_at as string);
+    } else {
+      // Fetch the existing record to compare against the unchanged side
+      const { data: existing } = await supabaseAdmin
+        .from('calendar_suggestions')
+        .select('start_at, end_at')
+        .eq('id', id)
+        .eq('user_id', user.userId)
+        .single();
+      if (existing) {
+        effectiveStart = new Date((update.start_at as string | undefined) ?? existing.start_at);
+        effectiveEnd   = new Date((update.end_at   as string | undefined) ?? existing.end_at);
+      }
+    }
+
+    if (effectiveStart && effectiveEnd && effectiveEnd <= effectiveStart) {
       return NextResponse.json({ error: 'La date de fin doit être après la date de début' }, { status: 400 });
     }
   }
@@ -59,6 +80,9 @@ export async function PUT(
     .select()
     .single();
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) {
+    console.error('[suggestions/put] DB error:', error.message);
+    return NextResponse.json({ error: 'Erreur interne' }, { status: 500 });
+  }
   return NextResponse.json({ suggestion: data });
 }

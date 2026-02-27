@@ -70,10 +70,19 @@ export default function AIChatPanel() {
   const sendMessage = async (query: string) => {
     if (!query.trim() || loading) return;
 
+    // Basic prompt-injection defense: if the trimmed message starts with a
+    // role keyword that could hijack the system prompt (case-insensitive),
+    // prepend a space so the AI backend never treats it as a literal role
+    // header.  This is a defence-in-depth measure; server-side validation
+    // should be the primary guard.
+    const sanitizedQuery = /^(system|assistant)\s*:/i.test(query.trim())
+      ? ' ' + query.trim()
+      : query.trim();
+
     const userMessage: Message = {
       id: Date.now().toString(),
       role: 'user',
-      content: query,
+      content: sanitizedQuery,
       timestamp: new Date(),
     };
 
@@ -86,7 +95,7 @@ export default function AIChatPanel() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          query,
+          query: sanitizedQuery,
           conversationHistory: messages.slice(-10).map((m) => ({
             role: m.role,
             content: m.content,
@@ -179,7 +188,7 @@ export default function AIChatPanel() {
                 </div>
                 <div>
                   <h3 className="text-[15px] font-semibold tracking-[-0.01em] text-[var(--foreground)]">Assistant IA</h3>
-                  <p className="text-[11px] text-[var(--muted-foreground)]">Recherche intelligente d'emails</p>
+                  <p className="text-[11px] text-[var(--muted-foreground)]">Recherche intelligente d&apos;emails</p>
                 </div>
               </div>
               <div className="flex items-center gap-1">
