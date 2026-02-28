@@ -2,8 +2,8 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronRight, ChevronDown, Paperclip, CheckCircle, XCircle, Scale, PenLine, Copy, RefreshCw, Loader2, AlertCircle, Clock, HelpCircle } from 'lucide-react';
-import { formatDistanceToNow } from 'date-fns';
+import { ChevronRight, ChevronDown, Paperclip, CheckCircle, XCircle, Scale, PenLine, Copy, RefreshCw, Loader2, AlertCircle } from 'lucide-react';
+import { formatDistanceToNow, format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import type { MatchLog, DraftReplyResult } from '@/types/pipeline';
 import { getActionStatus, ACTION_STATUS_CONFIG } from '@/types/pipeline';
@@ -14,13 +14,11 @@ import CategoryBadge from './CategoryBadge';
 
 interface Props {
   log: MatchLog;
-  onReview?: (id: string, approved: boolean) => void;
-  showReviewActions?: boolean;
   /** If provided, clicking the row opens the detail drawer instead of expanding inline */
   onSelect?: (log: MatchLog) => void;
 }
 
-export default function MatchLogRow({ log, onReview, showReviewActions, onSelect }: Props) {
+export default function MatchLogRow({ log, onSelect }: Props) {
   const [expanded, setExpanded] = useState(false);
   const [draft, setDraft] = useState<DraftReplyResult | null>(null);
   const [draftLoading, setDraftLoading] = useState(false);
@@ -29,6 +27,7 @@ export default function MatchLogRow({ log, onReview, showReviewActions, onSelect
 
   const actionStatus = getActionStatus(log);
   const actionCfg = ACTION_STATUS_CONFIG[actionStatus];
+  const isDone = actionStatus === 'done';
 
   async function handleGenerateDraft() {
     setDraftLoading(true);
@@ -50,10 +49,28 @@ export default function MatchLogRow({ log, onReview, showReviewActions, onSelect
     setTimeout(() => setCopied(false), 2000);
   }
 
+  const receivedDate = log.received_at ? new Date(log.received_at) : null;
+  const relativeDate = receivedDate
+    ? formatDistanceToNow(receivedDate, { addSuffix: true, locale: fr })
+    : '-';
+  const absoluteDate = receivedDate
+    ? format(receivedDate, 'dd MMM yyyy à HH:mm', { locale: fr })
+    : '';
+
+  // Urgency tooltip explains the escalation rule
+  const urgencyTooltip =
+    actionStatus === 'urgent'
+      ? `Urgent — email reçu il y a plus de 48h ou marqué important`
+      : actionStatus === 'to_review'
+      ? `En attente de validation (confiance 60–85%)`
+      : actionStatus === 'unclassified'
+      ? `Aucun dossier trouvé pour cet email`
+      : '';
+
   return (
-    <div className="relative">
+    <div className={`relative transition-opacity duration-200 ${isDone ? 'opacity-50' : 'opacity-100'}`}>
       {/* Left urgency accent bar */}
-      {actionStatus !== 'done' && (
+      {!isDone && (
         <div className={`absolute left-0 top-0 bottom-0 w-[3px] rounded-r-sm ${actionCfg.accentBg}`} />
       )}
 
@@ -61,17 +78,24 @@ export default function MatchLogRow({ log, onReview, showReviewActions, onSelect
         className="flex items-center gap-4 px-5 py-4 hover:bg-[var(--muted)] cursor-pointer transition-all duration-200"
         onClick={() => onSelect ? onSelect(log) : setExpanded(!expanded)}
       >
-        {/* Status dot — urgency-aware */}
+        {/* Status dot with tooltip */}
         <div className="w-5 flex-shrink-0">
-          <div className={`w-2 h-2 rounded-full ${actionCfg.dotClass} ${actionCfg.pulse ? 'animate-pulse' : ''}`} />
+          <div
+            className={`w-2 h-2 rounded-full ${actionCfg.dotClass} ${actionCfg.pulse ? 'animate-pulse' : ''}`}
+            title={urgencyTooltip}
+          />
         </div>
 
-        {/* Sender */}
+        {/* Sender + subject */}
         <div className="w-44 flex-shrink-0 min-w-0">
           <p className="text-[13px] font-medium text-[var(--foreground)] truncate">
             {log.sender_name || log.sender_email}
           </p>
-          <p className="text-[11px] text-[var(--muted-foreground)] truncate">{log.sender_email}</p>
+          {log.email_subject ? (
+            <p className="text-[11px] text-[var(--muted-foreground)] truncate">{log.email_subject}</p>
+          ) : (
+            <p className="text-[11px] text-[var(--muted-foreground)] truncate">{log.sender_email}</p>
+          )}
         </div>
 
         {/* Dossier */}
@@ -82,7 +106,7 @@ export default function MatchLogRow({ log, onReview, showReviewActions, onSelect
               <p className="text-[11px] text-[var(--muted-foreground)]">[{log.dossier_ref}]</p>
             </div>
           ) : (
-            <p className="text-[13px] text-[var(--muted-foreground)]">-</p>
+            <p className="text-[12px] text-[var(--muted-foreground)] italic">Aucun dossier associé</p>
           )}
         </div>
 
@@ -98,17 +122,17 @@ export default function MatchLogRow({ log, onReview, showReviewActions, onSelect
 
         {/* Lawyer */}
         <div className="w-32 flex-shrink-0 hidden xl:block">
-          <p className="text-[11px] text-[var(--muted-foreground)] truncate">{log.lawyer || '-'}</p>
+          <p className="text-[11px] text-[var(--muted-foreground)] truncate">{log.lawyer || 'N/D'}</p>
         </div>
 
         {/* Category + Action badge */}
         <div className="w-36 flex-shrink-0 hidden lg:block space-y-1">
           <CategoryBadge color={log.category_color} />
-          {actionStatus !== 'done' && (
-            <span className={`inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-medium rounded-full border ${actionCfg.badgeClass}`}>
-              {actionStatus === 'urgent' && <AlertCircle className="w-2.5 h-2.5" strokeWidth={2.5} />}
-              {actionStatus === 'to_review' && <Clock className="w-2.5 h-2.5" strokeWidth={2.5} />}
-              {actionStatus === 'unclassified' && <HelpCircle className="w-2.5 h-2.5" strokeWidth={2.5} />}
+          {!isDone && (
+            <span
+              className={`inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-medium rounded-full border ${actionCfg.badgeClass}`}
+              title={urgencyTooltip}
+            >
               {actionCfg.label}
             </span>
           )}
@@ -117,25 +141,34 @@ export default function MatchLogRow({ log, onReview, showReviewActions, onSelect
         {/* Icons */}
         <div className="w-8 flex-shrink-0 flex items-center justify-center gap-1.5">
           {log.is_ebarreau && (
-            <span title="e-Barreau"><Scale className="w-3.5 h-3.5 text-[var(--accent)]" strokeWidth={1.8} /></span>
+            <span title="Acte e-Barreau (dépôt électronique judiciaire)">
+              <Scale className="w-3.5 h-3.5 text-[var(--accent)]" strokeWidth={1.8} />
+            </span>
           )}
           {log.has_attachments && (
-            <Paperclip className="w-3.5 h-3.5 text-[var(--muted-foreground)]" strokeWidth={1.8} />
+            <span title="Pièces jointes">
+              <Paperclip className="w-3.5 h-3.5 text-[var(--muted-foreground)]" strokeWidth={1.8} />
+            </span>
           )}
           {log.review_approved === true && (
-            <span title="Approuvé"><CheckCircle className="w-3.5 h-3.5 text-emerald-400" strokeWidth={1.8} /></span>
+            <span title={`Validé${log.reviewed_by ? ' par ' + log.reviewed_by : ''}`}>
+              <CheckCircle className="w-3.5 h-3.5 text-emerald-400" strokeWidth={1.8} />
+            </span>
           )}
           {log.review_approved === false && (
-            <span title="Rejeté"><XCircle className="w-3.5 h-3.5 text-red-400" strokeWidth={1.8} /></span>
+            <span title={`Rejeté${log.reviewed_by ? ' par ' + log.reviewed_by : ''}`}>
+              <XCircle className="w-3.5 h-3.5 text-red-400" strokeWidth={1.8} />
+            </span>
           )}
         </div>
 
-        {/* Date */}
+        {/* Date with absolute date in tooltip */}
         <div className="w-24 flex-shrink-0 text-right">
-          <p className="text-[11px] text-[var(--muted-foreground)]">
-            {log.received_at
-              ? formatDistanceToNow(new Date(log.received_at), { addSuffix: true, locale: fr })
-              : '-'}
+          <p
+            className="text-[11px] text-[var(--muted-foreground)]"
+            title={absoluteDate}
+          >
+            {relativeDate}
           </p>
         </div>
 
@@ -164,18 +197,18 @@ export default function MatchLogRow({ log, onReview, showReviewActions, onSelect
             <div className="px-5 pb-4 pl-14 space-y-3">
               {log.match_reasons && log.match_reasons.length > 0 && (
                 <div>
-                  <p className="text-[11px] font-medium text-[var(--muted-foreground)] mb-1.5">Raisons :</p>
+                  <p className="text-[11px] font-medium text-[var(--muted-foreground)] mb-1.5">Pourquoi ce dossier :</p>
                   <ul className="space-y-1">
                     {log.match_reasons.map((r, i) => (
-                      <li key={i} className="text-[12px] text-[var(--foreground)]">+ {r}</li>
+                      <li key={i} className="text-[12px] text-[var(--foreground)]">· {r}</li>
                     ))}
                   </ul>
                 </div>
               )}
               <div className="flex gap-6 text-[11px] text-[var(--muted-foreground)]">
                 <span>Boîte : {log.mailbox}</span>
-                <span>Action: {log.action_taken}</span>
-                {log.reviewed_by && <span>Revu par: {log.reviewed_by}</span>}
+                {log.action_taken && <span>Action : {log.action_taken}</span>}
+                {log.reviewed_by && <span>Validé par : {log.reviewed_by}</span>}
               </div>
 
               {/* Draft Reply Section */}
@@ -186,14 +219,14 @@ export default function MatchLogRow({ log, onReview, showReviewActions, onSelect
                     className="flex items-center gap-1.5 px-3.5 py-2 text-[12px] font-medium rounded-xl bg-[var(--muted)] text-[var(--foreground)] hover:bg-[var(--foreground)] hover:text-white transition-all duration-200"
                   >
                     <PenLine className="w-3.5 h-3.5" strokeWidth={1.8} />
-                    Rédiger une réponse
+                    Rédiger une réponse IA
                   </button>
                 )}
 
                 {draftLoading && (
                   <div className="flex items-center gap-2 text-[12px] text-[var(--muted-foreground)] py-2">
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    Génération en cours...
+                    Génération en cours…
                   </div>
                 )}
 
@@ -216,9 +249,11 @@ export default function MatchLogRow({ log, onReview, showReviewActions, onSelect
                       <span className="text-[10px] font-semibold uppercase tracking-wider text-[var(--accent)] bg-blue-50 px-2 py-0.5 rounded-md">
                         Brouillon IA
                       </span>
-                      <span className="text-[10px] text-[var(--muted-foreground)]">
-                        {draft.styleMatch}
-                      </span>
+                      {draft.styleMatch && (
+                        <span className="text-[10px] text-[var(--muted-foreground)]">
+                          Style de rédaction : {draft.styleMatch}
+                        </span>
+                      )}
                     </div>
                     <div className="bg-[var(--muted)] border-l-2 border-l-[var(--accent)] rounded-xl p-4">
                       <p className="text-[13px] text-[var(--foreground)] whitespace-pre-wrap leading-relaxed">
@@ -238,29 +273,12 @@ export default function MatchLogRow({ log, onReview, showReviewActions, onSelect
                         className="flex items-center gap-1.5 px-3.5 py-2 text-[12px] font-medium rounded-xl bg-[var(--muted)] text-[var(--foreground)] hover:bg-[var(--foreground)]/10 transition-all duration-200"
                       >
                         <RefreshCw className="w-3.5 h-3.5" strokeWidth={1.8} />
-                        Régénérer
+                        Générer une alternative
                       </button>
                     </div>
                   </div>
                 )}
               </div>
-
-              {showReviewActions && log.review_approved === null && log.matched && onReview && (
-                <div className="flex gap-2 pt-1">
-                  <button
-                    onClick={(e) => { e.stopPropagation(); onReview(log.id, true); }}
-                    className="px-3.5 py-2 text-[12px] font-medium rounded-xl bg-[var(--foreground)] text-white hover:opacity-90 transition-all duration-200"
-                  >
-                    Approuver
-                  </button>
-                  <button
-                    onClick={(e) => { e.stopPropagation(); onReview(log.id, false); }}
-                    className="px-3.5 py-2 text-[12px] font-medium rounded-xl border border-red-200 text-red-500 hover:bg-red-50 transition-all duration-200"
-                  >
-                    Rejeter
-                  </button>
-                </div>
-              )}
             </div>
           </motion.div>
         )}

@@ -2,9 +2,9 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { CheckCircle, Inbox, RefreshCw } from 'lucide-react';
+import { CheckCircle, Inbox, RefreshCw, AlertCircle } from 'lucide-react';
 import type { MatchLog } from '@/types/pipeline';
-import { getMatchLogs, reviewMatch } from '@/lib/pipeline-api';
+import { getMatchLogs } from '@/lib/pipeline-api';
 import ConfidenceBadge from '@/components/pipeline/ConfidenceBadge';
 import MatchSourceTag from '@/components/pipeline/MatchSourceTag';
 import ReviewActions from '@/components/pipeline/ReviewActions';
@@ -15,10 +15,12 @@ export default function ReviewQueuePage() {
   const reviewerEmail = user?.email || 'unknown';
   const [items, setItems] = useState<MatchLog[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [total, setTotal] = useState(0);
 
   const load = useCallback(async () => {
     setLoading(true);
+    setLoadError(false);
     try {
       const res = await getMatchLogs({
         matched: true,
@@ -30,7 +32,7 @@ export default function ReviewQueuePage() {
       setItems(res.matches);
       setTotal(res.total);
     } catch {
-      // Fail silently
+      setLoadError(true);
     } finally {
       setLoading(false);
     }
@@ -53,6 +55,24 @@ export default function ReviewQueuePage() {
     );
   }
 
+  if (loadError) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 text-center gap-3">
+        <AlertCircle className="w-7 h-7 text-red-400" strokeWidth={1.5} />
+        <p className="text-[13px] text-[var(--muted-foreground)]">
+          Impossible de charger la file de validation. Vérifiez votre connexion.
+        </p>
+        <button
+          onClick={load}
+          className="flex items-center gap-2 px-4 py-2.5 text-[13px] font-medium rounded-xl bg-[var(--muted)] text-[var(--foreground)] hover:bg-[var(--foreground)] hover:text-white transition-all duration-200"
+        >
+          <RefreshCw className="w-4 h-4" strokeWidth={1.8} />
+          Réessayer
+        </button>
+      </div>
+    );
+  }
+
   if (items.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-center">
@@ -60,10 +80,13 @@ export default function ReviewQueuePage() {
           <CheckCircle className="w-7 h-7 text-emerald-400" strokeWidth={1.5} />
         </div>
         <h2 className="text-[20px] font-semibold tracking-[-0.01em] text-[var(--foreground)] mb-2">
-          File de revue vide
+          Aucun email à valider
         </h2>
-        <p className="text-[13px] text-[var(--muted-foreground)] mb-5 max-w-md">
-          Tous les emails ont été revus ou il n&apos;y a pas de nouvelles correspondances à valider.
+        <p className="text-[13px] text-[var(--muted-foreground)] mb-1 max-w-sm">
+          Tous les emails entre 60 et 85% de confiance ont été traités.
+        </p>
+        <p className="text-[12px] text-[var(--muted-foreground)] mb-5 max-w-sm">
+          Les emails à 85%+ sont classés automatiquement — consultez <strong>Toutes les correspondances</strong> pour les voir.
         </p>
         <button
           onClick={load}
@@ -77,15 +100,20 @@ export default function ReviewQueuePage() {
   }
 
   return (
-    <div className="space-y-4">
+    <div data-tour="review-queue" className="space-y-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2.5">
           <div className="p-2 rounded-xl bg-amber-50">
             <Inbox className="w-4 h-4 text-amber-500" strokeWidth={1.8} />
           </div>
-          <span className="text-[13px] font-medium text-[var(--foreground)]">
-            {total} correspondance{total !== 1 ? 's' : ''} à revoir
-          </span>
+          <div>
+            <span className="text-[13px] font-medium text-[var(--foreground)]">
+              {total} email{total !== 1 ? 's' : ''} à valider
+            </span>
+            <p className="text-[11px] text-[var(--muted-foreground)]">
+              Confiance entre 60–85% — l&apos;IA n&apos;est pas sûre, votre avis est nécessaire
+            </p>
+          </div>
         </div>
         <button
           onClick={load}
@@ -113,6 +141,11 @@ export default function ReviewQueuePage() {
                   {item.sender_name || item.sender_email}
                 </p>
                 <p className="text-[12px] text-[var(--muted-foreground)]">{item.sender_email}</p>
+                {item.email_subject && (
+                  <p className="text-[12px] text-[var(--muted-foreground)] mt-0.5 italic truncate">
+                    {item.email_subject}
+                  </p>
+                )}
               </div>
               <div className="flex items-center gap-2">
                 <ConfidenceBadge confidence={item.confidence} matched={item.matched} />
@@ -125,12 +158,13 @@ export default function ReviewQueuePage() {
                 Dossier suggéré : [{item.dossier_ref}] {item.dossier_name}
               </p>
               <p className="text-[12px] text-[var(--muted-foreground)] mt-1">
-                Avocat : {item.lawyer || 'N/A'} | Boîte : {item.mailbox}
+                Avocat : {item.lawyer || 'N/D'} · Boîte : {item.mailbox}
               </p>
               {item.match_reasons && item.match_reasons.length > 0 && (
                 <div className="mt-2 space-y-0.5">
-                  {item.match_reasons.map((r, i) => (
-                    <p key={i} className="text-[11px] text-[var(--muted-foreground)]">+ {r}</p>
+                  <p className="text-[11px] font-medium text-[var(--muted-foreground)] mb-1">Pourquoi ce dossier :</p>
+                  {item.match_reasons.map((r, idx) => (
+                    <p key={idx} className="text-[11px] text-[var(--muted-foreground)]">· {r}</p>
                   ))}
                 </div>
               )}
@@ -140,8 +174,9 @@ export default function ReviewQueuePage() {
               matchId={item.id}
               emailId={item.email_id ?? undefined}
               mailbox={item.mailbox ?? undefined}
+              dossierId={item.dossier_id ?? undefined}
               reviewedBy={reviewerEmail}
-              onReviewed={(id, _approved) => handleReviewed(id)}
+              onReviewed={(id) => handleReviewed(id)}
             />
           </motion.div>
         ))}

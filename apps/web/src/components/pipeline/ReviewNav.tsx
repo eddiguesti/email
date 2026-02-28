@@ -5,8 +5,8 @@ import { usePathname } from 'next/navigation';
 import { motion } from 'framer-motion';
 
 const tabs = [
-  { name: 'Correspondances', href: '/dashboard/review/matches' },
-  { name: 'À revoir', href: '/dashboard/review/queue' },
+  { name: 'Toutes les correspondances', href: '/dashboard/review/matches' },
+  { name: 'À valider (60–85%)', href: '/dashboard/review/queue' },
   { name: 'Expéditeurs', href: '/dashboard/review/senders' },
   { name: 'Complément Outlook', href: '/dashboard/review/addin' },
 ];

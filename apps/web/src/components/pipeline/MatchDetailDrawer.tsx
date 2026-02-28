@@ -13,7 +13,6 @@ import {
   RefreshCw,
   PenLine,
   Copy,
-  User,
   Inbox,
   AlertCircle,
   Send,
@@ -93,7 +92,6 @@ interface Props {
   log: MatchLog | null;
   open: boolean;
   onClose: () => void;
-  onReview?: (id: string, approved: boolean) => void;
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -129,7 +127,7 @@ function initials(name?: string | null, email?: string | null): string {
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export default function MatchDetailDrawer({ log, open, onClose, onReview }: Props) {
+export default function MatchDetailDrawer({ log, open, onClose }: Props) {
   const [message,  setMessage]  = useState<GraphMessage | null>(null);
   const [thread,   setThread]   = useState<ThreadItem[]>([]);
   const [msgLoad,  setMsgLoad]  = useState(false);
@@ -144,9 +142,6 @@ export default function MatchDetailDrawer({ log, open, onClose, onReview }: Prop
   const [sending,      setSending]      = useState(false);
   const [sendError,    setSendError]    = useState<string | null>(null);
   const [sent,         setSent]         = useState(false);
-
-  const [reviewLoading, setReviewLoading] = useState(false);
-  const [reviewError,   setReviewError]   = useState<string | null>(null);
 
   const [chatHistory, setChatHistory] = useState<Array<{ q: string; a: string }>>([]);
   const [chatInput,   setChatInput]   = useState('');
@@ -292,20 +287,6 @@ export default function MatchDetailDrawer({ log, open, onClose, onReview }: Prop
     setTimeout(() => setCopied(false), 2000);
   }
 
-  async function handleReview(approved: boolean) {
-    if (!log || !onReview) return;
-    setReviewLoading(true);
-    setReviewError(null);
-    try {
-      await Promise.resolve(onReview(log.id, approved));
-      onClose();
-    } catch (err) {
-      setReviewError((err as Error).message || 'Erreur lors de la validation');
-    } finally {
-      setReviewLoading(false);
-    }
-  }
-
   const subject     = message?.subject ?? (msgLoad ? '…' : '(Sans objet)');
   const bodyText    = message?.body
     ? (message.body.contentType === 'html' ? stripHtml(message.body.content) : message.body.content)
@@ -314,7 +295,6 @@ export default function MatchDetailDrawer({ log, open, onClose, onReview }: Prop
   const senderEmail = message?.from?.emailAddress?.address || log?.sender_email || '';
   const toList      = message?.toRecipients?.map(r => r.emailAddress?.name || r.emailAddress?.address).filter(Boolean).join(', ') ?? '';
 
-  const canReview  = log?.review_approved === null && log?.matched && !!onReview;
   const sourceLabel = log?.match_source ? (MATCH_SOURCE_LABELS[log.match_source] || log.match_source) : null;
   const sourceColor = log?.match_source ? (MATCH_SOURCE_COLORS[log.match_source] || 'bg-gray-100 text-gray-600') : '';
 
@@ -393,22 +373,6 @@ export default function MatchDetailDrawer({ log, open, onClose, onReview }: Prop
                     )}
                   </div>
                 </div>
-                {/* Quick reply shortcut — always visible in header */}
-                {!sent && log.email_id && (
-                  <button
-                    onClick={handleGenerateDraft}
-                    disabled={draftLoading || msgLoad}
-                    title="Rédiger une réponse IA"
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[12px] font-medium bg-[var(--accent)] text-white hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-150 flex-shrink-0"
-                  >
-                    {draftLoading ? (
-                      <Loader2 className="w-3.5 h-3.5 animate-spin" strokeWidth={1.8} />
-                    ) : (
-                      <Send className="w-3.5 h-3.5" strokeWidth={1.8} />
-                    )}
-                    Répondre
-                  </button>
-                )}
                 <button
                   onClick={onClose}
                   className="p-2 rounded-lg hover:bg-[var(--muted)] text-[var(--muted-foreground)] transition-colors duration-150 flex-shrink-0"
@@ -470,12 +434,12 @@ export default function MatchDetailDrawer({ log, open, onClose, onReview }: Prop
                           </p>
                           {log.dossier_id && (
                             <a
-                              href={`${process.env.NEXT_PUBLIC_KLEOS_WEB_URL ?? 'https://app.kleos.fr'}/case/${log.dossier_id}`}
+                              href={`https://eu.kleosapp.com/app/cases/${log.dossier_id}/overview`}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="inline-flex items-center gap-1 mt-1.5 text-[11px] font-medium text-[var(--accent)] hover:underline"
+                              className="inline-flex items-center gap-2 mt-2 px-3 py-1.5 rounded-lg text-[12px] font-semibold text-white bg-[var(--accent)] hover:opacity-90 transition-opacity"
                             >
-                              <ExternalLink className="w-3 h-3" strokeWidth={2} />
+                              <ExternalLink className="w-3.5 h-3.5" strokeWidth={2} />
                               Ouvrir dans Kleos
                             </a>
                           )}
@@ -724,7 +688,9 @@ export default function MatchDetailDrawer({ log, open, onClose, onReview }: Prop
                         <span className="text-[10px] font-semibold uppercase tracking-wider text-[var(--accent)] bg-blue-50 px-2 py-0.5 rounded-md">
                           Brouillon IA
                         </span>
-                        <span className="text-[10px] text-[var(--muted-foreground)]">{draft.styleMatch}</span>
+                        {draft.styleMatch && (
+                          <span className="text-[10px] text-[var(--muted-foreground)]">Style de rédaction : {draft.styleMatch}</span>
+                        )}
                       </div>
 
                       {sent ? (
@@ -786,7 +752,7 @@ export default function MatchDetailDrawer({ log, open, onClose, onReview }: Prop
                               className="flex items-center gap-1.5 px-3.5 py-2 text-[12px] font-medium rounded-xl bg-[var(--muted)] text-[var(--foreground)] hover:bg-[var(--foreground)]/10 transition-colors duration-150 disabled:opacity-50"
                             >
                               <RefreshCw className="w-3.5 h-3.5" strokeWidth={1.8} />
-                              Régénérer
+                              Générer une alternative
                             </button>
                           </div>
                         </>
@@ -797,58 +763,6 @@ export default function MatchDetailDrawer({ log, open, onClose, onReview }: Prop
 
               </div>{/* end scrollable body */}
 
-              {/* ── Footer actions ───────────────────────────────────────────── */}
-              {(canReview || log.reviewed_by) && (
-                <motion.div
-                  variants={SECTION}
-                  className="flex flex-col gap-2 px-5 py-4 border-t border-[var(--border)] bg-[var(--muted)] flex-shrink-0"
-                >
-                  {canReview ? (
-                    <>
-                      <div className="flex items-center gap-3">
-                        <button
-                          onClick={() => handleReview(true)}
-                          disabled={reviewLoading}
-                          className="flex items-center gap-2 px-4 py-2.5 text-[13px] font-medium rounded-xl bg-[var(--foreground)] text-white hover:opacity-90 transition-opacity duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          {reviewLoading ? (
-                            <Loader2 className="w-4 h-4 animate-spin" strokeWidth={1.8} />
-                          ) : (
-                            <CheckCircle className="w-4 h-4" strokeWidth={1.8} />
-                          )}
-                          Approuver
-                        </button>
-                        <button
-                          onClick={() => handleReview(false)}
-                          disabled={reviewLoading}
-                          className="flex items-center gap-2 px-4 py-2.5 text-[13px] font-medium rounded-xl border border-red-200 text-red-500 hover:bg-red-50 transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          {reviewLoading ? (
-                            <Loader2 className="w-4 h-4 animate-spin" strokeWidth={1.8} />
-                          ) : (
-                            <XCircle className="w-4 h-4" strokeWidth={1.8} />
-                          )}
-                          Rejeter
-                        </button>
-                      </div>
-                      {reviewError && (
-                        <div className="flex items-center gap-1.5 text-[12px] text-red-500">
-                          <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" strokeWidth={1.8} />
-                          {reviewError}
-                        </div>
-                      )}
-                    </>
-                  ) : log.reviewed_by ? (
-                    <div className="flex items-center gap-2 text-[12px] text-[var(--muted-foreground)]">
-                      <User className="w-3.5 h-3.5" strokeWidth={1.8} />
-                      Revu par {log.reviewed_by}
-                      {log.reviewed_at
-                        ? ` · ${formatDistanceToNow(new Date(log.reviewed_at), { addSuffix: true, locale: fr })}`
-                        : ''}
-                    </div>
-                  ) : null}
-                </motion.div>
-              )}
 
             </motion.div>{/* end stagger wrapper */}
           </motion.aside>

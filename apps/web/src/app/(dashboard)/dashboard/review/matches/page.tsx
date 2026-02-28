@@ -1,44 +1,65 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Search, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Search, ChevronLeft, ChevronRight, AlertCircle, RefreshCw } from 'lucide-react';
 import type { MatchLog, MatchLogFilters } from '@/types/pipeline';
-import { getMatchLogs, reviewMatch } from '@/lib/pipeline-api';
+import { getMatchLogs } from '@/lib/pipeline-api';
 import MatchLogRow from '@/components/pipeline/MatchLogRow';
 import MatchDetailDrawer from '@/components/pipeline/MatchDetailDrawer';
 import FilterBar from '@/components/pipeline/FilterBar';
-import { useAuth } from '@/context/AuthContext';
 
 export default function MatchesPage() {
-  const { user } = useAuth();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  // Initialise filters from URL so they survive refresh and can be shared
+  const [filters, setFilters] = useState<MatchLogFilters>(() => ({
+    page: Number(searchParams.get('page') || 1),
+    per_page: 50,
+    matched: searchParams.has('matched') ? searchParams.get('matched') === 'true' : undefined,
+    reviewed: searchParams.get('reviewed') || undefined,
+    source: searchParams.get('source') || undefined,
+    lawyer: searchParams.get('lawyer') || undefined,
+    date_from: searchParams.get('date_from') || undefined,
+    date_to: searchParams.get('date_to') || undefined,
+  }));
+
   const [logs, setLogs] = useState<MatchLog[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [filters, setFilters] = useState<MatchLogFilters>({ page: 1, per_page: 50 });
+  const [loadError, setLoadError] = useState(false);
   const [selectedLog, setSelectedLog] = useState<MatchLog | null>(null);
+
+  // Sync filters to URL
+  useEffect(() => {
+    const params = new URLSearchParams();
+    if (filters.page && filters.page > 1) params.set('page', String(filters.page));
+    if (filters.matched !== undefined) params.set('matched', String(filters.matched));
+    if (filters.reviewed) params.set('reviewed', filters.reviewed);
+    if (filters.source) params.set('source', filters.source);
+    if (filters.lawyer) params.set('lawyer', filters.lawyer);
+    if (filters.date_from) params.set('date_from', filters.date_from);
+    if (filters.date_to) params.set('date_to', filters.date_to);
+    router.replace(`?${params.toString()}`, { scroll: false });
+  }, [filters, router]);
 
   const load = useCallback(async () => {
     setLoading(true);
+    setLoadError(false);
     try {
       const res = await getMatchLogs(filters);
       setLogs(res.matches);
       setTotal(res.total);
     } catch {
-      // Fail silently
+      setLoadError(true);
     } finally {
       setLoading(false);
     }
   }, [filters]);
 
   useEffect(() => { load(); }, [load]);
-
-  const handleReview = async (id: string, approved: boolean) => {
-    await reviewMatch(id, approved); // let errors propagate so the drawer can show them
-    setLogs(prev => prev.map(l =>
-      l.id === id ? { ...l, review_approved: approved, reviewed_by: user?.email ?? null, reviewed_at: new Date().toISOString() } : l
-    ));
-  };
 
   const page = filters.page || 1;
   const perPage = filters.per_page || 50;
@@ -58,12 +79,12 @@ export default function MatchesPage() {
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl shadow-[var(--shadow-card)] overflow-hidden">
+      <div data-tour="matches-table" className="bg-white rounded-2xl shadow-[var(--shadow-card)] overflow-hidden">
         <div className="flex items-center gap-4 px-5 py-3 border-b border-[var(--border)] text-[11px] font-medium text-[var(--muted-foreground)] uppercase tracking-wider">
           <div className="w-5 flex-shrink-0" />
           <div className="w-44 flex-shrink-0">Expéditeur</div>
           <div className="flex-1 min-w-0 hidden md:block">Dossier</div>
-          <div className="w-14 flex-shrink-0 text-center">Conf.</div>
+          <div className="w-14 flex-shrink-0 text-center" title="Score de confiance de l'IA (85%+ = classé automatiquement)">Confiance</div>
           <div className="w-40 flex-shrink-0 hidden lg:block">Source</div>
           <div className="w-32 flex-shrink-0 hidden xl:block">Avocat</div>
           <div className="w-36 flex-shrink-0 hidden lg:block">Catégorie</div>
@@ -102,8 +123,27 @@ export default function MatchesPage() {
               </div>
             ))}
           </div>
+        ) : loadError ? (
+          <div className="flex flex-col items-center justify-center p-10 gap-3 text-center">
+            <AlertCircle className="w-6 h-6 text-red-400" strokeWidth={1.5} />
+            <p className="text-[13px] text-[var(--muted-foreground)]">
+              Impossible de charger les correspondances. Vérifiez votre connexion.
+            </p>
+            <button
+              onClick={load}
+              className="flex items-center gap-1.5 px-4 py-2 text-[13px] font-medium rounded-xl bg-[var(--muted)] text-[var(--foreground)] hover:bg-[var(--foreground)] hover:text-white transition-all duration-200"
+            >
+              <RefreshCw className="w-4 h-4" strokeWidth={1.8} />
+              Réessayer
+            </button>
+          </div>
         ) : logs.length === 0 ? (
-          <div className="p-10 text-center text-[13px] text-[var(--muted-foreground)]">Aucun résultat</div>
+          <div className="p-10 text-center space-y-1">
+            <p className="text-[13px] text-[var(--foreground)]">Aucun résultat</p>
+            <p className="text-[12px] text-[var(--muted-foreground)]">
+              Essayez d&apos;ajuster les filtres ou de changer la plage de dates.
+            </p>
+          </div>
         ) : (
           logs.map((log, i) => (
             <motion.div
@@ -113,7 +153,7 @@ export default function MatchesPage() {
               transition={{ delay: i * 0.02, duration: 0.25, ease: [0.25, 0.1, 0.25, 1] }}
               className="border-b border-[var(--border)] last:border-b-0"
             >
-              <MatchLogRow log={log} onReview={handleReview} showReviewActions onSelect={setSelectedLog} />
+              <MatchLogRow log={log} onSelect={setSelectedLog} />
             </motion.div>
           ))
         )}
@@ -146,7 +186,6 @@ export default function MatchesPage() {
         log={selectedLog}
         open={!!selectedLog}
         onClose={() => setSelectedLog(null)}
-        onReview={(id, approved) => handleReview(id, approved)}
       />
     </>
   );

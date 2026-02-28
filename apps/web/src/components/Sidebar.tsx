@@ -17,7 +17,7 @@ import { useAuth } from '@/context/AuthContext';
 import { toast } from 'sonner';
 
 const navigation = [
-  { name: 'Pipeline',        href: '/dashboard/review',   icon: ScanSearch      },
+  { name: 'Correspondances', href: '/dashboard/review',   icon: ScanSearch      },
   { name: 'Calendrier',      href: '/dashboard/calendar', icon: CalendarDays    },
   { name: 'Tableau de bord', href: '/dashboard',          icon: LayoutDashboard },
   { name: 'Activité',        href: '/dashboard/activity', icon: Activity        },
@@ -79,6 +79,7 @@ export default function Sidebar() {
             <Link
               key={item.name}
               href={item.href}
+              data-tour={item.name === 'Pipeline' ? 'nav-pipeline' : item.name === 'Calendrier' ? 'nav-calendar' : undefined}
               className={`
                 flex items-center gap-3 px-3 py-2 rounded-lg text-[13px] font-medium
                 transition-all duration-200 ease-out

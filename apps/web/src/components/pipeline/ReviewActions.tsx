@@ -1,8 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { CheckCircle, XCircle, Loader2, Sparkles, Copy, Check, Send, AlertCircle, RefreshCw } from 'lucide-react';
-import { reviewMatch } from '@/lib/pipeline-api';
+import { Loader2, Sparkles, Copy, Check, Send, AlertCircle, RefreshCw, CheckCircle, ExternalLink } from 'lucide-react';
 
 interface DraftResult {
   draft: string;
@@ -15,11 +14,12 @@ interface Props {
   emailId?: string;
   mailbox?: string;
   reviewedBy: string;
+  dossierId?: string;
   onReviewed: (id: string, approved: boolean) => void;
 }
 
-export default function ReviewActions({ matchId, emailId, mailbox, reviewedBy, onReviewed }: Props) {
-  const [loading, setLoading] = useState<'approve' | 'reject' | 'draft' | null>(null);
+export default function ReviewActions({ matchId, emailId, mailbox, dossierId, onReviewed }: Props) {
+  const [loading, setLoading] = useState(false);
   const [draft, setDraft] = useState<DraftResult | null>(null);
   const [editedDraft, setEditedDraft] = useState('');
   const [draftError, setDraftError] = useState<string | null>(null);
@@ -28,20 +28,8 @@ export default function ReviewActions({ matchId, emailId, mailbox, reviewedBy, o
   const [sendError, setSendError] = useState<string | null>(null);
   const [sent, setSent] = useState(false);
 
-  const handleReview = async (approved: boolean) => {
-    setLoading(approved ? 'approve' : 'reject');
-    try {
-      await reviewMatch(matchId, approved);
-      onReviewed(matchId, approved);
-    } catch {
-      // Silently fail — the UI won't update, user can retry
-    } finally {
-      setLoading(null);
-    }
-  };
-
   const handleGenerateDraft = async () => {
-    setLoading('draft');
+    setLoading(true);
     setDraft(null);
     setDraftError(null);
     setSent(false);
@@ -60,7 +48,7 @@ export default function ReviewActions({ matchId, emailId, mailbox, reviewedBy, o
     } catch (err) {
       setDraftError((err as Error).message || 'Impossible de générer le brouillon');
     } finally {
-      setLoading(null);
+      setLoading(false);
     }
   };
 
@@ -86,6 +74,7 @@ export default function ReviewActions({ matchId, emailId, mailbox, reviewedBy, o
         throw new Error(data.error || `Erreur ${res.status}`);
       }
       setSent(true);
+      onReviewed(matchId, true);
     } catch (err) {
       setSendError((err as Error).message || "Erreur lors de l'envoi");
     } finally {
@@ -96,41 +85,31 @@ export default function ReviewActions({ matchId, emailId, mailbox, reviewedBy, o
   return (
     <div className="space-y-3">
       <div className="flex gap-2 flex-wrap">
-        <button
-          onClick={() => handleReview(true)}
-          disabled={loading !== null}
-          className="flex items-center gap-1.5 px-4 py-2 text-[13px] font-medium rounded-xl bg-[var(--foreground)] text-white hover:opacity-90 disabled:opacity-40 transition-all duration-200"
-        >
-          {loading === 'approve' ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
-          ) : (
-            <CheckCircle className="w-4 h-4" strokeWidth={1.8} />
-          )}
-          Approuver
-        </button>
-        <button
-          onClick={() => handleReview(false)}
-          disabled={loading !== null}
-          className="flex items-center gap-1.5 px-4 py-2 text-[13px] font-medium rounded-xl border border-red-200 text-red-500 hover:bg-red-50 disabled:opacity-40 transition-all duration-200"
-        >
-          {loading === 'reject' ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
-          ) : (
-            <XCircle className="w-4 h-4" strokeWidth={1.8} />
-          )}
-          Rejeter
-        </button>
+        {/* Open in Kleos — the only real filing action */}
+        {dossierId && (
+          <a
+            href={`https://eu.kleosapp.com/app/cases/${dossierId}/overview`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1.5 px-4 py-2 text-[13px] font-semibold rounded-xl bg-[var(--accent)] text-white hover:opacity-90 transition-opacity duration-150"
+          >
+            <ExternalLink className="w-4 h-4" strokeWidth={1.8} />
+            Ouvrir dans Kleos
+          </a>
+        )}
+
+        {/* Generate draft */}
         <button
           onClick={handleGenerateDraft}
-          disabled={loading !== null}
+          disabled={loading || sent}
           className="flex items-center gap-1.5 px-4 py-2 text-[13px] font-medium rounded-xl border border-[var(--border)] text-[var(--foreground)] hover:bg-[var(--muted)] disabled:opacity-40 transition-all duration-200"
         >
-          {loading === 'draft' ? (
+          {loading ? (
             <Loader2 className="w-4 h-4 animate-spin" />
           ) : (
             <Sparkles className="w-4 h-4" strokeWidth={1.8} />
           )}
-          Générer brouillon IA
+          {draft ? 'Générer une alternative' : 'Rédiger une réponse IA'}
         </button>
       </div>
 
@@ -145,7 +124,10 @@ export default function ReviewActions({ matchId, emailId, mailbox, reviewedBy, o
         <div className="p-4 rounded-xl border border-[var(--border)] bg-[var(--muted)] space-y-3">
           <div className="flex items-center justify-between">
             <p className="text-[12px] font-semibold text-[var(--muted-foreground)] uppercase tracking-wide">
-              Brouillon IA {draft.styleMatch && <span className="normal-case font-normal">— {draft.styleMatch}</span>}
+              Brouillon IA
+              {draft.styleMatch && (
+                <span className="normal-case font-normal"> — Style de rédaction : {draft.styleMatch}</span>
+              )}
             </p>
           </div>
 
