@@ -14,9 +14,11 @@ import {
   Filter,
   Puzzle,
   Sparkles,
+  Compass,
 } from 'lucide-react';
 import { saveUserPreferences } from '@/lib/pipeline-api';
 import { useAuth } from '@/context/AuthContext';
+import { useTour } from '@/context/TourContext';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -89,6 +91,7 @@ const slideVariants = {
 
 export default function OnboardingModal({ onComplete }: OnboardingModalProps) {
   const { user } = useAuth();
+  const { start } = useTour();
   const [step, setStep] = useState(0);
   const [botMode, setBotMode] = useState<BotMode>('automatique');
   const [emailFilter, setEmailFilter] = useState<EmailFilter>('smart');
@@ -96,8 +99,7 @@ export default function OnboardingModal({ onComplete }: OnboardingModalProps) {
 
   const TOTAL_STEPS = 4; // Welcome, Bot mode, Email filter, Add-in
 
-  const handleFinish = async () => {
-    setSaving(true);
+  const savePreferences = async () => {
     try {
       await saveUserPreferences({
         display_name: user?.displayName ?? null,
@@ -111,10 +113,22 @@ export default function OnboardingModal({ onComplete }: OnboardingModalProps) {
       });
     } catch {
       // Non-blocking — proceed even if save fails
-    } finally {
-      setSaving(false);
-      onComplete();
     }
+  };
+
+  const handleFinish = async () => {
+    setSaving(true);
+    await savePreferences();
+    setSaving(false);
+    onComplete();
+  };
+
+  const handleFinishAndTour = async () => {
+    setSaving(true);
+    await savePreferences();
+    setSaving(false);
+    start(0);   // launch guided tour before closing so TourOverlay activates
+    onComplete();
   };
 
   return (
@@ -398,14 +412,27 @@ export default function OnboardingModal({ onComplete }: OnboardingModalProps) {
               <ArrowRight className="w-4 h-4" strokeWidth={2} />
             </button>
           ) : (
-            <button
-              onClick={handleFinish}
-              disabled={saving}
-              className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[var(--foreground)] text-white text-[13px] font-medium hover:opacity-90 disabled:opacity-40 transition-all duration-200"
-            >
-              {saving ? 'Enregistrement...' : 'Accéder au tableau de bord'}
-              {!saving && <ArrowRight className="w-4 h-4" strokeWidth={2} />}
-            </button>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={handleFinish}
+                disabled={saving}
+                className="text-[13px] text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors disabled:opacity-40"
+              >
+                Passer
+              </button>
+              <button
+                onClick={handleFinishAndTour}
+                disabled={saving}
+                className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[var(--foreground)] text-white text-[13px] font-medium hover:opacity-90 disabled:opacity-40 transition-all duration-200"
+              >
+                {saving ? 'Enregistrement...' : (
+                  <>
+                    <Compass className="w-4 h-4" strokeWidth={1.8} />
+                    Découvrir la plateforme
+                  </>
+                )}
+              </button>
+            </div>
           )}
         </div>
       </motion.div>

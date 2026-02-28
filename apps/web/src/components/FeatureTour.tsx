@@ -2,7 +2,8 @@
 
 import { motion } from 'framer-motion';
 import Link from 'next/link';
-import { X, Mail, Sparkles, CalendarDays, Eye, ArrowRight } from 'lucide-react';
+import { X, Mail, Sparkles, CalendarDays, Eye, ArrowRight, Compass } from 'lucide-react';
+import { useTour } from '@/context/TourContext';
 
 const features = [
   {
@@ -54,6 +55,13 @@ const fadeUp = {
 };
 
 export default function FeatureTour({ onDismiss }: { onDismiss: () => void }) {
+  const { start } = useTour();
+
+  const handleStartTour = () => {
+    onDismiss();
+    start(0);
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: -8 }}
@@ -114,6 +122,20 @@ export default function FeatureTour({ onDismiss }: { onDismiss: () => void }) {
           </motion.div>
         ))}
       </motion.div>
+
+      {/* Footer CTA */}
+      <div className="px-6 py-4 border-t border-[var(--border)] flex items-center justify-between bg-[var(--muted)]/40">
+        <p className="text-[12px] text-[var(--muted-foreground)]">
+          Vous pouvez relancer cette présentation depuis le tableau de bord à tout moment.
+        </p>
+        <button
+          onClick={handleStartTour}
+          className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[var(--foreground)] text-white text-[12px] font-medium hover:opacity-90 transition-all duration-200 flex-shrink-0 ml-4"
+        >
+          <Compass className="w-3.5 h-3.5" strokeWidth={1.8} />
+          Lancer la visite guidée
+        </button>
+      </div>
     </motion.div>
   );
 }

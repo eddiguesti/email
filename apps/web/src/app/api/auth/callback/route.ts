@@ -55,7 +55,7 @@ export async function GET(req: NextRequest) {
   if (state) {
     try {
       const decoded = JSON.parse(Buffer.from(state, 'base64url').toString());
-      const raw = decoded.redirect || '/dashboard/review';
+      const raw = decoded.redirect || '/dashboard';
       // Reject absolute URLs and protocol-relative URLs to prevent open redirect
       if (raw.startsWith('/') && !raw.startsWith('//')) {
         postLoginRedirect = raw;
