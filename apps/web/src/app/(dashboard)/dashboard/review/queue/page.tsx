@@ -141,11 +141,6 @@ export default function ReviewQueuePage() {
                   {item.sender_name || item.sender_email}
                 </p>
                 <p className="text-[12px] text-[var(--muted-foreground)]">{item.sender_email}</p>
-                {item.email_subject && (
-                  <p className="text-[12px] text-[var(--muted-foreground)] mt-0.5 italic truncate">
-                    {item.email_subject}
-                  </p>
-                )}
               </div>
               <div className="flex items-center gap-2">
                 <ConfidenceBadge confidence={item.confidence} matched={item.matched} />

@@ -91,11 +91,7 @@ export default function MatchLogRow({ log, onSelect }: Props) {
           <p className="text-[13px] font-medium text-[var(--foreground)] truncate">
             {log.sender_name || log.sender_email}
           </p>
-          {log.email_subject ? (
-            <p className="text-[11px] text-[var(--muted-foreground)] truncate">{log.email_subject}</p>
-          ) : (
-            <p className="text-[11px] text-[var(--muted-foreground)] truncate">{log.sender_email}</p>
-          )}
+          <p className="text-[11px] text-[var(--muted-foreground)] truncate">{log.sender_email}</p>
         </div>
 
         {/* Dossier */}
