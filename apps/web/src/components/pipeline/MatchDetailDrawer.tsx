@@ -125,6 +125,11 @@ function initials(name?: string | null, email?: string | null): string {
   return (email || '?').slice(0, 2).toUpperCase();
 }
 
+/** Strip raw AI prefixes like "Grok: " or "AI: " from match reasons */
+function cleanReason(r: string): string {
+  return r.replace(/^(grok|ai|llm)[^:]*:\s*/i, '').trim();
+}
+
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function MatchDetailDrawer({ log, open, onClose }: Props) {
@@ -146,6 +151,7 @@ export default function MatchDetailDrawer({ log, open, onClose }: Props) {
   const [chatHistory, setChatHistory] = useState<Array<{ q: string; a: string }>>([]);
   const [chatInput,   setChatInput]   = useState('');
   const [chatLoading, setChatLoading] = useState(false);
+  const [toExpanded,  setToExpanded]  = useState(false);
 
   const draftSectionRef = useRef<HTMLDivElement>(null);
   const chatEndRef      = useRef<HTMLDivElement>(null);
@@ -163,6 +169,7 @@ export default function MatchDetailDrawer({ log, open, onClose }: Props) {
     setSent(false);
     setChatHistory([]);
     setChatInput('');
+    setToExpanded(false);
     if (!l.email_id) return;
 
     setMsgLoad(true);
@@ -293,7 +300,11 @@ export default function MatchDetailDrawer({ log, open, onClose }: Props) {
     : null;
   const senderName  = message?.from?.emailAddress?.name  || log?.sender_name  || null;
   const senderEmail = message?.from?.emailAddress?.address || log?.sender_email || '';
-  const toList      = message?.toRecipients?.map(r => r.emailAddress?.name || r.emailAddress?.address).filter(Boolean).join(', ') ?? '';
+  const toRecipients = (message?.toRecipients ?? [])
+    .map(r => r.emailAddress?.name || r.emailAddress?.address)
+    .filter(Boolean) as string[];
+  const TO_LIMIT = 2;
+  const toHiddenCount = toRecipients.length - TO_LIMIT;
 
   const sourceLabel = log?.match_source ? (MATCH_SOURCE_LABELS[log.match_source] || log.match_source) : null;
   const sourceColor = log?.match_source ? (MATCH_SOURCE_COLORS[log.match_source] || 'bg-gray-100 text-gray-600') : '';
@@ -405,10 +416,35 @@ export default function MatchDetailDrawer({ log, open, onClose }: Props) {
                         )}
                       </div>
                       <p className="text-[11px] text-[var(--muted-foreground)] truncate mt-0.5">{senderEmail}</p>
-                      {toList && (
-                        <p className="text-[11px] text-[var(--muted-foreground)] mt-0.5">
-                          <span className="font-medium">À :</span> {toList}
-                        </p>
+                      {toRecipients.length > 0 && (
+                        <div className="mt-0.5">
+                          <p className="text-[11px] text-[var(--muted-foreground)]">
+                            <span className="font-medium">À :</span>{' '}
+                            {(toExpanded ? toRecipients : toRecipients.slice(0, TO_LIMIT)).join(', ')}
+                            {!toExpanded && toHiddenCount > 0 && (
+                              <>
+                                {', '}
+                                <button
+                                  onClick={() => setToExpanded(true)}
+                                  className="text-[var(--accent)] hover:underline font-medium"
+                                >
+                                  +{toHiddenCount} autres
+                                </button>
+                              </>
+                            )}
+                            {toExpanded && toHiddenCount > 0 && (
+                              <>
+                                {' '}
+                                <button
+                                  onClick={() => setToExpanded(false)}
+                                  className="text-[var(--muted-foreground)] hover:underline"
+                                >
+                                  (réduire)
+                                </button>
+                              </>
+                            )}
+                          </p>
+                        </div>
                       )}
                     </div>
                   </div>
@@ -425,29 +461,32 @@ export default function MatchDetailDrawer({ log, open, onClose }: Props) {
 
                   {log.matched && log.dossier_name ? (
                     <>
-                      <div className="flex items-start gap-3">
-                        <div className="flex-1 min-w-0">
-                          <p className="text-[14px] font-medium text-[var(--foreground)]">{log.dossier_name}</p>
-                          <p className="text-[11px] text-[var(--muted-foreground)] mt-0.5">
-                            Réf. {log.dossier_ref}
-                            {log.lawyer ? ` — ${log.lawyer}` : ''}
+                      {/* Dossier card */}
+                      <div className="bg-[var(--muted)] rounded-xl p-3.5 space-y-2">
+                        <div className="flex items-start justify-between gap-2">
+                          <p className="text-[13px] font-semibold text-[var(--foreground)] leading-snug flex-1 min-w-0">
+                            {log.dossier_name}
                           </p>
-                          {log.dossier_id && (
-                            <a
-                              href={`https://eu.kleosapp.com/app/cases/${log.dossier_id}/overview`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="inline-flex items-center gap-2 mt-2 px-3 py-1.5 rounded-lg text-[12px] font-semibold text-white bg-[var(--accent)] hover:opacity-90 transition-opacity"
-                            >
-                              <ExternalLink className="w-3.5 h-3.5" strokeWidth={2} />
-                              Ouvrir dans Kleos
-                            </a>
-                          )}
+                          <ConfidenceBadge confidence={log.confidence} matched={log.matched} />
                         </div>
-                        <ConfidenceBadge confidence={log.confidence} matched={log.matched} />
+                        <p className="text-[11px] text-[var(--muted-foreground)]">
+                          Réf. {log.dossier_ref}{log.lawyer ? ` · ${log.lawyer}` : ''}
+                        </p>
+                        {log.dossier_id && (
+                          <a
+                            href={`https://eu.kleosapp.com/app/cases/${log.dossier_id}/overview`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-[12px] font-semibold text-white bg-[var(--accent)] hover:opacity-90 transition-opacity"
+                          >
+                            <ExternalLink className="w-3.5 h-3.5" strokeWidth={2} />
+                            Ouvrir dans Kleos
+                          </a>
+                        )}
                       </div>
 
-                      <div className="flex items-center gap-2 flex-wrap">
+                      {/* Méthode + statut */}
+                      <div className="flex items-center gap-2 flex-wrap pt-0.5">
                         {sourceLabel && (
                           <span className={`inline-block px-2.5 py-1 rounded-lg text-[11px] font-medium ${sourceColor}`}>
                             {sourceLabel}
@@ -468,14 +507,20 @@ export default function MatchDetailDrawer({ log, open, onClose }: Props) {
                         )}
                       </div>
 
+                      {/* Raisons */}
                       {log.match_reasons && log.match_reasons.length > 0 && (
-                        <div className="space-y-1">
-                          <p className="text-[11px] font-medium text-[var(--muted-foreground)]">Raisons :</p>
-                          {log.match_reasons.map((r, i) => (
-                            <p key={i} className="text-[12px] text-[var(--foreground)] pl-2">
-                              <span className="text-emerald-500 mr-1.5">+</span>{r}
-                            </p>
-                          ))}
+                        <div className="space-y-1.5 pt-0.5">
+                          <p className="text-[11px] font-semibold text-[var(--muted-foreground)] uppercase tracking-wider">
+                            Pourquoi ce dossier
+                          </p>
+                          <div className="space-y-1">
+                            {log.match_reasons.map((r, i) => (
+                              <div key={i} className="flex items-start gap-2">
+                                <CheckCircle className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0 mt-0.5" strokeWidth={2} />
+                                <p className="text-[12px] text-[var(--foreground)] leading-snug">{cleanReason(r)}</p>
+                              </div>
+                            ))}
+                          </div>
                         </div>
                       )}
                     </>
