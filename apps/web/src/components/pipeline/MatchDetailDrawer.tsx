@@ -341,7 +341,8 @@ export default function MatchDetailDrawer({ log, open, onClose }: Props) {
             initial="hidden"
             animate="visible"
             exit="exit"
-            className="fixed top-0 right-0 bottom-0 z-50 w-[520px] bg-white flex flex-col"
+            data-tour="detail-drawer"
+            className="fixed top-0 right-0 bottom-0 z-[115] w-[520px] bg-white flex flex-col"
             style={{ boxShadow: '-8px 0 60px rgba(0,0,0,0.14), -1px 0 0 rgba(0,0,0,0.05)' }}
           >
             {/* Content — stagger wrapper preserving flex layout */}

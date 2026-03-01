@@ -15,7 +15,7 @@ import { TOUR_DEMO_LOGS } from '@/lib/tour-demo-data';
 export default function MatchesPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { active: tourActive } = useTour();
+  const { active: tourActive, step: tourStep } = useTour();
 
   // Initialise filters from URL so they survive refresh and can be shared
   const [filters, setFilters] = useState<MatchLogFilters>(() => ({
@@ -70,6 +70,15 @@ export default function MatchesPage() {
 
   // During the tour, show demo rows so new users see a populated pipeline
   const displayLogs = tourActive && !loading && logs.length === 0 ? TOUR_DEMO_LOGS : logs;
+
+  // Auto-open/close demo drawer on tour step 2 (drawer explanation step)
+  useEffect(() => {
+    if (tourActive && tourStep === 2) {
+      setSelectedLog(TOUR_DEMO_LOGS[0] ?? null);
+    } else {
+      setSelectedLog(null);
+    }
+  }, [tourActive, tourStep]);
 
   return (
     <>
