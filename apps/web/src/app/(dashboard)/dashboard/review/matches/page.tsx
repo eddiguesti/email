@@ -9,10 +9,13 @@ import { getMatchLogs } from '@/lib/pipeline-api';
 import MatchLogRow from '@/components/pipeline/MatchLogRow';
 import MatchDetailDrawer from '@/components/pipeline/MatchDetailDrawer';
 import FilterBar from '@/components/pipeline/FilterBar';
+import { useTour } from '@/context/TourContext';
+import { TOUR_DEMO_LOGS } from '@/lib/tour-demo-data';
 
 export default function MatchesPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { active: tourActive } = useTour();
 
   // Initialise filters from URL so they survive refresh and can be shared
   const [filters, setFilters] = useState<MatchLogFilters>(() => ({
@@ -64,6 +67,9 @@ export default function MatchesPage() {
   const page = filters.page || 1;
   const perPage = filters.per_page || 50;
   const totalPages = Math.ceil(total / perPage);
+
+  // During the tour, show demo rows so new users see a populated pipeline
+  const displayLogs = tourActive && !loading && logs.length === 0 ? TOUR_DEMO_LOGS : logs;
 
   return (
     <>
@@ -137,7 +143,7 @@ export default function MatchesPage() {
               Réessayer
             </button>
           </div>
-        ) : logs.length === 0 ? (
+        ) : displayLogs.length === 0 ? (
           <div className="p-10 text-center space-y-1">
             <p className="text-[13px] text-[var(--foreground)]">Aucun résultat</p>
             <p className="text-[12px] text-[var(--muted-foreground)]">
@@ -145,7 +151,7 @@ export default function MatchesPage() {
             </p>
           </div>
         ) : (
-          logs.map((log, i) => (
+          displayLogs.map((log, i) => (
             <motion.div
               key={log.id}
               initial={{ opacity: 0, y: 6 }}

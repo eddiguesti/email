@@ -182,6 +182,7 @@ export default function AIChatPanel() {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => setIsOpen(true)}
+            data-tour="ai-chat"
             className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-[var(--foreground)] text-white shadow-[0_8px_30px_rgba(0,0,0,0.15)] flex items-center justify-center hover:shadow-[0_12px_40px_rgba(0,0,0,0.2)] transition-shadow duration-300"
           >
             <Sparkles className="w-5 h-5" strokeWidth={1.8} />

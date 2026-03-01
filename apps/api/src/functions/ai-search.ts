@@ -47,18 +47,25 @@ async function aiSearch(request: HttpRequest, context: InvocationContext): Promi
 
     const systemPrompt = `Tu es un assistant juridique intelligent pour un cabinet d'avocats français spécialisé en baux commerciaux et immobilier.
 
-Ton rôle est d'aider les avocats à chercher dans leurs emails ET dans Kleos (logiciel de gestion de dossiers).
+Ton rôle est d'aider les avocats à chercher dans TOUTE la boîte mail Microsoft 365 ET dans Kleos (logiciel de gestion de dossiers).
 Tu dois:
 1. Comprendre les demandes en langage naturel en français
 2. Identifier si la question concerne des emails, des dossiers Kleos, ou des contacts
 3. Répondre UNIQUEMENT avec un objet JSON structuré (sans texte avant ni après)
 
 ${kleosAvailable
-  ? 'Tu as accès à: emails Microsoft 365 (TOUS les dossiers), dossiers/affaires Kleos, contacts Kleos.'
-  : 'Tu as accès à: emails Microsoft 365 (TOUS les dossiers de la boîte mail).'}
+  ? 'Tu as accès à: emails Microsoft 365 (TOUS les dossiers — boîte de réception, envoyés, archives, etc.), dossiers/affaires Kleos, contacts Kleos.'
+  : 'Tu as accès à: emails Microsoft 365 (TOUS les dossiers — boîte de réception, envoyés, archives, etc.).'}
 
-**Pour rechercher des emails (tous dossiers de boîte mail):**
-{"action":"search_emails","search_query":"mots clés","filters":{"from":null,"subject_contains":null,"date_filter":"today|this_week|this_month|null","has_attachments":null},"explanation":"Ce que tu cherches"}
+**Pour rechercher des emails:**
+RÈGLE CRITIQUE: search_query doit contenir uniquement des mots-clés de CONTENU (noms, organisations, numéros de dossier). NE PAS mettre "urgent", "non lu", "pièce jointe" dans search_query — utiliser les filtres à la place.
+{"action":"search_emails","search_query":"mots-clés de contenu (noms, organisations, références — laisser vide si on filtre seulement)","filters":{"from":null,"subject_contains":null,"date_filter":"today|this_week|this_month|null","has_attachments":true|false|null,"is_unread":true|false|null,"importance":"high|null"},"explanation":"Ce que tu cherches en français"}
+
+Exemples:
+- "emails urgents non lus" → search_query:"", filters:{is_unread:true, importance:"high"}
+- "emails du tribunal cette semaine" → search_query:"tribunal", filters:{date_filter:"this_week"}
+- "emails de Charlotte Liron avec pièces jointes" → search_query:"", filters:{from:"Charlotte Liron", has_attachments:true}
+- "dossiers SMABTP" → action:search_dossiers, search_query:"SMABTP"
 
 ${kleosAvailable ? `**Pour rechercher des dossiers/affaires dans Kleos:**
 {"action":"search_dossiers","search_query":"référence ou nom du dossier ou client","explanation":"Ce que tu cherches"}
@@ -121,17 +128,32 @@ Catégories emails courants: tribunaux, greffes, cours d'appel, confrères/avoca
         aiAction = JSON.parse(jsonMatch[0]);
         explanation = aiAction.explanation || '';
 
-        if (aiAction.action === 'search_emails' && aiAction.search_query) {
+        if (aiAction.action === 'search_emails') {
           // Build KQL search query — search across ALL mail folders via /me/messages
-          const parts: string[] = [aiAction.search_query];
+          const parts: string[] = [];
+          // Content keywords (free-text)
+          if (aiAction.search_query?.trim()) {
+            parts.push(aiAction.search_query.trim());
+          }
+          // Metadata filters as proper KQL properties
           if (aiAction.filters?.from) {
             parts.push(`from:${aiAction.filters.from}`);
           }
           if (aiAction.filters?.subject_contains) {
             parts.push(`subject:${aiAction.filters.subject_contains}`);
           }
-          if (aiAction.filters?.has_attachments) {
+          if (aiAction.filters?.has_attachments === true) {
             parts.push('hasAttachments:true');
+          }
+          if (aiAction.filters?.is_unread === true) {
+            parts.push('isRead:false');
+          }
+          if (aiAction.filters?.importance === 'high') {
+            parts.push('importance:high');
+          }
+          // If no filters at all, reject rather than returning the entire mailbox
+          if (parts.length === 0) {
+            explanation = "Pouvez-vous préciser votre recherche ? Par exemple : « emails du tribunal cette semaine » ou « messages de Charlotte Liron ».";
           }
           const kqlQuery = parts.join(' ');
 
@@ -149,52 +171,87 @@ Catégories emails courants: tribunaux, greffes, cours d'appel, confrères/avoca
             cutoff.setDate(cutoff.getDate() - 30);
           }
 
-          try {
-            // /me/messages searches ALL folders (inbox, sent, archives, etc.)
-            const searchResponse = await graphClient
-              .api('/me/messages')
-              .search(`"${kqlQuery}"`)
-              .select('id,subject,from,receivedDateTime,bodyPreview,hasAttachments,importance')
-              .top(20)
-              .orderby('receivedDateTime desc')
-              .get();
+          if (!auth.user.accessToken) {
+            explanation = "Impossible d'accéder à vos emails : la session ne contient pas de jeton Microsoft valide. Veuillez vous reconnecter.";
+          } else if (kqlQuery) {
+            try {
+              // /me/messages searches ALL folders (inbox, sent, archives, archived, etc.)
+              // Fetch more than needed to allow for conversation deduplication
+              const searchResponse = await graphClient
+                .api('/me/messages')
+                .search(`"${kqlQuery}"`)
+                .select('id,subject,from,receivedDateTime,bodyPreview,hasAttachments,importance,conversationId')
+                .top(50)
+                .orderby('receivedDateTime desc')
+                .get();
 
-            const allMsgs = searchResponse.value || [];
-            // Apply date filter client-side (Graph search + filter cannot be combined)
-            const filtered = cutoff
-              ? allMsgs.filter((m: any) => new Date(m.receivedDateTime) >= cutoff!)
-              : allMsgs;
+              const allMsgs = searchResponse.value || [];
 
-            emailResults = filtered.slice(0, 15).map((msg: any) => ({
-              id: msg.id,
-              subject: msg.subject || '(Sans objet)',
-              from: {
-                name: msg.from?.emailAddress?.name || 'Inconnu',
-                email: msg.from?.emailAddress?.address || '',
-              },
-              receivedDateTime: msg.receivedDateTime,
-              preview: msg.bodyPreview || '',
-              hasAttachments: msg.hasAttachments || false,
-              importance: msg.importance || 'normal',
-            }));
-          } catch (graphError) {
-            context.error('Graph search error:', graphError);
+              // Apply date filter client-side (Graph search + filter cannot be combined)
+              const afterCutoff = cutoff
+                ? allMsgs.filter((m: any) => new Date(m.receivedDateTime) >= cutoff!)
+                : allMsgs;
+
+              // Deduplicate by conversationId — keep at most 2 messages per thread
+              // so results span different email chains rather than one long thread
+              const seenConversations = new Map<string, number>();
+              const deduped = afterCutoff.filter((m: any) => {
+                const convId = m.conversationId || m.id;
+                const count = seenConversations.get(convId) ?? 0;
+                if (count >= 2) return false;
+                seenConversations.set(convId, count + 1);
+                return true;
+              });
+
+              emailResults = deduped.slice(0, 15).map((msg: any) => ({
+                id: msg.id,
+                subject: msg.subject || '(Sans objet)',
+                from: {
+                  name: msg.from?.emailAddress?.name || 'Inconnu',
+                  email: msg.from?.emailAddress?.address || '',
+                },
+                receivedDateTime: msg.receivedDateTime,
+                preview: msg.bodyPreview || '',
+                hasAttachments: msg.hasAttachments || false,
+                importance: msg.importance || 'normal',
+              }));
+
+              if (emailResults.length === 0) {
+                explanation = `${aiAction.explanation || 'Recherche effectuée'} — aucun email trouvé pour cette requête.`;
+              }
+            } catch (graphError: any) {
+              context.error('Graph search error:', graphError);
+              const status = graphError?.statusCode ?? graphError?.status;
+              if (status === 401) {
+                explanation = "Session Microsoft expirée. Veuillez vous déconnecter et vous reconnecter pour renouveler l'accès aux emails.";
+              } else {
+                explanation = `Erreur lors de l'accès à la boîte mail (${status ?? 'inconnue'}). Vérifiez que votre compte Microsoft 365 est correctement connecté.`;
+              }
+            }
           }
 
         } else if (aiAction.action === 'search_dossiers' && aiAction.search_query && kleosAvailable) {
           try {
             const result = await searchCases(aiAction.search_query, { pageSize: 10 });
             dossierResults = result.cases;
+            if (dossierResults.length === 0) {
+              explanation = `${aiAction.explanation || 'Recherche effectuée'} — aucun dossier trouvé dans Kleos.`;
+            }
           } catch (kleosError) {
             context.error('Kleos dossier search error:', kleosError);
+            explanation = "Erreur lors de l'accès à Kleos. Vérifiez que le service est disponible.";
           }
 
         } else if (aiAction.action === 'search_contacts' && aiAction.search_query && kleosAvailable) {
           try {
             const result = await searchContacts(aiAction.search_query, { pageSize: 10 });
             contactResults = result.contacts;
+            if (contactResults.length === 0) {
+              explanation = `${aiAction.explanation || 'Recherche effectuée'} — aucun contact trouvé dans Kleos.`;
+            }
           } catch (kleosError) {
             context.error('Kleos contact search error:', kleosError);
+            explanation = "Erreur lors de l'accès aux contacts Kleos.";
           }
         }
         // 'answer' action: explanation is used as-is

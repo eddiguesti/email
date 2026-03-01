@@ -178,7 +178,9 @@ export async function GET(req: NextRequest) {
         // so we append the function route directly (no extra /api/)
         const AZURE_API_URL = process.env.AZURE_API_URL;
         const API_KEY = process.env.AZURE_FUNCTIONS_KEY || '';
-        if (AZURE_API_URL) {
+        if (!AZURE_API_URL) {
+          console.error('[auth-callback] AZURE_API_URL not set — Graph subscription skipped for', email);
+        } else {
           const subResponse = await fetch(
             `${AZURE_API_URL}/subscriptions`,
             {
@@ -198,10 +200,13 @@ export async function GET(req: NextRequest) {
                 subscription_expires_at: subData.subscription.expiresAt,
               }).eq('microsoft_id', graphUser.id);
             }
+          } else {
+            console.error('[auth-callback] Subscription creation failed:', subResponse.status, 'for', email);
           }
         }
-      } catch {
+      } catch (subErr) {
         // Non-blocking — subscription can be created manually later
+        console.error('[auth-callback] Subscription error for', email, isDev ? subErr : '');
       }
     }
 

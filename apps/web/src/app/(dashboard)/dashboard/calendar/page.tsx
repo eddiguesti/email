@@ -160,7 +160,7 @@ export default function CalendarPage() {
             </p>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div data-tour="calendar-view" className="flex items-center gap-2">
             {/* Refresh */}
             <button
               onClick={() => { loadEvents(); loadSuggestions(); }}

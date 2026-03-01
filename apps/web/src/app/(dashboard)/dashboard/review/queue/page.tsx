@@ -8,15 +8,20 @@ import { getMatchLogs } from '@/lib/pipeline-api';
 import ConfidenceBadge from '@/components/pipeline/ConfidenceBadge';
 import MatchSourceTag from '@/components/pipeline/MatchSourceTag';
 import ReviewActions from '@/components/pipeline/ReviewActions';
+import MatchDetailDrawer from '@/components/pipeline/MatchDetailDrawer';
 import { useAuth } from '@/context/AuthContext';
+import { useTour } from '@/context/TourContext';
+import { TOUR_DEMO_QUEUE } from '@/lib/tour-demo-data';
 
 export default function ReviewQueuePage() {
   const { user } = useAuth();
   const reviewerEmail = user?.email || 'unknown';
+  const { active: tourActive } = useTour();
   const [items, setItems] = useState<MatchLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
   const [total, setTotal] = useState(0);
+  const [selectedLog, setSelectedLog] = useState<MatchLog | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -44,6 +49,10 @@ export default function ReviewQueuePage() {
     setItems(prev => prev.filter(item => item.id !== id));
     setTotal(prev => prev - 1);
   };
+
+  // During the tour, show demo items so new users see a populated review queue
+  const displayItems = tourActive && !loading && items.length === 0 ? TOUR_DEMO_QUEUE : items;
+  const isDemo = displayItems === TOUR_DEMO_QUEUE;
 
   if (loading) {
     return (
@@ -73,7 +82,7 @@ export default function ReviewQueuePage() {
     );
   }
 
-  if (items.length === 0) {
+  if (displayItems.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-center">
         <div className="w-14 h-14 rounded-2xl bg-emerald-50 flex items-center justify-center mb-5">
@@ -100,6 +109,7 @@ export default function ReviewQueuePage() {
   }
 
   return (
+    <>
     <div data-tour="review-queue" className="space-y-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2.5">
@@ -108,24 +118,26 @@ export default function ReviewQueuePage() {
           </div>
           <div>
             <span className="text-[13px] font-medium text-[var(--foreground)]">
-              {total} email{total !== 1 ? 's' : ''} à valider
+              {isDemo ? displayItems.length : total} email{(isDemo ? displayItems.length : total) !== 1 ? 's' : ''} à valider
             </span>
             <p className="text-[11px] text-[var(--muted-foreground)]">
               Confiance entre 60–85% — l&apos;IA n&apos;est pas sûre, votre avis est nécessaire
             </p>
           </div>
         </div>
-        <button
-          onClick={load}
-          className="flex items-center gap-1.5 px-3 py-1.5 text-[12px] text-[var(--muted-foreground)] hover:text-[var(--foreground)] rounded-lg hover:bg-[var(--muted)] transition-all duration-200"
-        >
-          <RefreshCw className="w-3.5 h-3.5" strokeWidth={1.8} />
-          Actualiser
-        </button>
+        {!isDemo && (
+          <button
+            onClick={load}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-[12px] text-[var(--muted-foreground)] hover:text-[var(--foreground)] rounded-lg hover:bg-[var(--muted)] transition-all duration-200"
+          >
+            <RefreshCw className="w-3.5 h-3.5" strokeWidth={1.8} />
+            Actualiser
+          </button>
+        )}
       </div>
 
       <AnimatePresence mode="popLayout">
-        {items.map((item, i) => (
+        {displayItems.map((item, i) => (
           <motion.div
             key={item.id}
             layout
@@ -135,47 +147,62 @@ export default function ReviewQueuePage() {
             transition={{ delay: i * 0.06, duration: 0.35, ease: [0.25, 0.1, 0.25, 1] }}
             className="p-5 bg-white rounded-2xl shadow-[var(--shadow-card)] space-y-4"
           >
-            <div className="flex items-start justify-between gap-4">
-              <div className="flex-1 min-w-0">
-                <p className="text-[14px] font-medium text-[var(--foreground)]">
-                  {item.sender_name || item.sender_email}
-                </p>
-                <p className="text-[12px] text-[var(--muted-foreground)]">{item.sender_email}</p>
-              </div>
-              <div className="flex items-center gap-2">
-                <ConfidenceBadge confidence={item.confidence} matched={item.matched} />
-                <MatchSourceTag source={item.match_source} />
-              </div>
-            </div>
-
-            <div className="p-4 bg-[var(--muted)] rounded-xl">
-              <p className="text-[13px] font-medium text-[var(--foreground)]">
-                Dossier suggéré : [{item.dossier_ref}] {item.dossier_name}
-              </p>
-              <p className="text-[12px] text-[var(--muted-foreground)] mt-1">
-                Avocat : {item.lawyer || 'N/D'} · Boîte : {item.mailbox}
-              </p>
-              {item.match_reasons && item.match_reasons.length > 0 && (
-                <div className="mt-2 space-y-0.5">
-                  <p className="text-[11px] font-medium text-[var(--muted-foreground)] mb-1">Pourquoi ce dossier :</p>
-                  {item.match_reasons.map((r, idx) => (
-                    <p key={idx} className="text-[11px] text-[var(--muted-foreground)]">· {r}</p>
-                  ))}
+            <button
+              onClick={() => setSelectedLog(item)}
+              className="w-full text-left space-y-3 group"
+            >
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex-1 min-w-0">
+                  <p className="text-[14px] font-medium text-[var(--foreground)] group-hover:text-[var(--accent)] transition-colors duration-150">
+                    {item.sender_name || item.sender_email}
+                  </p>
+                  <p className="text-[12px] text-[var(--muted-foreground)]">{item.sender_email}</p>
                 </div>
-              )}
-            </div>
+                <div className="flex items-center gap-2">
+                  <ConfidenceBadge confidence={item.confidence} matched={item.matched} />
+                  <MatchSourceTag source={item.match_source} />
+                </div>
+              </div>
 
-            <ReviewActions
-              matchId={item.id}
-              emailId={item.email_id ?? undefined}
-              mailbox={item.mailbox ?? undefined}
-              dossierId={item.dossier_id != null ? String(item.dossier_id) : undefined}
-              reviewedBy={reviewerEmail}
-              onReviewed={(id) => handleReviewed(id)}
-            />
+              <div className="p-4 bg-[var(--muted)] rounded-xl group-hover:bg-[var(--border)] transition-colors duration-150">
+                <p className="text-[13px] font-medium text-[var(--foreground)]">
+                  Dossier suggéré : [{item.dossier_ref}] {item.dossier_name}
+                </p>
+                <p className="text-[12px] text-[var(--muted-foreground)] mt-1">
+                  Avocat : {item.lawyer || 'N/D'} · Boîte : {item.mailbox}
+                </p>
+                {item.match_reasons && item.match_reasons.length > 0 && (
+                  <div className="mt-2 space-y-0.5">
+                    <p className="text-[11px] font-medium text-[var(--muted-foreground)] mb-1">Pourquoi ce dossier :</p>
+                    {item.match_reasons.map((r, idx) => (
+                      <p key={idx} className="text-[11px] text-[var(--muted-foreground)]">· {r}</p>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </button>
+
+            {/* Don't show review actions for demo items — they would call real APIs */}
+            {!isDemo && (
+              <ReviewActions
+                matchId={item.id}
+                emailId={item.email_id ?? undefined}
+                mailbox={item.mailbox ?? undefined}
+                dossierId={item.dossier_id != null ? String(item.dossier_id) : undefined}
+                reviewedBy={reviewerEmail}
+                onReviewed={(id) => handleReviewed(id)}
+              />
+            )}
           </motion.div>
         ))}
       </AnimatePresence>
     </div>
+
+    <MatchDetailDrawer
+      log={selectedLog}
+      open={!!selectedLog}
+      onClose={() => setSelectedLog(null)}
+    />
+    </>
   );
 }

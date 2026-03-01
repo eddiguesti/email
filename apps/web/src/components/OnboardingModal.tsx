@@ -100,19 +100,27 @@ export default function OnboardingModal({ onComplete }: OnboardingModalProps) {
   const TOTAL_STEPS = 4; // Welcome, Bot mode, Email filter, Add-in
 
   const savePreferences = async () => {
-    try {
-      await saveUserPreferences({
-        display_name: user?.displayName ?? null,
-        bot_mode: botMode,
-        email_filter: emailFilter,
-        onboarded: true,
-        onboarded_at: new Date().toISOString(),
-        email_notifications: true,
-        urgent_alerts: true,
-        language: 'fr',
-      });
-    } catch {
-      // Non-blocking — proceed even if save fails
+    const payload = {
+      display_name: user?.displayName ?? null,
+      bot_mode: botMode,
+      email_filter: emailFilter,
+      onboarded: true,
+      onboarded_at: new Date().toISOString(),
+      email_notifications: true,
+      urgent_alerts: true,
+      language: 'fr',
+    };
+    // Try up to 2 times so a transient network hiccup doesn't leave
+    // the user in an unboarded state on other devices.
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        await saveUserPreferences(payload);
+        return; // success
+      } catch {
+        if (attempt === 1) {
+          // Both attempts failed — proceed anyway so onboarding doesn't block
+        }
+      }
     }
   };
 

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Loader2, Sparkles, Copy, Check, Send, AlertCircle, RefreshCw, CheckCircle, ExternalLink } from 'lucide-react';
+import { Loader2, Sparkles, Copy, Check, Send, AlertCircle, RefreshCw, CheckCircle, FolderOpen } from 'lucide-react';
 
 interface DraftResult {
   draft: string;
@@ -87,15 +87,17 @@ export default function ReviewActions({ matchId, emailId, mailbox, dossierId, on
       <div className="flex gap-2 flex-wrap">
         {/* Open in Kleos — the only real filing action */}
         {dossierId && (
-          <a
-            href={`https://eu.kleosapp.com/app/cases/${dossierId}/overview`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-1.5 px-4 py-2 text-[13px] font-semibold rounded-xl bg-[var(--accent)] text-white hover:opacity-90 transition-opacity duration-150"
-          >
-            <ExternalLink className="w-4 h-4" strokeWidth={1.8} />
-            Ouvrir dans Kleos
-          </a>
+          <>
+            <a
+              href={`https://eu.kleosapp.com/app/cases/${dossierId}/overview`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 px-4 py-2 text-[13px] font-semibold rounded-xl bg-[var(--accent)] text-white hover:opacity-90 transition-opacity duration-150"
+            >
+              <FolderOpen className="w-4 h-4" strokeWidth={1.8} />
+              Voir dossier dans Kleos
+            </a>
+          </>
         )}
 
         {/* Generate draft */}
