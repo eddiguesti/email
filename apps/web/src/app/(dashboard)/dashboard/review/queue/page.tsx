@@ -186,8 +186,6 @@ export default function ReviewQueuePage() {
             {!isDemo && (
               <ReviewActions
                 matchId={item.id}
-                emailId={item.email_id ?? undefined}
-                mailbox={item.mailbox ?? undefined}
                 dossierId={item.dossier_id != null ? String(item.dossier_id) : undefined}
                 reviewedBy={reviewerEmail}
                 onReviewed={(id) => handleReviewed(id)}
