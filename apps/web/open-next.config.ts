@@ -1,5 +1,3 @@
-import type { OpenNextConfig } from "@opennextjs/cloudflare";
-
-const config: OpenNextConfig = {};
-
+// @ts-nocheck — this file is consumed by @opennextjs/cloudflare, not Next.js
+const config = {};
 export default config;
