@@ -43,17 +43,17 @@ export default function MatchRateChart({ data }: Props) {
     <div className="bg-white rounded-2xl shadow-[var(--shadow-card)] p-6">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h2 className="text-[15px] font-semibold tracking-[-0.01em] text-[var(--foreground)]">Taux de classement</h2>
-          <p className="text-[12px] text-[var(--muted-foreground)] mt-0.5">Emails traités et classés par jour</p>
+          <h2 className="text-[15px] font-semibold tracking-[-0.01em] text-[var(--foreground)]">Routing Rate</h2>
+          <p className="text-[12px] text-[var(--muted-foreground)] mt-0.5">Emails processed and routed per day</p>
         </div>
         <div className="flex items-center gap-5">
           <div className="flex items-center gap-2">
             <div className="w-2.5 h-2.5 rounded-full bg-[#1d1d1f]" />
-            <span className="text-[11px] text-[var(--muted-foreground)]">Traités</span>
+            <span className="text-[11px] text-[var(--muted-foreground)]">Processed</span>
           </div>
           <div className="flex items-center gap-2">
             <div className="w-2.5 h-2.5 rounded-full bg-emerald-400" />
-            <span className="text-[11px] text-[var(--muted-foreground)]">Classés</span>
+            <span className="text-[11px] text-[var(--muted-foreground)]">Routed</span>
           </div>
         </div>
       </div>
@@ -95,7 +95,7 @@ export default function MatchRateChart({ data }: Props) {
               strokeWidth={2}
               fillOpacity={1}
               fill="url(#colorProcessed)"
-              name="Traités"
+              name="Processed"
             />
             <Area
               type="monotone"
@@ -104,7 +104,7 @@ export default function MatchRateChart({ data }: Props) {
               strokeWidth={2}
               fillOpacity={1}
               fill="url(#colorMatched)"
-              name="Classés"
+              name="Routed"
             />
           </AreaChart>
         </ResponsiveContainer>

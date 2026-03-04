@@ -17,9 +17,9 @@ export default function AgendaView({ events, onEventClick }: Props) {
         <div className="w-14 h-14 rounded-2xl bg-[var(--muted)] flex items-center justify-center mb-4">
           <Clock className="w-6 h-6 text-[var(--muted-foreground)]" strokeWidth={1.5} />
         </div>
-        <p className="text-[15px] font-medium text-[var(--foreground)]">Aucun événement</p>
+        <p className="text-[15px] font-medium text-[var(--foreground)]">No events</p>
         <p className="text-[13px] text-[var(--muted-foreground)] mt-1.5">
-          Votre calendrier est vide sur cette période
+          Your calendar is empty for this period
         </p>
       </div>
     );
@@ -99,7 +99,7 @@ function EventRow({ event, onClick }: { event: CalendarEvent; onClick: () => voi
       <div className="flex-shrink-0 w-16 text-right">
         {event.isAllDay ? (
           <span className="inline-block px-1.5 py-0.5 text-[10px] font-semibold text-[var(--accent)] bg-blue-50 rounded-md">
-            Journée
+            All day
           </span>
         ) : (
           <div>
@@ -132,7 +132,7 @@ function EventRow({ event, onClick }: { event: CalendarEvent; onClick: () => voi
           {hasOnlineMeeting && (
             <span className="flex items-center gap-1 text-[11px] text-[var(--accent)]">
               <Video className="w-3 h-3 flex-shrink-0" strokeWidth={1.8} />
-              Réunion en ligne
+              Online meeting
             </span>
           )}
           {attendeeCount > 0 && (

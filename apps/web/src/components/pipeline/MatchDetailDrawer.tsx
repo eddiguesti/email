@@ -21,7 +21,6 @@ import {
   MessageSquare,
 } from 'lucide-react';
 import { formatDistanceToNow, format } from 'date-fns';
-import { fr } from 'date-fns/locale';
 import type { MatchLog, DraftReplyResult } from '@/types/pipeline';
 import { MATCH_SOURCE_LABELS, MATCH_SOURCE_COLORS } from '@/types/pipeline';
 import { generateDraftReply } from '@/lib/pipeline-api';
@@ -180,7 +179,7 @@ export default function MatchDetailDrawer({ log, open, onClose }: Props) {
       const res = await fetch(msgUrl.toString());
 
       if (!res.ok) {
-        setMsgError('Impossible de charger cet email');
+        setMsgError('Unable to load this email');
         return;
       }
 
@@ -202,7 +201,7 @@ export default function MatchDetailDrawer({ log, open, onClose }: Props) {
         }
       }
     } catch {
-      setMsgError('Impossible de charger cet email');
+      setMsgError('Unable to load this email');
     } finally {
       setMsgLoad(false);
     }
@@ -231,7 +230,7 @@ export default function MatchDetailDrawer({ log, open, onClose }: Props) {
       setDraft(result);
       setEditedDraft(result.draft);
     } catch (err) {
-      setDraftError((err as Error).message || 'Erreur de génération');
+      setDraftError((err as Error).message || 'Generation error');
     } finally {
       setDraftLoading(false);
     }
@@ -254,11 +253,11 @@ export default function MatchDetailDrawer({ log, open, onClose }: Props) {
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({})) as { error?: string };
-        throw new Error(data.error || `Erreur ${res.status}`);
+        throw new Error(data.error || `Error ${res.status}`);
       }
       setSent(true);
     } catch (err) {
-      setSendError((err as Error).message || "Erreur lors de l'envoi");
+      setSendError((err as Error).message || 'Failed to send');
     } finally {
       setSending(false);
     }
@@ -276,12 +275,12 @@ export default function MatchDetailDrawer({ log, open, onClose }: Props) {
         body: JSON.stringify({ matchId: log.id, question }),
       });
       const data = await res.json() as { answer?: string; error?: string };
-      const answer = data.answer ?? data.error ?? 'Erreur inconnue.';
+      const answer = data.answer ?? data.error ?? 'Unknown error.';
       setChatHistory(prev => [...prev, { q: question, a: answer }]);
       // Scroll to bottom of chat after answer
       setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 50);
     } catch {
-      setChatHistory(prev => [...prev, { q: question, a: 'Impossible de contacter le serveur.' }]);
+      setChatHistory(prev => [...prev, { q: question, a: 'Unable to reach the server.' }]);
     } finally {
       setChatLoading(false);
     }
@@ -294,7 +293,7 @@ export default function MatchDetailDrawer({ log, open, onClose }: Props) {
     setTimeout(() => setCopied(false), 2000);
   }
 
-  const subject     = message?.subject ?? (msgLoad ? '…' : '(Sans objet)');
+  const subject     = message?.subject ?? (msgLoad ? '…' : '(No Subject)');
   const bodyText    = message?.body
     ? (message.body.contentType === 'html' ? stripHtml(message.body.content) : message.body.content)
     : null;
@@ -374,13 +373,13 @@ export default function MatchDetailDrawer({ log, open, onClose }: Props) {
                     {log.has_attachments && (
                       <span className="inline-flex items-center gap-1 text-[11px] text-[var(--muted-foreground)] bg-[var(--muted)] px-2 py-0.5 rounded-md">
                         <Paperclip className="w-3 h-3" strokeWidth={1.8} />
-                        Pièces jointes
+                        Attachments
                       </span>
                     )}
                     {log.is_ebarreau && (
                       <span className="inline-flex items-center gap-1 text-[11px] text-blue-700 bg-blue-50 px-2 py-0.5 rounded-md">
                         <Scale className="w-3 h-3" strokeWidth={1.8} />
-                        e-Barreau
+                        Priority
                       </span>
                     )}
                   </div>
@@ -412,7 +411,7 @@ export default function MatchDetailDrawer({ log, open, onClose }: Props) {
                         </p>
                         {log.received_at && (
                           <p className="text-[11px] text-[var(--muted-foreground)] flex-shrink-0">
-                            {format(new Date(log.received_at), 'd MMM yyyy, HH:mm', { locale: fr })}
+                            {format(new Date(log.received_at), 'd MMM yyyy, HH:mm')}
                           </p>
                         )}
                       </div>
@@ -420,7 +419,7 @@ export default function MatchDetailDrawer({ log, open, onClose }: Props) {
                       {toRecipients.length > 0 && (
                         <div className="mt-0.5">
                           <p className="text-[11px] text-[var(--muted-foreground)]">
-                            <span className="font-medium">À :</span>{' '}
+                            <span className="font-medium">To:</span>{' '}
                             {(toExpanded ? toRecipients : toRecipients.slice(0, TO_LIMIT)).join(', ')}
                             {!toExpanded && toHiddenCount > 0 && (
                               <>
@@ -429,7 +428,7 @@ export default function MatchDetailDrawer({ log, open, onClose }: Props) {
                                   onClick={() => setToExpanded(true)}
                                   className="text-[var(--accent)] hover:underline font-medium"
                                 >
-                                  +{toHiddenCount} autres
+                                  +{toHiddenCount} more
                                 </button>
                               </>
                             )}
@@ -440,7 +439,7 @@ export default function MatchDetailDrawer({ log, open, onClose }: Props) {
                                   onClick={() => setToExpanded(false)}
                                   className="text-[var(--muted-foreground)] hover:underline"
                                 >
-                                  (réduire)
+                                  (less)
                                 </button>
                               </>
                             )}
@@ -457,7 +456,7 @@ export default function MatchDetailDrawer({ log, open, onClose }: Props) {
                   className="px-5 py-4 border-b border-[var(--border)] space-y-3"
                 >
                   <p className="text-[11px] font-semibold uppercase tracking-wider text-[var(--muted-foreground)]">
-                    Classement
+                    Routing
                   </p>
 
                   {log.matched && log.dossier_name ? (
@@ -471,18 +470,15 @@ export default function MatchDetailDrawer({ log, open, onClose }: Props) {
                           <ConfidenceBadge confidence={log.confidence} matched={log.matched} />
                         </div>
                         <p className="text-[11px] text-[var(--muted-foreground)]">
-                          Réf. {log.dossier_ref}{log.lawyer ? ` · ${log.lawyer}` : ''}
+                          Ref. {log.dossier_ref}{log.handler ? ` · ${log.handler}` : ''}
                         </p>
                         {log.dossier_id && (
-                          <a
-                            href={`https://eu.kleosapp.com/app/cases/${log.dossier_id}/overview`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-[12px] font-semibold text-white bg-[var(--accent)] hover:opacity-90 transition-opacity"
+                          <button
+                            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-[12px] font-semibold text-white bg-[var(--accent)] hover:opacity-90 transition-opacity cursor-default"
                           >
                             <ExternalLink className="w-3.5 h-3.5" strokeWidth={2} />
-                            Ouvrir dans Kleos
-                          </a>
+                            View in Opera Cloud
+                          </button>
                         )}
                       </div>
 
@@ -497,13 +493,13 @@ export default function MatchDetailDrawer({ log, open, onClose }: Props) {
                         {log.review_approved === true && (
                           <span className="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg">
                             <CheckCircle className="w-3 h-3" strokeWidth={2} />
-                            Approuvé
+                            Approved
                           </span>
                         )}
                         {log.review_approved === false && (
                           <span className="inline-flex items-center gap-1 text-[11px] font-medium text-red-600 bg-red-50 px-2.5 py-1 rounded-lg">
                             <XCircle className="w-3 h-3" strokeWidth={2} />
-                            Rejeté
+                            Rejected
                           </span>
                         )}
                       </div>
@@ -512,7 +508,7 @@ export default function MatchDetailDrawer({ log, open, onClose }: Props) {
                       {log.match_reasons && log.match_reasons.length > 0 && (
                         <div className="space-y-1.5 pt-0.5">
                           <p className="text-[11px] font-semibold text-[var(--muted-foreground)] uppercase tracking-wider">
-                            Pourquoi ce dossier
+                            Why this booking
                           </p>
                           <div className="space-y-1">
                             {log.match_reasons.map((r, i) => (
@@ -526,7 +522,7 @@ export default function MatchDetailDrawer({ log, open, onClose }: Props) {
                       )}
                     </>
                   ) : (
-                    <p className="text-[13px] text-[var(--muted-foreground)]">Non classé</p>
+                    <p className="text-[13px] text-[var(--muted-foreground)]">Unmatched</p>
                   )}
                 </motion.div>
 
@@ -552,7 +548,7 @@ export default function MatchDetailDrawer({ log, open, onClose }: Props) {
                   ) : notFound ? (
                     <div className="flex items-center gap-2 text-[12px] text-[var(--muted-foreground)] py-2">
                       <AlertCircle className="w-4 h-4 flex-shrink-0" strokeWidth={1.8} />
-                      Cet email n&apos;est plus accessible (supprimé ou archivé).
+                      This email is no longer accessible (deleted or archived).
                     </div>
                   ) : msgError ? (
                     <div className="flex items-center gap-2 text-[12px] text-red-500 py-2">
@@ -564,7 +560,7 @@ export default function MatchDetailDrawer({ log, open, onClose }: Props) {
                       {bodyText.slice(0, 3000)}{bodyText.length > 3000 ? '…' : ''}
                     </p>
                   ) : (
-                    <p className="text-[13px] text-[var(--muted-foreground)] italic">Contenu non disponible.</p>
+                    <p className="text-[13px] text-[var(--muted-foreground)] italic">Content not available.</p>
                   )}
                 </motion.div>
 
@@ -575,7 +571,7 @@ export default function MatchDetailDrawer({ log, open, onClose }: Props) {
                     className="px-5 py-4 border-b border-[var(--border)]"
                   >
                     <p className="text-[11px] font-semibold uppercase tracking-wider text-[var(--muted-foreground)] mb-3">
-                      Fil de discussion ({thread.length} autre{thread.length > 1 ? 's' : ''})
+                      Thread ({thread.length} other{thread.length > 1 ? 's' : ''})
                     </p>
                     <div className="space-y-2">
                       {thread.map((t) => (
@@ -586,10 +582,10 @@ export default function MatchDetailDrawer({ log, open, onClose }: Props) {
                           <div className="flex-1 min-w-0">
                             <div className="flex items-baseline justify-between gap-2">
                               <p className="text-[12px] font-medium text-[var(--foreground)] truncate">
-                                {t.from?.emailAddress?.name || t.from?.emailAddress?.address || 'Inconnu'}
+                                {t.from?.emailAddress?.name || t.from?.emailAddress?.address || 'Unknown'}
                               </p>
                               <p className="text-[10px] text-[var(--muted-foreground)] flex-shrink-0">
-                                {formatDistanceToNow(new Date(t.receivedDateTime), { addSuffix: true, locale: fr })}
+                                {formatDistanceToNow(new Date(t.receivedDateTime), { addSuffix: true })}
                               </p>
                             </div>
                             <p className="text-[11px] text-[var(--muted-foreground)] truncate mt-0.5 leading-snug">
@@ -611,7 +607,7 @@ export default function MatchDetailDrawer({ log, open, onClose }: Props) {
                     <div className="flex items-center gap-2 mb-3">
                       <Sparkles className="w-3.5 h-3.5 text-[var(--accent)]" strokeWidth={1.8} />
                       <p className="text-[11px] font-semibold uppercase tracking-wider text-[var(--muted-foreground)]">
-                        Assistant dossier
+                        Booking Assistant
                       </p>
                       <span className="ml-auto text-[10px] text-[var(--muted-foreground)] bg-[var(--muted)] px-2 py-0.5 rounded-md">
                         {log.dossier_ref}
@@ -652,9 +648,9 @@ export default function MatchDetailDrawer({ log, open, onClose }: Props) {
                     {chatHistory.length === 0 && !chatLoading && (
                       <div className="flex flex-wrap gap-1.5 mb-3">
                         {[
-                          'Y a-t-il une réunion prévue ?',
-                          'Quels sont les derniers échanges ?',
-                          'Y a-t-il des documents manquants ?',
+                          'Is there a meeting scheduled?',
+                          'What are the latest interactions?',
+                          'Are there any missing documents?',
                         ].map(q => (
                           <button
                             key={q}
@@ -675,7 +671,7 @@ export default function MatchDetailDrawer({ log, open, onClose }: Props) {
                         value={chatInput}
                         onChange={e => setChatInput(e.target.value)}
                         onKeyDown={e => { if (e.key === 'Enter' && chatInput.trim() && !chatLoading) handleChatQuestion(chatInput); }}
-                        placeholder="Poser une question sur ce dossier…"
+                        placeholder="Ask a question about this booking…"
                         disabled={chatLoading}
                         className="flex-1 text-[12px] px-3 py-2 rounded-xl border border-[var(--border)] bg-[var(--muted)] focus:outline-none focus:border-[var(--accent)] placeholder:text-[var(--muted-foreground)] disabled:opacity-50 transition-colors duration-150"
                       />
@@ -695,7 +691,7 @@ export default function MatchDetailDrawer({ log, open, onClose }: Props) {
                 {/* Draft reply */}
                 <motion.div ref={draftSectionRef} variants={SECTION} className="px-5 py-4">
                   <p className="text-[11px] font-semibold uppercase tracking-wider text-[var(--muted-foreground)] mb-3">
-                    Réponse IA
+                    AI Response
                   </p>
 
                   {!draft && !draftLoading && !draftError && (
@@ -704,14 +700,14 @@ export default function MatchDetailDrawer({ log, open, onClose }: Props) {
                       className="flex items-center gap-1.5 px-3.5 py-2 text-[12px] font-medium rounded-xl bg-[var(--muted)] text-[var(--foreground)] hover:bg-[var(--foreground)] hover:text-white transition-all duration-200"
                     >
                       <PenLine className="w-3.5 h-3.5" strokeWidth={1.8} />
-                      Rédiger une réponse
+                      Draft a reply
                     </button>
                   )}
 
                   {draftLoading && (
                     <div className="flex items-center gap-2 text-[12px] text-[var(--muted-foreground)]">
                       <Loader2 className="w-4 h-4 animate-spin" />
-                      Génération en cours…
+                      Generating…
                     </div>
                   )}
 
@@ -723,7 +719,7 @@ export default function MatchDetailDrawer({ log, open, onClose }: Props) {
                         className="flex items-center gap-1.5 px-3 py-1.5 text-[12px] rounded-xl border border-red-200 text-red-500 hover:bg-red-50 transition-all duration-200"
                       >
                         <RefreshCw className="w-3.5 h-3.5" strokeWidth={1.8} />
-                        Réessayer
+                        Retry
                       </button>
                     </div>
                   )}
@@ -732,27 +728,27 @@ export default function MatchDetailDrawer({ log, open, onClose }: Props) {
                     <div className="space-y-2.5">
                       <div className="flex items-center gap-2">
                         <span className="text-[10px] font-semibold uppercase tracking-wider text-[var(--accent)] bg-blue-50 px-2 py-0.5 rounded-md">
-                          Brouillon IA
+                          AI Draft
                         </span>
                         {draft.styleMatch && (
-                          <span className="text-[10px] text-[var(--muted-foreground)]">Style de rédaction : {draft.styleMatch}</span>
+                          <span className="text-[10px] text-[var(--muted-foreground)]">Writing style: {draft.styleMatch}</span>
                         )}
                       </div>
 
                       {sent ? (
                         <div className="flex items-center gap-2 px-4 py-3 bg-emerald-50 border border-emerald-200 rounded-xl text-[13px] font-medium text-emerald-700">
                           <CheckCircle className="w-4 h-4 flex-shrink-0" strokeWidth={1.8} />
-                          Réponse envoyée à {log.sender_email}
+                          Reply sent to {log.sender_email}
                         </div>
                       ) : (
                         <>
                           {/* Recipient + signature notice */}
                           <div className="flex items-center justify-between gap-2 mb-2 flex-wrap">
                             <p className="text-[11px] text-[var(--muted-foreground)]">
-                              À : <span className="font-medium text-[var(--foreground)]">{log.sender_name ? `${log.sender_name} <${log.sender_email}>` : log.sender_email}</span>
+                              To: <span className="font-medium text-[var(--foreground)]">{log.sender_name ? `${log.sender_name} <${log.sender_email}>` : log.sender_email}</span>
                             </p>
                             <span className="text-[10px] text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-100 flex-shrink-0">
-                              Votre signature sera incluse
+                              Your signature will be included
                             </span>
                           </div>
 
@@ -782,7 +778,7 @@ export default function MatchDetailDrawer({ log, open, onClose }: Props) {
                               ) : (
                                 <Send className="w-4 h-4" strokeWidth={2} />
                               )}
-                              {sending ? 'Envoi en cours…' : 'Envoyer'}
+                              {sending ? 'Sending…' : 'Send'}
                             </button>
                             <button
                               onClick={handleCopy}
@@ -790,7 +786,7 @@ export default function MatchDetailDrawer({ log, open, onClose }: Props) {
                               className="flex items-center gap-1.5 px-3.5 py-2 text-[12px] font-medium rounded-xl bg-[var(--muted)] text-[var(--foreground)] hover:bg-[var(--foreground)]/10 transition-colors duration-150 disabled:opacity-50"
                             >
                               <Copy className="w-3.5 h-3.5" strokeWidth={1.8} />
-                              {copied ? 'Copié !' : 'Copier'}
+                              {copied ? 'Copied!' : 'Copy'}
                             </button>
                             <button
                               onClick={() => { setDraft(null); setEditedDraft(''); setSent(false); setSendError(null); handleGenerateDraft(); }}
@@ -798,7 +794,7 @@ export default function MatchDetailDrawer({ log, open, onClose }: Props) {
                               className="flex items-center gap-1.5 px-3.5 py-2 text-[12px] font-medium rounded-xl bg-[var(--muted)] text-[var(--foreground)] hover:bg-[var(--foreground)]/10 transition-colors duration-150 disabled:opacity-50"
                             >
                               <RefreshCw className="w-3.5 h-3.5" strokeWidth={1.8} />
-                              Générer une alternative
+                              Generate alternative
                             </button>
                           </div>
                         </>

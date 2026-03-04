@@ -1,7 +1,7 @@
 'use client';
 
 import { formatDistanceToNow } from 'date-fns';
-import { fr } from 'date-fns/locale';
+
 import { Activity, CheckCircle, AlertCircle, XCircle } from 'lucide-react';
 import type { PipelineRun } from '@/types/pipeline';
 
@@ -28,18 +28,18 @@ export default function PipelineRunCard({ run }: Props) {
           <span className="text-[14px] font-medium text-[var(--foreground)]">{run.mailbox}</span>
         </div>
         <span className="text-[11px] text-[var(--muted-foreground)]">
-          {formatDistanceToNow(new Date(run.started_at), { addSuffix: true, locale: fr })}
+          {formatDistanceToNow(new Date(run.started_at), { addSuffix: true })}
         </span>
       </div>
 
       <div className="grid grid-cols-4 gap-3 text-center">
         <div>
           <p className="text-[20px] font-light tracking-tight text-[var(--foreground)]">{run.emails_processed}</p>
-          <p className="text-[11px] text-[var(--muted-foreground)]">Traités</p>
+          <p className="text-[11px] text-[var(--muted-foreground)]">Processed</p>
         </div>
         <div>
           <p className="text-[20px] font-light tracking-tight text-emerald-500">{matchRate}%</p>
-          <p className="text-[11px] text-[var(--muted-foreground)]">Taux</p>
+          <p className="text-[11px] text-[var(--muted-foreground)]">Rate</p>
         </div>
         <div>
           <p className="text-[20px] font-light tracking-tight text-[var(--accent)]">{run.emails_auto_filed}</p>
@@ -47,14 +47,14 @@ export default function PipelineRunCard({ run }: Props) {
         </div>
         <div>
           <p className="text-[20px] font-light tracking-tight text-amber-500">{run.emails_review}</p>
-          <p className="text-[11px] text-[var(--muted-foreground)]">Revue</p>
+          <p className="text-[11px] text-[var(--muted-foreground)]">Review</p>
         </div>
       </div>
 
       {run.error_count > 0 && (
         <div className="mt-3 flex items-center gap-1.5 text-[11px] text-red-400">
           <AlertCircle className="w-3.5 h-3.5" strokeWidth={1.8} />
-          {run.error_count} erreur{run.error_count > 1 ? 's' : ''}
+          {run.error_count} error{run.error_count > 1 ? 's' : ''}
         </div>
       )}
     </div>

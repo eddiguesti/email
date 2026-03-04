@@ -18,8 +18,8 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "LB-BOT | Assistant Juridique",
-  description: "Tableau de bord d'automatisation des emails pour cabinets d'avocats",
+  title: "Grand Azure Bot | Hotel Email Assistant",
+  description: "Email triage dashboard for The Grand Azure Hotel",
   icons: {
     icon: [
       { url: "/icon-32.png", sizes: "32x32", type: "image/png" },
@@ -35,10 +35,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="fr">
+    <html lang="en">
       <body
         className={`${montserrat.variable} ${inter.variable} antialiased`}
       >
+        {/* Suppress browser-extension errors from polluting the dev overlay */}
+        <script dangerouslySetInnerHTML={{ __html: `(function(){var _oe=window.onerror;window.onerror=function(m,s,l,c,e){if(s&&s.indexOf('chrome-extension://')!==-1)return true;if(e&&e.stack&&e.stack.indexOf('chrome-extension://')!==-1)return true;return _oe?_oe.apply(this,arguments):false;};window.addEventListener('unhandledrejection',function(e){var s=e.reason&&(e.reason.stack||String(e.reason));if(s&&s.indexOf('chrome-extension://')!==-1){e.preventDefault();e.stopImmediatePropagation();}},true);})();` }} />
         <Suspense fallback={
           <div className="min-h-screen bg-[var(--background)] flex items-center justify-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--primary)]" />

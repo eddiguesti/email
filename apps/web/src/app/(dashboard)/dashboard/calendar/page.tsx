@@ -105,7 +105,7 @@ export default function CalendarPage() {
       const res = await getCalendarEvents({ startDate, endDate });
       setEvents(res.events);
     } catch (err) {
-      setEventsError(err instanceof Error ? err.message : 'Erreur de chargement');
+      setEventsError(err instanceof Error ? err.message : 'Loading error');
     } finally {
       setLoadingEvents(false);
     }
@@ -138,7 +138,7 @@ export default function CalendarPage() {
     ? formatMonthYear(currentDate)
     : view === 'week'
     ? formatWeekRange(currentDate)
-    : 'Agenda — 30 prochains jours';
+    : 'Agenda — next 30 days';
 
   return (
     <div className="flex gap-6 h-[calc(100vh-64px)]">
@@ -241,7 +241,7 @@ export default function CalendarPage() {
                 onClick={loadEvents}
                 className="px-4 py-2 rounded-xl text-[13px] font-medium bg-[var(--muted)] text-[var(--foreground)] hover:bg-[var(--border)] transition-all"
               >
-                Réessayer
+                Retry
               </button>
             </div>
           ) : (

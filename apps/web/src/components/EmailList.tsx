@@ -14,7 +14,7 @@ import {
   Loader2,
 } from 'lucide-react';
 import { formatDistanceToNow, format } from 'date-fns';
-import { fr } from 'date-fns/locale';
+
 import { getEmails, EmailMessage, createTodoFromEmail } from '@/lib/api';
 
 interface EmailListProps {
@@ -57,9 +57,9 @@ export default function EmailList({ folderId, folderName }: EmailListProps) {
   const handleCreateTodo = async (email: EmailMessage) => {
     try {
       await createTodoFromEmail(email);
-      alert('Tâche créée avec succès!');
+      alert('Task created successfully!');
     } catch (err) {
-      alert('Erreur: ' + (err as Error).message);
+      alert('Error: ' + (err as Error).message);
     }
   };
 
@@ -72,11 +72,11 @@ export default function EmailList({ folderId, folderName }: EmailListProps) {
     const oneDay = 24 * 60 * 60 * 1000;
 
     if (diff < oneDay) {
-      return formatDistanceToNow(date, { addSuffix: true, locale: fr });
+      return formatDistanceToNow(date, { addSuffix: true });
     } else if (diff < 7 * oneDay) {
-      return format(date, 'EEEE', { locale: fr });
+      return format(date, 'EEEE', );
     } else {
-      return format(date, 'dd MMM', { locale: fr });
+      return format(date, 'dd MMM', );
     }
   };
 
@@ -113,7 +113,7 @@ export default function EmailList({ folderId, folderName }: EmailListProps) {
               onClick={loadEmails}
               className="ml-2 text-[13px] text-[var(--foreground)] hover:text-[var(--accent)] transition-colors"
             >
-              Réessayer
+              Retry
             </button>
           </div>
         ) : loading ? (
@@ -126,7 +126,7 @@ export default function EmailList({ folderId, folderName }: EmailListProps) {
             <div className="w-12 h-12 rounded-2xl bg-[var(--muted)] flex items-center justify-center mx-auto">
               <Mail className="w-6 h-6 text-[var(--muted-foreground)]" strokeWidth={1.5} />
             </div>
-            <p className="mt-4 text-[14px] text-[var(--muted-foreground)]">Aucun email dans ce dossier</p>
+            <p className="mt-4 text-[14px] text-[var(--muted-foreground)]">No emails in this folder</p>
           </div>
         ) : (
           <div>
@@ -190,7 +190,7 @@ export default function EmailList({ folderId, folderName }: EmailListProps) {
                         handleCreateTodo(email);
                       }}
                       className="p-1.5 rounded-lg text-[var(--muted-foreground)] hover:bg-[var(--foreground)] hover:text-white opacity-0 group-hover:opacity-100 transition-all duration-200"
-                      title="Créer une tâche"
+                      title="Create task"
                     >
                       <Plus className="w-3.5 h-3.5" strokeWidth={2} />
                     </button>

@@ -27,7 +27,7 @@ importers:
       '@azure/functions':
         specifier: ^4.5.0
         version: 4.11.0
-      '@lb-bot/shared':
+      '@grand-azure/shared':
         specifier: workspace:*
         version: link:../../packages/shared
       '@microsoft/microsoft-graph-client':
@@ -107,7 +107,7 @@ importers:
 
   apps/web:
     dependencies:
-      '@lb-bot/shared':
+      '@grand-azure/shared':
         specifier: workspace:*
         version: link:../../packages/shared
       '@supabase/supabase-js':
@@ -171,7 +171,7 @@ importers:
       '@azure/storage-blob':
         specifier: ^12.17.0
         version: 12.29.1
-      '@lb-bot/shared':
+      '@grand-azure/shared':
         specifier: workspace:*
         version: link:../../packages/shared
       '@supabase/supabase-js':
@@ -208,7 +208,7 @@ importers:
       '@azure/storage-blob':
         specifier: ^12.17.0
         version: 12.29.1
-      '@lb-bot/shared':
+      '@grand-azure/shared':
         specifier: workspace:*
         version: link:../packages/shared
       '@microsoft/microsoft-graph-client':

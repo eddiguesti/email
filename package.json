@@ -1,8 +1,8 @@
 {
-  "name": "lb-bot",
+  "name": "grand-azure-hotel",
   "version": "0.1.0",
   "private": true,
-  "description": "AI Legal Inbox - Outlook → Azure → Kleos Integration",
+  "description": "Grand Azure Hotel - AI Email Routing Platform",
   "scripts": {
     "dev": "turbo run dev",
     "dev:api": "pnpm --filter @lb-bot/api dev",

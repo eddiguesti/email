@@ -65,7 +65,15 @@ function verifySessionToken(token: string): SessionUser | null {
  * Extract user from session cookie (lb_session).
  */
 export function getUserFromRequest(req: NextRequest): SessionUser | null {
-  // Try cookie first, then Authorization header as fallback
+  // Demo mode check FIRST — no session cookie required
+  if (process.env.DEV_MODE === 'true') {
+    const isDemo = req.cookies.get('lb_demo_mode')?.value === 'true';
+    if (isDemo) {
+      return { userId: 'demo-user-1', email: 'reservations@grandazurehotel.com', name: 'Demo User', isAdmin: true };
+    }
+  }
+
+  // Try session cookie, then Authorization header as fallback
   let session = req.cookies.get('lb_session')?.value;
   if (!session) {
     const authHeader = req.headers.get('Authorization');
@@ -74,14 +82,6 @@ export function getUserFromRequest(req: NextRequest): SessionUser | null {
     }
   }
   if (!session) return null;
-
-  // Demo mode — only allowed when DEV_MODE=true (server-side only, never baked into the bundle)
-  if (process.env.DEV_MODE === 'true') {
-    const isDemo = req.cookies.get('lb_demo_mode')?.value === 'true';
-    if (isDemo) {
-      return { userId: 'demo-user-1', email: 'demo@brosset-techer.fr', name: 'Utilisateur Demo', isAdmin: false };
-    }
-  }
 
   return verifySessionToken(session);
 }

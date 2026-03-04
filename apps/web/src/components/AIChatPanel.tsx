@@ -19,7 +19,6 @@ import {
   Users,
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
-import { fr } from 'date-fns/locale';
 
 interface Message {
   id: string;
@@ -58,10 +57,10 @@ interface KleosContactResult {
 }
 
 const suggestedQueries = [
-  "Montre-moi les emails du tribunal cette semaine",
-  "Emails urgents non lus",
-  "Cherche le dossier Dupont dans Kleos",
-  "Recherche 'convocation audience'",
+  "Show me guest complaints this week",
+  "Unread urgent booking requests",
+  "Find booking for James Wilson",
+  "Search OTA confirmations",
 ];
 
 export default function AIChatPanel() {
@@ -125,7 +124,7 @@ export default function AIChatPanel() {
 
       const data = await response.json();
       if (!response.ok) {
-        const errMsg = data?.error || `Erreur ${response.status}`;
+        const errMsg = data?.error || `Error ${response.status}`;
         throw new Error(errMsg);
       }
 
@@ -142,8 +141,8 @@ export default function AIChatPanel() {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
         content: cleanMessage || (totalResults > 0
-          ? `J'ai trouvé ${totalResults} résultat(s).`
-          : "Je n'ai pas trouvé de résultats pour cette recherche."),
+          ? `Found ${totalResults} result(s).`
+          : 'No results found for this search.'),
         results: data.results,
         dossierResults: data.dossierResults,
         contactResults: data.contactResults,
@@ -155,7 +154,7 @@ export default function AIChatPanel() {
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: `Erreur : ${error instanceof Error ? error.message : 'Veuillez réessayer.'}`,
+        content: `Error: ${error instanceof Error ? error.message : 'Please try again.'}`,
         timestamp: new Date(),
       };
       setMessages((prev) => [...prev, errorMessage]);
@@ -211,8 +210,8 @@ export default function AIChatPanel() {
                   <Sparkles className="w-4 h-4 text-white" strokeWidth={1.8} />
                 </div>
                 <div>
-                  <h3 className="text-[15px] font-semibold tracking-[-0.01em] text-[var(--foreground)]">Assistant IA</h3>
-                  <p className="text-[11px] text-[var(--muted-foreground)]">Emails · Kleos · Contacts</p>
+                  <h3 className="text-[15px] font-semibold tracking-[-0.01em] text-[var(--foreground)]">AI Assistant</h3>
+                  <p className="text-[11px] text-[var(--muted-foreground)]">Bookings · PMS · Guests</p>
                 </div>
               </div>
               <div className="flex items-center gap-1">
@@ -244,10 +243,10 @@ export default function AIChatPanel() {
                     <MessageSquare className="w-6 h-6 text-[var(--muted-foreground)]" strokeWidth={1.5} />
                   </div>
                   <h4 className="text-[17px] font-semibold tracking-[-0.01em] text-[var(--foreground)] mb-1.5">
-                    Comment puis-je vous aider ?
+                    How can I help you?
                   </h4>
                   <p className="text-[13px] text-[var(--muted-foreground)] mb-8">
-                    Cherchez dans vos emails et dossiers Kleos en langage naturel
+                    Search bookings, guests and the PMS in natural language
                   </p>
                   <div className="space-y-2">
                     {suggestedQueries.map((query, i) => (
@@ -313,7 +312,7 @@ export default function AIChatPanel() {
                                     )}
                                   </div>
                                   <p className="text-[11px] text-[var(--muted-foreground)] mt-0.5">
-                                    {email.from.name} · {formatDistanceToNow(new Date(email.receivedDateTime), { addSuffix: true, locale: fr })}
+                                    {email.from.name} · {formatDistanceToNow(new Date(email.receivedDateTime), { addSuffix: true })}
                                   </p>
                                   <p className="text-[11px] text-[var(--muted-foreground)] mt-1 line-clamp-2 opacity-70">
                                     {email.preview}
@@ -342,7 +341,7 @@ export default function AIChatPanel() {
                                 </div>
                                 <div className="flex-1 min-w-0">
                                   <p className="font-medium text-[13px] text-[var(--foreground)] truncate">{dossier.name}</p>
-                                  <p className="text-[11px] text-[var(--muted-foreground)] mt-0.5">Réf. {dossier.reference}{dossier.typeName ? ` · ${dossier.typeName}` : ''}</p>
+                                  <p className="text-[11px] text-[var(--muted-foreground)] mt-0.5">Ref. {dossier.reference}{dossier.typeName ? ` · ${dossier.typeName}` : ''}</p>
                                   {dossier.description && (
                                     <p className="text-[11px] text-[var(--muted-foreground)] mt-1 line-clamp-2 opacity-70">{dossier.description}</p>
                                   )}
@@ -385,7 +384,7 @@ export default function AIChatPanel() {
                       )}
 
                       <p className="text-[11px] text-[var(--muted-foreground)] mt-1.5 px-1 opacity-60">
-                        {formatDistanceToNow(message.timestamp, { addSuffix: true, locale: fr })}
+                        {formatDistanceToNow(message.timestamp, { addSuffix: true })}
                       </p>
                     </div>
                     {message.role === 'user' && (
@@ -409,7 +408,7 @@ export default function AIChatPanel() {
                   <div className="bg-[var(--muted)] rounded-2xl px-4 py-3">
                     <div className="flex items-center gap-2.5">
                       <Loader2 className="w-3.5 h-3.5 animate-spin text-[var(--muted-foreground)]" />
-                      <span className="text-[13px] text-[var(--muted-foreground)]">Recherche emails et Kleos...</span>
+                      <span className="text-[13px] text-[var(--muted-foreground)]">Searching bookings and PMS...</span>
                     </div>
                   </div>
                 </motion.div>
@@ -426,7 +425,7 @@ export default function AIChatPanel() {
                   type="text"
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
-                  placeholder="Emails, dossiers Kleos, contacts..."
+                  placeholder="Bookings, guest names, departments..."
                   disabled={loading}
                   className="flex-1 px-4 py-3 rounded-xl bg-[var(--muted)] text-[var(--foreground)] text-[13px] placeholder:text-[var(--muted-foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--foreground)]/10 transition-all duration-200 disabled:opacity-50"
                 />

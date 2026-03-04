@@ -5,10 +5,10 @@ import { usePathname } from 'next/navigation';
 import { motion } from 'framer-motion';
 
 const tabs = [
-  { name: 'Toutes les correspondances', href: '/dashboard/review/matches' },
-  { name: 'À valider (60–85%)', href: '/dashboard/review/queue' },
-  { name: 'Expéditeurs', href: '/dashboard/review/senders' },
-  { name: 'Complément Outlook', href: '/dashboard/review/addin' },
+  { name: 'All Matches', href: '/dashboard/review/matches' },
+  { name: 'Pending Review (60–85%)', href: '/dashboard/review/queue' },
+  { name: 'Senders', href: '/dashboard/review/senders' },
+  { name: 'Outlook Add-in', href: '/dashboard/review/addin' },
 ];
 
 export default function ReviewNav() {

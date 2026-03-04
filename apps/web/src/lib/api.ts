@@ -44,7 +44,7 @@ export interface EmailMessage {
 
 export interface Todo {
   id: string;
-  lawyer_id: string;
+  handler_id: string;
   email_message_id?: string;
   email_subject?: string;
   email_sender?: string;
@@ -81,8 +81,8 @@ async function apiFetch<T>(endpoint: string, options: RequestInit = {}): Promise
   });
 
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ error: 'Erreur inconnue' }));
-    throw new Error(error.error || `Erreur ${response.status}`);
+    const error = await response.json().catch(() => ({ error: 'Unknown error' }));
+    throw new Error(error.error || `Error ${response.status}`);
   }
 
   return response.json();

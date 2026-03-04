@@ -44,14 +44,14 @@ function LoginContent() {
           className="flex items-center gap-3 justify-center mb-10"
         >
           <div className="w-10 h-10 rounded-xl overflow-hidden">
-            <Image src="/logo.png" alt="Logo" width={40} height={40} priority />
+            <Image src="/logo.svg" alt="Grand Azure Hotel" width={40} height={40} priority unoptimized />
           </div>
           <div>
             <h1 className="text-[17px] font-semibold tracking-[-0.01em] text-[var(--foreground)]">
-              Brosset Techer
+              The Grand Azure Hotel
             </h1>
             <p className="text-[11px] text-[var(--muted-foreground)] font-medium">
-              Gestion Interne
+              Staff Portal
             </p>
           </div>
         </motion.div>
@@ -64,10 +64,10 @@ function LoginContent() {
           className="text-center mb-8"
         >
           <h2 className="text-[28px] font-light tracking-[-0.02em] text-[var(--foreground)]">
-            Bienvenue
+            Welcome
           </h2>
           <p className="text-[15px] text-[var(--muted-foreground)] mt-2">
-            Connectez-vous pour accéder au tableau de bord
+            Sign in to access your dashboard
           </p>
         </motion.div>
 
@@ -88,7 +88,7 @@ function LoginContent() {
               <path d="M10 11H0V21H10V11Z" fill="#00A4EF" />
               <path d="M21 11H11V21H21V11Z" fill="#FFB900" />
             </svg>
-            Se connecter avec Microsoft
+            Sign in with Microsoft
           </button>
 
           {isDevMode && (
@@ -98,7 +98,7 @@ function LoginContent() {
                   <div className="w-full border-t border-[var(--border)]" />
                 </div>
                 <div className="relative flex justify-center">
-                  <span className="px-3 bg-white text-[13px] text-[var(--muted-foreground)]">ou</span>
+                  <span className="px-3 bg-white text-[13px] text-[var(--muted-foreground)]">or</span>
                 </div>
               </div>
 
@@ -107,7 +107,7 @@ function LoginContent() {
                 className="w-full flex items-center justify-center gap-3 px-6 py-3.5 rounded-xl bg-[var(--muted)] text-[var(--foreground)] text-[15px] font-medium tracking-[-0.01em] hover:bg-[#ebebed] transition-colors duration-200"
               >
                 <Play className="w-4 h-4" />
-                Mode démo
+                Demo Mode
               </button>
             </>
           )}
@@ -122,9 +122,9 @@ function LoginContent() {
         >
           <div className="grid grid-cols-3 gap-4 text-center">
             {[
-              { icon: Mail, label: 'Classement intelligent' },
-              { icon: Zap, label: 'Traitement instantané' },
-              { icon: Shield, label: 'Sécurisé' },
+              { icon: Mail, label: 'Smart Routing' },
+              { icon: Zap, label: 'Instant Processing' },
+              { icon: Shield, label: 'Secure' },
             ].map((feature) => (
               <div key={feature.label} className="space-y-2">
                 <div className="w-10 h-10 rounded-xl bg-[var(--muted)] flex items-center justify-center mx-auto">
@@ -144,7 +144,7 @@ function LoginContent() {
           className="mt-8 text-center"
         >
           <p className="text-[11px] text-[var(--muted-foreground)]">
-            &copy; 2026 SELARL Brosset-Techer
+            &copy; 2026 The Grand Azure Hotel
           </p>
         </motion.div>
       </motion.div>

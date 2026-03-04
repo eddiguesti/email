@@ -64,8 +64,8 @@ async function calendarFetch<T>(path: string, options?: RequestInit): Promise<T>
     headers: { 'Content-Type': 'application/json', ...options?.headers },
   });
   if (!res.ok) {
-    const err = await res.json().catch(() => ({ error: `Erreur ${res.status}` }));
-    throw new Error((err as { error?: string }).error || `Erreur ${res.status}`);
+    const err = await res.json().catch(() => ({ error: `Error ${res.status}` }));
+    throw new Error((err as { error?: string }).error || `Error ${res.status}`);
   }
   return res.json();
 }

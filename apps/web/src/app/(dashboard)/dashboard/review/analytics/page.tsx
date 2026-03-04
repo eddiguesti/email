@@ -49,16 +49,16 @@ export default function AnalyticsPage() {
   }
 
   if (!stats) {
-    return <p className="text-[13px] text-[var(--muted-foreground)]">Erreur de chargement</p>;
+    return <p className="text-[13px] text-[var(--muted-foreground)]">Loading error</p>;
   }
 
   return (
     <div className="space-y-6">
       <div className="flex gap-2.5">
         <select value={days} onChange={(e) => setDays(Number(e.target.value))} className={selectClasses}>
-          <option value={7}>7 jours</option>
-          <option value={30}>30 jours</option>
-          <option value={90}>90 jours</option>
+          <option value={7}>7 days</option>
+          <option value={30}>30 days</option>
+          <option value={90}>90 days</option>
         </select>
       </div>
 
@@ -67,7 +67,7 @@ export default function AnalyticsPage() {
       )}
 
       <div className="bg-white rounded-2xl shadow-[var(--shadow-card)] p-6">
-        <h2 className="text-[15px] font-semibold tracking-[-0.01em] text-[var(--foreground)] mb-5">Distribution de confiance</h2>
+        <h2 className="text-[15px] font-semibold tracking-[-0.01em] text-[var(--foreground)] mb-5">Confidence distribution</h2>
         <div className="h-64">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={stats.confidence_distribution}>
@@ -82,7 +82,7 @@ export default function AnalyticsPage() {
       </div>
 
       <div className="bg-white rounded-2xl shadow-[var(--shadow-card)] p-6">
-        <h2 className="text-[15px] font-semibold tracking-[-0.01em] text-[var(--foreground)] mb-5">Efficacité des sources</h2>
+        <h2 className="text-[15px] font-semibold tracking-[-0.01em] text-[var(--foreground)] mb-5">Source Efficiency</h2>
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
@@ -90,7 +90,7 @@ export default function AnalyticsPage() {
                 <th className="pb-3 font-medium">Source</th>
                 <th className="pb-3 font-medium text-right">Nombre</th>
                 <th className="pb-3 font-medium text-right">% du total</th>
-                <th className="pb-3 font-medium text-right">Confiance moy.</th>
+                <th className="pb-3 font-medium text-right">Avg. Confidence</th>
               </tr>
             </thead>
             <tbody>
@@ -120,7 +120,7 @@ export default function AnalyticsPage() {
 
       {stats.mailbox_stats.length > 1 && (
         <div className="bg-white rounded-2xl shadow-[var(--shadow-card)] p-6">
-          <h2 className="text-[15px] font-semibold tracking-[-0.01em] text-[var(--foreground)] mb-5">Performance par boîte</h2>
+          <h2 className="text-[15px] font-semibold tracking-[-0.01em] text-[var(--foreground)] mb-5">Performance by Mailbox</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {stats.mailbox_stats.map(mb => (
               <div key={mb.mailbox} className="p-5 bg-[var(--muted)] rounded-xl">
@@ -128,15 +128,15 @@ export default function AnalyticsPage() {
                 <div className="flex gap-6 text-center">
                   <div>
                     <p className="text-[20px] font-light tracking-tight text-[var(--foreground)]">{mb.processed}</p>
-                    <p className="text-[11px] text-[var(--muted-foreground)]">Traités</p>
+                    <p className="text-[11px] text-[var(--muted-foreground)]">Processed</p>
                   </div>
                   <div>
                     <p className="text-[20px] font-light tracking-tight text-emerald-500">{mb.matched}</p>
-                    <p className="text-[11px] text-[var(--muted-foreground)]">Classés</p>
+                    <p className="text-[11px] text-[var(--muted-foreground)]">Routed</p>
                   </div>
                   <div>
                     <p className="text-[20px] font-light tracking-tight text-[var(--foreground)]">{Math.round(mb.match_rate * 100)}%</p>
-                    <p className="text-[11px] text-[var(--muted-foreground)]">Taux</p>
+                    <p className="text-[11px] text-[var(--muted-foreground)]">Rate</p>
                   </div>
                 </div>
               </div>

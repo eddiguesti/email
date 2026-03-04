@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Search, Users } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
-import { fr } from 'date-fns/locale';
+
 import type { SenderHistoryEntry } from '@/types/pipeline';
 import { getSenderHistory } from '@/lib/pipeline-api';
 
@@ -34,7 +34,7 @@ export default function SendersPage() {
         <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--muted-foreground)]" strokeWidth={1.8} />
         <input
           type="text"
-          placeholder="Rechercher un expéditeur..."
+          placeholder="Search a sender..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="w-full pl-11 pr-4 py-3 text-[13px] rounded-xl bg-[var(--muted)] text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--foreground)]/10 transition-all duration-200"
@@ -44,23 +44,23 @@ export default function SendersPage() {
       <div className="flex items-center gap-2">
         <Users className="w-4 h-4 text-[var(--muted-foreground)]" strokeWidth={1.8} />
         <span className="text-[13px] text-[var(--muted-foreground)]">
-          {total} expéditeur{total !== 1 ? 's' : ''} connu{total !== 1 ? 's' : ''}
+          {total} known sender{total !== 1 ? 's' : ''}
         </span>
       </div>
 
       <div className="bg-white rounded-2xl shadow-[var(--shadow-card)] overflow-hidden">
         <div className="flex items-center gap-4 px-5 py-3 border-b border-[var(--border)] text-[11px] font-medium text-[var(--muted-foreground)] uppercase tracking-wider">
-          <div className="flex-1">Expéditeur</div>
-          <div className="w-48 hidden md:block">Dossier</div>
+          <div className="flex-1">Sender</div>
+          <div className="w-48 hidden md:block">Booking</div>
           <div className="w-20 text-center">Occurrences</div>
-          <div className="w-20 text-center">Confiance</div>
-          <div className="w-28 text-right">Dernier contact</div>
+          <div className="w-20 text-center">Confidence</div>
+          <div className="w-28 text-right">Last Contact</div>
         </div>
 
         {loading ? (
-          <div className="p-10 text-center text-[13px] text-[var(--muted-foreground)]">Chargement...</div>
+          <div className="p-10 text-center text-[13px] text-[var(--muted-foreground)]">Loading...</div>
         ) : senders.length === 0 ? (
-          <div className="p-10 text-center text-[13px] text-[var(--muted-foreground)]">Aucun expéditeur trouvé</div>
+          <div className="p-10 text-center text-[13px] text-[var(--muted-foreground)]">No senders found</div>
         ) : (
           senders.map(s => (
             <div
@@ -95,7 +95,7 @@ export default function SendersPage() {
               </div>
               <div className="w-28 text-right">
                 <p className="text-[11px] text-[var(--muted-foreground)]">
-                  {formatDistanceToNow(new Date(s.last_seen), { addSuffix: true, locale: fr })}
+                  {s.last_seen && !isNaN(new Date(s.last_seen).getTime()) ? formatDistanceToNow(new Date(s.last_seen), { addSuffix: true }) : '—'}
                 </p>
               </div>
             </div>

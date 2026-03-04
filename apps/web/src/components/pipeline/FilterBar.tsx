@@ -33,21 +33,21 @@ export default function FilterBar({ filters, onChange }: Props) {
     <div className="flex flex-wrap gap-4 p-5 bg-white rounded-2xl shadow-[var(--shadow-card)]">
       {/* Quick workflow preset */}
       <div>
-        <label className={labelClasses}>Tâche rapide</label>
+        <label className={labelClasses}>Quick filter</label>
         <select
           value={quickFilter}
           onChange={(e) => applyQuickFilter(e.target.value)}
           className={selectClasses}
         >
-          <option value="">Tous les emails</option>
-          <option value="to_review">En attente de validation (60–85%)</option>
-          <option value="unclassified">Sans dossier associé</option>
+          <option value="">All emails</option>
+          <option value="to_review">Pending review (60–85%)</option>
+          <option value="unclassified">No booking matched</option>
         </select>
       </div>
 
       {/* Matched filter — renamed to avoid confusion with "Classé" badge */}
       <div>
-        <label className={labelClasses}>Dossier trouvé</label>
+        <label className={labelClasses}>Booking Found</label>
         <select
           value={filters.matched === undefined ? '' : String(filters.matched)}
           onChange={(e) => {
@@ -56,42 +56,42 @@ export default function FilterBar({ filters, onChange }: Props) {
           }}
           className={selectClasses}
         >
-          <option value="">Tous</option>
-          <option value="true">Oui — dossier trouvé</option>
-          <option value="false">Non — sans dossier</option>
+          <option value="">All</option>
+          <option value="true">Yes — booking found</option>
+          <option value="false">No — unmatched</option>
         </select>
       </div>
 
       {/* Source */}
       <div>
-        <label className={labelClasses}>Source de détection</label>
+        <label className={labelClasses}>Detection Source</label>
         <select
           value={filters.source || ''}
           onChange={(e) => update({ source: e.target.value || undefined })}
           className={selectClasses}
         >
-          <option value="">Toutes les sources</option>
+          <option value="">All sources</option>
           {Object.entries(MATCH_SOURCE_LABELS).map(([key, label]) => (
             <option key={key} value={key}>{label}</option>
           ))}
         </select>
       </div>
 
-      {/* Lawyer */}
+      {/* Handler */}
       <div>
-        <label className={labelClasses}>Avocat</label>
+        <label className={labelClasses}>Dept.</label>
         <input
           type="text"
-          placeholder="Rechercher..."
-          value={filters.lawyer || ''}
-          onChange={(e) => update({ lawyer: e.target.value || undefined })}
+          placeholder="Search..."
+          value={filters.handler || ''}
+          onChange={(e) => update({ handler: e.target.value || undefined })}
           className={`${inputClasses} w-36`}
         />
       </div>
 
       {/* Date range with labels */}
       <div>
-        <label className={labelClasses}>Reçu après le</label>
+        <label className={labelClasses}>Received after</label>
         <input
           type="date"
           value={filters.date_from || ''}
@@ -101,7 +101,7 @@ export default function FilterBar({ filters, onChange }: Props) {
       </div>
 
       <div>
-        <label className={labelClasses}>Reçu avant le</label>
+        <label className={labelClasses}>Received before</label>
         <input
           type="date"
           value={filters.date_to || ''}
@@ -112,15 +112,15 @@ export default function FilterBar({ filters, onChange }: Props) {
 
       {/* Review status — renamed to avoid "À revoir" clash with confidence badge */}
       <div>
-        <label className={labelClasses}>Statut de validation</label>
+        <label className={labelClasses}>Review Status</label>
         <select
           value={filters.reviewed || ''}
           onChange={(e) => update({ reviewed: e.target.value || undefined })}
           className={selectClasses}
         >
-          <option value="">Tous</option>
-          <option value="false">Non validés</option>
-          <option value="true">Déjà validés</option>
+          <option value="">All</option>
+          <option value="false">Not reviewed</option>
+          <option value="true">Already reviewed</option>
         </select>
       </div>
     </div>

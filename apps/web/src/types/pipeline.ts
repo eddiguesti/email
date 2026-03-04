@@ -18,7 +18,7 @@ export interface MatchLog {
   confidence: number | null;
   match_source: string | null;
   match_reasons: string[] | null;
-  lawyer: string | null;
+  handler: string | null;
   action_taken: string | null;
   reviewed_by: string | null;
   reviewed_at: string | null;
@@ -68,7 +68,7 @@ export interface ConversationThread {
   dossier_name: string;
   confidence: number;
   match_source: string | null;
-  lawyer: string | null;
+  handler: string | null;
   email_count: number;
   last_email_at: string;
 }
@@ -83,10 +83,10 @@ export function getConfidenceBand(confidence: number | null, matched: boolean): 
 }
 
 export const CONFIDENCE_BAND_LABELS: Record<ConfidenceBand, string> = {
-  auto_file: 'Auto-classement',
-  review: 'À revoir',
-  low: 'Faible',
-  no_match: 'Non classé',
+  auto_file: 'Auto-routed',
+  review: 'To Review',
+  low: 'Low Confidence',
+  no_match: 'Unmatched',
 };
 
 export const CONFIDENCE_BAND_COLORS: Record<ConfidenceBand, string> = {
@@ -97,17 +97,17 @@ export const CONFIDENCE_BAND_COLORS: Record<ConfidenceBand, string> = {
 };
 
 export const MATCH_SOURCE_LABELS: Record<string, string> = {
-  conversation_thread: 'Fil de conversation',
-  reference_exact: 'Référence exacte',
-  rg_match: 'Numéro RG',
-  sender_history: 'Historique expéditeur',
-  ai_classifier_scoped: 'IA (avocat)',
-  ai_classifier_global: 'IA (global)',
-  kb_party_exact: 'Partie connue (exact)',
-  kb_party_common: 'Partie connue (commune)',
-  kb_party_fuzzy: 'Partie connue (approx)',
-  kb_keyword: 'Mots-clés dossier',
-  kleos_search: 'Recherche KLEOS',
+  conversation_thread: 'Email Thread',
+  reference_exact:     'Booking Ref.',
+  rg_match:            'Opera Cloud',
+  sender_history:      'Known Guest',
+  ai_classifier_scoped:'AI · By Dept',
+  ai_classifier_global:'AI · Global',
+  kb_party_exact:      'Guest Profile',
+  kb_party_common:     'Name Match',
+  kb_party_fuzzy:      'Fuzzy Match',
+  kb_keyword:          'Keywords',
+  kleos_search:        'PMS Search',
 };
 
 export const MATCH_SOURCE_COLORS: Record<string, string> = {
@@ -190,7 +190,7 @@ export interface MatchLogFilters {
   confidence_min?: number;
   confidence_max?: number;
   source?: string;
-  lawyer?: string;
+  handler?: string;
   date_from?: string;
   date_to?: string;
   reviewed?: string;
@@ -202,12 +202,12 @@ export interface MatchLogFilters {
 export type CategoryColor = 'green' | 'orange' | 'red' | 'blue' | 'grey' | 'purple';
 
 export const CATEGORY_LABELS: Record<string, string> = {
-  green: 'Classé',
-  orange: 'À vérifier',
-  red: 'Non classé',
-  blue: 'eBarreau',
-  grey: 'Ignoré',
-  purple: 'Nouveau contact',
+  green: 'Routed',
+  orange: 'To Review',
+  red: 'Unmatched',
+  blue: 'OTA Booking',
+  grey: 'Ignored',
+  purple: 'New Guest',
 };
 
 export const CATEGORY_STYLES: Record<string, string> = {
@@ -223,7 +223,7 @@ export const CATEGORY_STYLES: Record<string, string> = {
 
 export type ActionStatus = 'urgent' | 'to_review' | 'unclassified' | 'done';
 
-/** Derive what action the lawyer needs to take on this match */
+/** Derive what action the handler needs to take on this match */
 export function getActionStatus(log: MatchLog): ActionStatus {
   // Already handled
   if (log.review_approved === true) return 'done';
@@ -259,14 +259,14 @@ export const ACTION_STATUS_CONFIG: Record<
     pulse: true,
   },
   to_review: {
-    label: 'À revoir',
+    label: 'To Review',
     accentBg: 'bg-amber-400',
     badgeClass: 'bg-amber-50 text-amber-600 border-amber-200',
     dotClass: 'bg-amber-400',
     pulse: false,
   },
   unclassified: {
-    label: 'À classer',
+    label: 'Unrouted',
     accentBg: 'bg-slate-300',
     badgeClass: 'bg-slate-100 text-slate-500 border-slate-200',
     dotClass: 'bg-gray-300',

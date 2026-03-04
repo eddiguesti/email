@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import path from 'path';
 
 // unsafe-eval is only needed in dev (webpack HMR / React Fast Refresh).
 // Production Next.js builds do not require it.
@@ -49,6 +50,9 @@ const nextConfig: NextConfig = {
   images: {
     // Serve AVIF/WebP when the browser supports them — same visual quality, 30-50% smaller files.
     formats: ['image/avif', 'image/webp'],
+  },
+  turbopack: {
+    root: path.resolve(__dirname, '../..'),
   },
 };
 

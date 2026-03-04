@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation';
 
-export default function LawyersPage() {
+export default function StaffPage() {
   redirect('/dashboard/review/senders');
 }

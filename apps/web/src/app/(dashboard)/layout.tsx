@@ -6,10 +6,11 @@ import dynamic from 'next/dynamic';
 import { motion } from 'framer-motion';
 import Sidebar from '@/components/Sidebar';
 import NotificationBell from '@/components/NotificationBell';
+import PlatformInfoPanel from '@/components/PlatformInfoPanel';
 import { useAuth } from '@/context/AuthContext';
 import { TourProvider } from '@/context/TourContext';
 import { getUserPreferences } from '@/lib/pipeline-api';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Sparkles } from 'lucide-react';
 
 // Lazy-load heavy panels — excluded from the initial JS bundle so first-load
 // JavaScript is smaller. AIChatPanel is hidden on mount; OnboardingModal only
@@ -27,6 +28,7 @@ export default function DashboardLayout({
   const router   = useRouter();
   const pathname = usePathname();
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [showPlatformPanel, setShowPlatformPanel] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -70,7 +72,7 @@ export default function DashboardLayout({
           className="text-center"
         >
           <Loader2 className="w-8 h-8 animate-spin text-[var(--muted-foreground)] mx-auto" />
-          <p className="mt-4 text-[13px] text-[var(--muted-foreground)]">Chargement...</p>
+          <p className="mt-4 text-[13px] text-[var(--muted-foreground)]">Loading...</p>
         </motion.div>
       </div>
     );
@@ -85,7 +87,15 @@ export default function DashboardLayout({
       <div className="min-h-screen bg-white">
         <Sidebar />
         <main className="pl-[260px]">
-          <div className="flex items-center justify-end px-10 pt-6 pb-2">
+          <div className="flex items-center justify-end gap-2 px-10 pt-6 pb-2">
+            <button
+              onClick={() => setShowPlatformPanel(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:bg-[var(--muted)] transition-all duration-200"
+              title="Platform overview"
+            >
+              <Sparkles className="w-3.5 h-3.5" strokeWidth={1.8} />
+              Platform overview
+            </button>
             <NotificationBell compact />
           </div>
           <motion.div
@@ -100,6 +110,7 @@ export default function DashboardLayout({
         </main>
         <AIChatPanel />
         <TourOverlay />
+        <PlatformInfoPanel open={showPlatformPanel} onClose={() => setShowPlatformPanel(false)} />
 
         {/* First-login onboarding wizard */}
         {showOnboarding && <OnboardingModal onComplete={handleOnboardingComplete} />}

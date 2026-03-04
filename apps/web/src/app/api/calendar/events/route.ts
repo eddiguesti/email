@@ -1,117 +1,47 @@
-/**
- * GET /api/calendar/events
- *
- * Fetches calendar events from Microsoft Graph for the authenticated user.
- * Uses native fetch — no additional SDK dependency required.
- * Decrypts the stored access token server-side; never exposes tokens to the client.
- */
+import { NextResponse } from 'next/server';
 
-import { NextRequest, NextResponse } from 'next/server';
-import { getUserFromRequest } from '@/lib/auth-server';
-import { supabaseAdmin } from '@/lib/supabase-server';
-import { decryptToken } from '@lb-bot/shared';
-
-const GRAPH_BASE = 'https://graph.microsoft.com/v1.0';
-
-export async function GET(req: NextRequest) {
-  const user = getUserFromRequest(req);
-  if (!user) {
-    return NextResponse.json({ error: 'Non authentifié' }, { status: 401 });
-  }
-
-  const { searchParams } = req.nextUrl;
-  const startDateParam = searchParams.get('startDate');
-  const endDateParam   = searchParams.get('endDate');
-
-  const startDate = startDateParam ? new Date(startDateParam) : new Date();
-  const endDate   = endDateParam
-    ? new Date(endDateParam)
-    : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
-
-  if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
-    return NextResponse.json({ error: 'Dates invalides' }, { status: 400 });
-  }
-
-  // Fetch + decrypt access token from lawyers table
-  const { data: lawyer, error: dbErr } = await supabaseAdmin
-    .from('lawyers')
-    .select('access_token')
-    .eq('microsoft_id', user.userId)
-    .single();
-
-  if (dbErr || !lawyer?.access_token) {
-    return NextResponse.json({ error: 'Token introuvable' }, { status: 401 });
-  }
-
-  const accessToken = decryptToken(lawyer.access_token);
-  if (!accessToken) {
-    return NextResponse.json({ error: 'Token invalide' }, { status: 401 });
-  }
-
-  try {
-    const filter = `start/dateTime ge '${startDate.toISOString()}' and end/dateTime le '${endDate.toISOString()}'`;
-    const select = 'id,subject,bodyPreview,start,end,location,isAllDay,attendees,categories,importance,organizer,onlineMeetingUrl';
-
-    const url = new URL(`${GRAPH_BASE}/me/calendar/events`);
-    url.searchParams.set('$filter', filter);
-    url.searchParams.set('$orderby', 'start/dateTime');
-    url.searchParams.set('$top', '100');
-    url.searchParams.set('$select', select);
-
-    // Paginate through @odata.nextLink until all events are fetched (max 5 pages / 500 events).
-    const MAX_PAGES = 5;
-    const rawEvents: Record<string, unknown>[] = [];
-    let nextUrl: string | null = url.toString();
-    let page = 0;
-
-    while (nextUrl && page < MAX_PAGES) {
-      const response = await fetch(nextUrl, {
-        headers: { Authorization: `Bearer ${accessToken}`, Accept: 'application/json' },
-        cache: 'no-store',
-        signal: AbortSignal.timeout(15_000),
-      });
-
-      if (!response.ok) {
-        console.error('Graph API error:', response.status);
-        return NextResponse.json({ error: 'Erreur Microsoft Graph' }, { status: 502 });
-      }
-
-      const data = await response.json() as {
-        value?: Record<string, unknown>[];
-        '@odata.nextLink'?: string;
-      };
-
-      if (data.value) rawEvents.push(...data.value);
-      nextUrl = data['@odata.nextLink'] ?? null;
-      page++;
-    }
-
-    const events = rawEvents.map(e => ({
-      id:          e.id as string,
-      source:      'microsoft' as const,
-      subject:     (e.subject as string) || 'Sans titre',
-      bodyPreview: (e.bodyPreview as string) || '',
-      // Graph returns { dateTime, timeZone } for timed events, { date } for all-day.
-      // Normalise both to an ISO string.
-      start:       (e.start as { dateTime?: string; date?: string } | null)?.dateTime
-                   ?? `${(e.start as { date?: string } | null)?.date}T00:00:00.000Z`,
-      end:         (e.end   as { dateTime?: string; date?: string } | null)?.dateTime
-                   ?? `${(e.end   as { date?: string } | null)?.date}T00:00:00.000Z`,
-      location:    (e.location as { displayName?: string } | null)?.displayName || undefined,
-      isAllDay:    (e.isAllDay as boolean) || false,
-      attendees:   ((e.attendees as { emailAddress: { name?: string; address?: string } }[]) || []).map((a: { emailAddress: { name?: string; address?: string } }) => ({
-        name:  a.emailAddress?.name,
-        email: a.emailAddress?.address,
-      })),
-      categories:       (e.categories as string[]) || [],
-      importance:       (e.importance as string) || 'normal',
-      organizer:        (e.organizer as { emailAddress: { name?: string } } | null)?.emailAddress?.name || undefined,
-      onlineMeetingUrl: (e.onlineMeetingUrl as string) || undefined,
-    }));
-
-    return NextResponse.json({ events, count: events.length });
-  } catch (err) {
-    console.error('Calendar events error:', err);
-    return NextResponse.json({ error: 'Erreur lors du chargement des événements' }, { status: 500 });
-  }
+export async function GET() {
+  const now = Date.now();
+  const events = [
+    {
+      id: 'cal-001', source: 'microsoft',
+      subject: 'Hartmann Group — Block Booking Follow-up',
+      bodyPreview: 'Confirm final room allocation for 12-room block (March 15-18)',
+      start: new Date(now + 2 * 86_400_000).toISOString(),
+      end: new Date(now + 2 * 86_400_000 + 3_600_000).toISOString(),
+      location: 'Reservations Office', isAllDay: false,
+      attendees: [{ name: 'Hartmann Group Travel', email: 'corporate.travel@hartmann-group.de' }],
+      categories: ['Reservations'], importance: 'high', organizer: 'Demo User',
+    },
+    {
+      id: 'cal-002', source: 'microsoft',
+      subject: 'Grand Ballroom Site Visit — Metropolitan Arts Gala',
+      bodyPreview: 'Walk-through for April 5 Gala Dinner setup (200 covers)',
+      start: new Date(now + 5 * 86_400_000).toISOString(),
+      end: new Date(now + 5 * 86_400_000 + 5_400_000).toISOString(),
+      location: 'Grand Ballroom', isAllDay: false,
+      attendees: [{ name: 'Metropolitan Arts Foundation', email: 'events@metropolitan-arts.org' }],
+      categories: ['Events'], importance: 'high', organizer: 'Demo User',
+    },
+    {
+      id: 'cal-003', source: 'microsoft',
+      subject: 'VIP Check-in — Sterling Investments Director',
+      bodyPreview: '4-night stay preparation for Director Suite',
+      start: new Date(now + 7 * 86_400_000).toISOString(),
+      end: new Date(now + 7 * 86_400_000 + 1_800_000).toISOString(),
+      location: 'Reception — Director Suite 701', isAllDay: false,
+      attendees: [], categories: ['Concierge'], importance: 'high', organizer: 'Demo User',
+    },
+    {
+      id: 'cal-004', source: 'microsoft',
+      subject: 'Monthly Housekeeping Review — CleanPro Services',
+      bodyPreview: 'Monthly service review and contract renewal discussion',
+      start: new Date(now + 10 * 86_400_000).toISOString(),
+      end: new Date(now + 10 * 86_400_000 + 3_600_000).toISOString(),
+      location: 'Conference Room B', isAllDay: false,
+      attendees: [{ name: 'CleanPro Services', email: 'housekeeping@cleanpro.com' }],
+      categories: ['Operations'], importance: 'normal', organizer: 'Demo User',
+    },
+  ];
+  return NextResponse.json({ events, count: events.length });
 }

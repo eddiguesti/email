@@ -1,0 +1,10 @@
+<svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="40" height="40" rx="9" fill="#1B5277"/>
+  <!-- Crown shape: base + 3 peaks -->
+  <path d="M7 29 L7 19 L13 23 L20 12 L27 23 L33 19 L33 29 Z" fill="white"/>
+  <rect x="7" y="29" width="26" height="3" rx="1.5" fill="white" opacity="0.75"/>
+  <!-- Gem/circle accent at top -->
+  <circle cx="20" cy="11" r="2.5" fill="white"/>
+  <circle cx="7" cy="18" r="2" fill="white"/>
+  <circle cx="33" cy="18" r="2" fill="white"/>
+</svg>

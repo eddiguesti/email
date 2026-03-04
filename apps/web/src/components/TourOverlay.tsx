@@ -44,10 +44,10 @@ const STEPS: Step[] = [
     route: null,
     target: null,
     icon: <Sparkles className="w-8 h-8" strokeWidth={1.5} />,
-    label: 'Bienvenue',
-    title: 'Bienvenue sur LB-Bot',
-    subtitle: 'Votre assistant juridique IA',
-    body: "LB-Bot analyse chaque email entrant, le classe automatiquement dans le bon dossier Kleos, rédige des réponses dans votre style et répond à vos questions sur vos dossiers — le tout en arrière-plan.\n\nCette visite guidée vous présente les 5 modules clés en moins de 2 minutes.",
+    label: 'Welcome',
+    title: 'Welcome to Grand Azure Bot',
+    subtitle: 'Your hotel AI email assistant',
+    body: "Grand Azure Bot analyses every incoming email, automatically matches it to the correct booking in the PMS, drafts replies in your style, and answers questions about reservations — all running in the background.\n\nThis guided tour covers the 5 key modules in under 2 minutes.",
     accentFrom: 'from-slate-900',
     accentTo: 'to-slate-700',
     accentText: 'text-white',
@@ -58,11 +58,11 @@ const STEPS: Step[] = [
     target: 'nav-pipeline',
     preferSide: 'right',
     icon: <Mail className="w-6 h-6" strokeWidth={1.5} />,
-    label: 'Correspondances',
-    title: 'Pipeline Email',
-    subtitle: 'Classement automatique IA',
-    body: "Chaque email de votre boîte est analysé en temps réel. LB-Bot identifie le dossier Kleos correspondant grâce à 8 méthodes de matching combinées.\n\nLes emails classés avec plus de 85 % de confiance sont archivés automatiquement. Les autres passent en file de revue.",
-    tip: "Cliquez sur n'importe quelle ligne pour ouvrir le panneau de détail.",
+    label: 'Matches',
+    title: 'Email Routing',
+    subtitle: 'AI automatic routing',
+    body: "Every email in your inbox is analysed in real time. Grand Azure Bot identifies the matching booking using 8 combined matching methods.\n\nEmails matched with over 85% confidence are routed automatically. Others go to the review queue.",
+    tip: "Click any row to open the detail panel.",
     accentFrom: 'from-indigo-600',
     accentTo: 'to-violet-600',
     accentText: 'text-white',
@@ -73,11 +73,11 @@ const STEPS: Step[] = [
     target: 'detail-drawer',
     preferSide: 'left',
     icon: <Eye className="w-6 h-6" strokeWidth={1.5} />,
-    label: 'Panneau de détail',
-    title: 'Tout en un coup d\'œil',
-    subtitle: 'Email · Dossier · Réponse IA · Questions',
-    body: "Cliquez sur n'importe quelle ligne et ce panneau s'ouvre. Vous voyez immédiatement l'email complet, le dossier Kleos suggéré et les raisons du classement.\n\nDeux outils IA sont intégrés directement ici :\n\n✦ Rédiger une réponse — l'IA génère un brouillon dans votre style personnel (intro, corps, clôture). Relisez, modifiez si besoin, envoyez en un clic.\n\n✦ Assistant dossier — posez une question sur le dossier en français courant : « Y a-t-il une réunion prévue ? », « Quels sont les derniers échanges ? » L'IA fouille votre historique email et répond en contexte.",
-    tip: "Les brouillons s'adaptent automatiquement au ton du dossier — judiciaire, amiable, notarial…",
+    label: 'Detail panel',
+    title: 'Everything at a glance',
+    subtitle: 'Email · Booking · AI Reply · Questions',
+    body: "Click any row and this panel opens. You immediately see the full email, the suggested booking, and the reasons for the match.\n\nTwo AI tools are built in directly here:\n\n✦ Draft a reply — the AI generates a draft in your personal style (intro, body, closing). Review, edit if needed, send in one click.\n\n✦ Booking assistant — ask a question about the reservation in plain English: 'Is there a check-in today?', 'What are the latest exchanges?' The AI searches your email history and answers in context.",
+    tip: "Drafts automatically adapt to the tone of the reservation — formal, casual, or corporate.",
     accentFrom: 'from-violet-600',
     accentTo: 'to-purple-600',
     accentText: 'text-white',
@@ -88,11 +88,11 @@ const STEPS: Step[] = [
     target: 'review-queue',
     preferSide: 'top',
     icon: <CheckCircle className="w-6 h-6" strokeWidth={1.5} />,
-    label: 'File de revue',
-    title: 'File de revue',
-    subtitle: 'Validez les classements incertains',
-    body: "Quand l'IA n'est pas suffisamment confiante (60–85 %), l'email attend votre validation. Vous voyez l'expéditeur, le dossier suggéré et les raisons du matching.\n\nUn clic sur Approuver ou Rejeter. Chaque décision affine la précision du modèle pour votre cabinet.",
-    tip: "Vous pouvez aussi générer et envoyer une réponse directement depuis la file.",
+    label: 'Review queue',
+    title: 'Review Queue',
+    subtitle: 'Validate uncertain routing suggestions',
+    body: "When the AI is not confident enough (60–85%), the email waits for your approval. You see the sender, the suggested booking, and the matching reasons.\n\nOne click to Approve or Reject. Each decision refines the model's accuracy for your hotel.",
+    tip: "You can also generate and send a reply directly from the queue.",
     accentFrom: 'from-amber-500',
     accentTo: 'to-orange-500',
     accentText: 'text-white',
@@ -103,11 +103,11 @@ const STEPS: Step[] = [
     target: 'calendar-view',
     preferSide: 'bottom',
     icon: <CalendarDays className="w-6 h-6" strokeWidth={1.5} />,
-    label: 'Calendrier',
-    title: 'Calendrier intelligent',
-    subtitle: 'Agenda Microsoft 365 + suggestions IA',
-    body: "Retrouvez tous vos rendez-vous Microsoft 365 directement dans LB-Bot — vue mois, semaine ou agenda.\n\nL'IA détecte les intentions de réunion dans vos emails et propose d'ajouter le créneau à votre agenda en un clic.",
-    tip: "Les suggestions restent en attente jusqu'à ce que vous les acceptiez ou les ignoriez.",
+    label: 'Calendar',
+    title: 'Smart Calendar',
+    subtitle: 'Microsoft 365 agenda + AI suggestions',
+    body: "View all your Microsoft 365 events directly in Grand Azure Bot — month, week, or agenda view.\n\nThe AI detects meeting intent in your emails and suggests adding the time slot to your calendar in one click.",
+    tip: "Suggestions stay pending until you accept or dismiss them.",
     accentFrom: 'from-emerald-600',
     accentTo: 'to-teal-600',
     accentText: 'text-white',
@@ -118,11 +118,11 @@ const STEPS: Step[] = [
     target: 'ai-chat',
     preferSide: 'left',
     icon: <MessageSquare className="w-6 h-6" strokeWidth={1.5} />,
-    label: 'Assistant IA',
-    title: 'Assistant IA global',
-    subtitle: 'Questions en langage naturel',
-    body: "Cette icône ✦ ouvre l'assistant IA. Posez des questions sur vos emails en français courant :\n\n« Emails urgents du tribunal cette semaine » · « Dossiers sans réponse depuis 3 jours »\n\nL'IA comprend le contexte juridique et retrouve les emails pertinents.",
-    tip: "L'assistant est disponible depuis toutes les pages du tableau de bord.",
+    label: 'AI Assistant',
+    title: 'Global AI Assistant',
+    subtitle: 'Natural language questions',
+    body: "The ✦ icon opens the AI assistant. Ask questions about your emails in plain English:\n\n'Urgent booking requests this week' · 'Emails from corporate guests without a reply'\n\nThe AI understands hotel context and finds relevant emails.",
+    tip: "The assistant is available from all dashboard pages.",
     accentFrom: 'from-blue-600',
     accentTo: 'to-cyan-600',
     accentText: 'text-white',
@@ -132,10 +132,10 @@ const STEPS: Step[] = [
     route: '/dashboard',
     target: null,
     icon: <LayoutDashboard className="w-8 h-8" strokeWidth={1.5} />,
-    label: 'Terminé',
-    title: 'Vous êtes prêt !',
-    subtitle: 'La plateforme est à vous',
-    body: "Vous connaissez maintenant les 5 modules clés de LB-Bot. Le pipeline tourne en arrière-plan — les emails arrivent, sont analysés et classés automatiquement.\n\nLe guide est toujours accessible depuis l'icône Boussole dans la barre latérale.",
+    label: 'Done',
+    title: "You're all set!",
+    subtitle: 'The platform is yours',
+    body: "You now know the 5 key modules of Grand Azure Bot. The pipeline runs in the background — emails arrive, are analysed, and routed automatically.\n\nThe guide is always accessible from the Compass icon in the sidebar.",
     accentFrom: 'from-emerald-600',
     accentTo: 'to-emerald-500',
     accentText: 'text-white',
@@ -458,21 +458,21 @@ export default function TourOverlay() {
                           className="flex items-center gap-1.5 text-[13px] text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors"
                         >
                           <ArrowLeft className="w-3.5 h-3.5" strokeWidth={2} />
-                          Précédent
+                          Previous
                         </button>
                       ) : (
                         <button
                           onClick={stop}
                           className="text-[13px] text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors"
                         >
-                          Passer la visite
+                          Skip tour
                         </button>
                       )}
                       <button
                         onClick={handleNext}
                         className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-[13px] font-semibold bg-gradient-to-r ${current.accentFrom} ${current.accentTo} text-white shadow-md hover:opacity-90 transition-opacity`}
                       >
-                        {isLast ? 'Commencer !' : isFirst ? 'Commencer la visite' : 'Suivant'}
+                        {isLast ? "Let's go!" : isFirst ? 'Start tour' : 'Next'}
                         {!isLast && <ArrowRight className="w-3.5 h-3.5" strokeWidth={2} />}
                       </button>
                     </div>
@@ -528,7 +528,7 @@ export default function TourOverlay() {
                       <button
                         onClick={stop}
                         className="p-1.5 rounded-lg text-[var(--muted-foreground)] hover:bg-[var(--muted)] hover:text-[var(--foreground)] transition-all flex-shrink-0"
-                        title="Fermer la visite"
+                        title="Close tour"
                       >
                         <X className="w-3.5 h-3.5" strokeWidth={1.8} />
                       </button>
@@ -573,13 +573,13 @@ export default function TourOverlay() {
                           className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium text-[var(--muted-foreground)] hover:bg-white hover:text-[var(--foreground)] transition-all"
                         >
                           <ArrowLeft className="w-3.5 h-3.5" strokeWidth={2} />
-                          Retour
+                          Back
                         </button>
                         <button
                           onClick={handleNext}
                           className={`flex items-center gap-1.5 px-4 py-1.5 rounded-xl text-[12px] font-semibold bg-gradient-to-r ${current.accentFrom} ${current.accentTo} text-white shadow-sm hover:opacity-90 transition-opacity`}
                         >
-                          {step === TOUR_TOTAL_STEPS - 2 ? 'Terminer' : 'Suivant'}
+                          {step === TOUR_TOTAL_STEPS - 2 ? 'Finish' : 'Next'}
                           <ArrowRight className="w-3.5 h-3.5" strokeWidth={2} />
                         </button>
                       </div>
@@ -618,13 +618,13 @@ export default function TourOverlay() {
                         className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-[12px] text-[var(--muted-foreground)] hover:bg-[var(--muted)] transition-all"
                       >
                         <ArrowLeft className="w-3.5 h-3.5" strokeWidth={2} />
-                        Retour
+                        Back
                       </button>
                       <button
                         onClick={handleNext}
                         className={`flex items-center gap-1.5 px-4 py-1.5 rounded-xl text-[12px] font-semibold bg-gradient-to-r ${current.accentFrom} ${current.accentTo} text-white shadow-sm hover:opacity-90 transition-opacity`}
                       >
-                        {step === TOUR_TOTAL_STEPS - 2 ? 'Terminer' : 'Suivant'}
+                        {step === TOUR_TOTAL_STEPS - 2 ? 'Finish' : 'Next'}
                         <ArrowRight className="w-3.5 h-3.5" strokeWidth={2} />
                       </button>
                     </div>

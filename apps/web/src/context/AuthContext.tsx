@@ -26,8 +26,8 @@ const DEV_MODE = process.env.NEXT_PUBLIC_DEV_MODE === 'true';
 
 const DEMO_USER: User = {
   id: 'demo-user-1',
-  email: 'demo@brosset-techer.fr',
-  displayName: 'Utilisateur Demo',
+  email: 'demo@grandazurehotel.com',
+  displayName: 'Demo User',
 };
 
 // lb_session is httpOnly — only demo_mode is readable from JS
@@ -77,7 +77,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     } catch {
       setUser(null);
-      setError('Erreur de connexion au serveur');
+      setError('Connection error');
       return false;
     }
   };

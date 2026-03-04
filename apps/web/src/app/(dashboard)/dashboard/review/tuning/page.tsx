@@ -59,7 +59,7 @@ export default function TuningPage() {
   if (error) {
     return (
       <div className="bg-white rounded-2xl shadow-[var(--shadow-card)] p-6 border-l-2 border-l-red-400">
-        <p className="text-[13px] text-red-500">Erreur: {error}</p>
+        <p className="text-[13px] text-red-500">Error: {error}</p>
       </div>
     );
   }
@@ -72,11 +72,11 @@ export default function TuningPage() {
     <div className="space-y-6">
       <div className="flex gap-2.5 items-center">
         <select value={days} onChange={e => setDays(Number(e.target.value))} className={selectClasses}>
-          <option value={7}>7 jours</option>
-          <option value={14}>14 jours</option>
-          <option value={30}>30 jours</option>
-          <option value={60}>60 jours</option>
-          <option value={90}>90 jours</option>
+          <option value={7}>7 days</option>
+          <option value={14}>14 days</option>
+          <option value={30}>30 days</option>
+          <option value={60}>60 days</option>
+          <option value={90}>90 days</option>
         </select>
       </div>
 
@@ -109,7 +109,7 @@ export default function TuningPage() {
       {stats.accuracy_by_source.length > 0 && (
         <div className="bg-white rounded-2xl shadow-[var(--shadow-card)] p-6">
           <h2 className="text-[15px] font-semibold tracking-[-0.01em] text-[var(--foreground)] mb-5">
-            Précision par source
+            Accuracy by Source
           </h2>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart
@@ -124,7 +124,7 @@ export default function TuningPage() {
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.04)" />
               <XAxis type="number" domain={[0, 100]} tickFormatter={v => `${v}%`} tick={{ fontSize: 11, fill: '#86868b' }} />
               <YAxis type="category" dataKey="label" width={130} tick={{ fontSize: 12, fill: '#1d1d1f' }} />
-              <Tooltip formatter={(value) => [`${value}%`, 'Précision']} contentStyle={tooltipStyle} />
+              <Tooltip formatter={(value) => [`${value}%`, 'Accuracy']} contentStyle={tooltipStyle} />
               <Bar dataKey="accuracyPct" radius={[0, 6, 6, 0]}>
                 {stats.accuracy_by_source.map((s, i) => (
                   <Cell key={i} fill={s.accuracy >= 0.9 ? '#34d399' : s.accuracy >= 0.7 ? '#fbbf24' : '#f87171'} />
@@ -138,9 +138,9 @@ export default function TuningPage() {
                 <tr className="text-left text-[11px] text-[var(--muted-foreground)] uppercase tracking-wider border-b border-[var(--border)]">
                   <th className="py-2.5">Source</th>
                   <th className="py-2.5 text-right">Total</th>
-                  <th className="py-2.5 text-right">Approuvés</th>
-                  <th className="py-2.5 text-right">Rejetés</th>
-                  <th className="py-2.5 text-right">Précision</th>
+                  <th className="py-2.5 text-right">Approved</th>
+                  <th className="py-2.5 text-right">Rejected</th>
+                  <th className="py-2.5 text-right">Accuracy</th>
                   <th className="py-2.5 text-right">Conf. moy.</th>
                 </tr>
               </thead>
@@ -169,7 +169,7 @@ export default function TuningPage() {
       {stats.accuracy_by_confidence_band.length > 0 && (
         <div className="bg-white rounded-2xl shadow-[var(--shadow-card)] p-6">
           <h2 className="text-[15px] font-semibold tracking-[-0.01em] text-[var(--foreground)] mb-5">
-            Confiance vs Précision
+            Confidence vs Accuracy
           </h2>
           <ResponsiveContainer width="100%" height={250}>
             <BarChart data={stats.accuracy_by_confidence_band.map(b => ({ ...b, accuracyPct: Math.round(b.accuracy * 100) }))}>
@@ -177,7 +177,7 @@ export default function TuningPage() {
               <XAxis dataKey="band" tick={{ fontSize: 11, fill: '#86868b' }} />
               <YAxis domain={[0, 100]} tickFormatter={v => `${v}%`} tick={{ fontSize: 11, fill: '#86868b' }} />
               <Tooltip
-                formatter={(value, name) => [name === 'accuracyPct' ? `${value}%` : value, name === 'accuracyPct' ? 'Précision' : 'Total']}
+                formatter={(value, name) => [name === 'accuracyPct' ? `${value}%` : value, name === 'accuracyPct' ? 'Accuracy' : 'Total']}
                 contentStyle={tooltipStyle}
               />
               <Bar dataKey="accuracyPct" radius={[6, 6, 0, 0]}>
@@ -188,7 +188,7 @@ export default function TuningPage() {
             </BarChart>
           </ResponsiveContainer>
           <p className="text-[11px] text-[var(--muted-foreground)] mt-3">
-            Les barres vertes indiquent une précision &ge; 90%, jaunes &ge; 70%, rouges &lt; 70%
+            Green bars indicate accuracy &ge; 90%, yellow &ge; 70%, red &lt; 70%
           </p>
         </div>
       )}
@@ -217,7 +217,7 @@ export default function TuningPage() {
                 <>
                   <div className="text-[var(--muted-foreground)]">&rarr;</div>
                   <div className="text-right">
-                    <div className="text-[11px] text-emerald-500">Suggéré</div>
+                    <div className="text-[11px] text-emerald-500">Suggested</div>
                     <div className="font-mono font-light text-[20px] text-emerald-500">
                       {(rec.suggested * 100).toFixed(0)}%
                     </div>
@@ -233,7 +233,7 @@ export default function TuningPage() {
       {stats.daily_accuracy.length > 0 && (
         <div className="bg-white rounded-2xl shadow-[var(--shadow-card)] p-6">
           <h2 className="text-[15px] font-semibold tracking-[-0.01em] text-[var(--foreground)] mb-5">
-            Tendance de précision quotidienne
+            Daily Accuracy Trend
           </h2>
           <ResponsiveContainer width="100%" height={250}>
             <LineChart data={stats.daily_accuracy.map(d => ({ ...d, accuracyPct: Math.round(d.accuracy * 100) }))}>
@@ -241,7 +241,7 @@ export default function TuningPage() {
               <XAxis dataKey="date" tick={{ fontSize: 11, fill: '#86868b' }} />
               <YAxis domain={[0, 100]} tickFormatter={v => `${v}%`} tick={{ fontSize: 11, fill: '#86868b' }} />
               <Tooltip
-                formatter={(value, name) => [name === 'accuracyPct' ? `${value}%` : value, name === 'accuracyPct' ? 'Précision' : name === 'total' ? 'Total' : name]}
+                formatter={(value, name) => [name === 'accuracyPct' ? `${value}%` : value, name === 'accuracyPct' ? 'Accuracy' : name === 'total' ? 'Total' : name]}
                 contentStyle={tooltipStyle}
               />
               <Line type="monotone" dataKey="accuracyPct" stroke="#34d399" strokeWidth={2} dot={{ r: 3, fill: '#34d399' }} />
@@ -254,7 +254,7 @@ export default function TuningPage() {
       {stats.false_positives.length > 0 && (
         <div className="bg-white rounded-2xl shadow-[var(--shadow-card)] p-6">
           <h2 className="text-[15px] font-semibold tracking-[-0.01em] text-[var(--foreground)] mb-5">
-            Faux positifs récents ({stats.false_positives.length})
+            Recent False Positives ({stats.false_positives.length})
           </h2>
           <div className="overflow-x-auto">
             <table className="w-full">
@@ -262,9 +262,9 @@ export default function TuningPage() {
                 <tr className="text-left text-[11px] text-[var(--muted-foreground)] uppercase tracking-wider border-b border-[var(--border)]">
                   <th className="py-2.5">Date</th>
                   <th className="py-2.5">Source</th>
-                  <th className="py-2.5">Confiance</th>
-                  <th className="py-2.5">Dossier</th>
-                  <th className="py-2.5">Boîte</th>
+                  <th className="py-2.5">Confidence</th>
+                  <th className="py-2.5">Booking</th>
+                  <th className="py-2.5">Mailbox</th>
                 </tr>
               </thead>
               <tbody>
@@ -291,9 +291,9 @@ export default function TuningPage() {
       {cov.reviewed === 0 && (
         <div className="bg-white rounded-2xl shadow-[var(--shadow-card)] p-10 text-center">
           <p className="text-[13px] text-[var(--muted-foreground)]">
-            Aucune revue trouvée pour cette période. Approuvez ou rejetez des correspondances
-            dans la <a href="/dashboard/review/queue" className="text-[var(--accent)] hover:underline">file de revue</a> pour
-            voir les statistiques de précision.
+            No reviews found for this period. Approve or reject matches in the{' '}
+            <a href="/dashboard/review/queue" className="text-[var(--accent)] hover:underline">review queue</a>{' '}
+            to see accuracy statistics.
           </p>
         </div>
       )}

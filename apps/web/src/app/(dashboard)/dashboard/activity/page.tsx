@@ -2,19 +2,19 @@
 
 import { useState, useEffect } from 'react';
 import { formatDistanceToNow } from 'date-fns';
-import { fr } from 'date-fns/locale';
+
 import { Activity, CheckCircle, XCircle, FileText, Settings, Search, LogIn, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { getActivityLogs } from '@/lib/pipeline-api';
 import type { ActivityLog } from '@/types/pipeline';
 
 const ACTION_CONFIG: Record<string, { label: string; icon: typeof Activity; color: string }> = {
-  match_approved: { label: 'Correspondance approuvée', icon: CheckCircle, color: 'text-emerald-400' },
-  match_rejected: { label: 'Correspondance rejetée', icon: XCircle, color: 'text-red-400' },
-  draft_generated: { label: 'Brouillon généré', icon: FileText, color: 'text-[var(--accent)]' },
-  settings_updated: { label: 'Paramètres modifiés', icon: Settings, color: 'text-amber-400' },
-  login: { label: 'Connexion', icon: LogIn, color: 'text-[var(--foreground)]' },
-  search: { label: 'Recherche', icon: Search, color: 'text-purple-400' },
+  match_approved: { label: 'Match approved', icon: CheckCircle, color: 'text-emerald-400' },
+  match_rejected: { label: 'Match rejected', icon: XCircle, color: 'text-red-400' },
+  draft_generated: { label: 'Draft generated', icon: FileText, color: 'text-[var(--accent)]' },
+  settings_updated: { label: 'Settings updated', icon: Settings, color: 'text-amber-400' },
+  login: { label: 'Login', icon: LogIn, color: 'text-[var(--foreground)]' },
+  search: { label: 'Search', icon: Search, color: 'text-purple-400' },
 };
 
 const DEFAULT_ACTION = { label: 'Action', icon: Activity, color: 'text-[var(--muted-foreground)]' };
@@ -48,9 +48,9 @@ export default function ActivityPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-[28px] font-light tracking-[-0.02em] text-[var(--foreground)]">Journal d&apos;activité</h1>
+        <h1 className="text-[28px] font-light tracking-[-0.02em] text-[var(--foreground)]">Activity Log</h1>
         <p className="text-[13px] text-[var(--muted-foreground)] mt-1">
-          Historique des actions effectuées par les utilisateurs
+          History of actions performed by users
         </p>
       </div>
 
@@ -85,7 +85,7 @@ export default function ActivityPage() {
           </button>
         </div>
         <span className="text-[12px] text-[var(--muted-foreground)]">
-          {total} entrée{total !== 1 ? 's' : ''}
+          {total} entr{total !== 1 ? 'ies' : 'y'}
         </span>
       </div>
 
@@ -101,7 +101,7 @@ export default function ActivityPage() {
           <div className="w-12 h-12 rounded-2xl bg-[var(--muted)] flex items-center justify-center mx-auto mb-3">
             <Activity className="w-6 h-6 text-[var(--muted-foreground)]" strokeWidth={1.5} />
           </div>
-          <p className="text-[13px] text-[var(--muted-foreground)]">Aucune activité enregistrée</p>
+          <p className="text-[13px] text-[var(--muted-foreground)]">No activity recorded</p>
         </div>
       ) : (
         <div className="bg-white rounded-2xl shadow-[var(--shadow-card)] overflow-hidden">
@@ -157,7 +157,7 @@ export default function ActivityPage() {
                   </div>
                 </div>
                 <span className="flex-shrink-0 text-[11px] text-[var(--muted-foreground)]">
-                  {formatDistanceToNow(new Date(log.created_at), { addSuffix: true, locale: fr })}
+                  {formatDistanceToNow(new Date(log.created_at), { addSuffix: true })}
                 </span>
               </div>
             );
@@ -178,7 +178,7 @@ export default function ActivityPage() {
               className="flex items-center gap-1.5 px-4 py-2 text-[13px] rounded-xl border border-[var(--border)] text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:bg-[var(--muted)] disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-200"
             >
               <ChevronLeft className="w-4 h-4" strokeWidth={1.8} />
-              Précédent
+              Previous
             </button>
             <button
               onClick={() => setPage(p => Math.min(totalPages, p + 1))}

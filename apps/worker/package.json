@@ -15,7 +15,7 @@
   "dependencies": {
     "@azure/functions": "^4.5.0",
     "@azure/storage-blob": "^12.17.0",
-    "@lb-bot/shared": "workspace:*",
+    "@grand-azure/shared": "workspace:*",
     "@supabase/supabase-js": "^2.39.0",
     "web-push": "^3.6.7",
     "zod": "^3.22.0"

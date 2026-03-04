@@ -24,7 +24,7 @@ export default function MatchesPage() {
     matched: searchParams.has('matched') ? searchParams.get('matched') === 'true' : undefined,
     reviewed: searchParams.get('reviewed') || undefined,
     source: searchParams.get('source') || undefined,
-    lawyer: searchParams.get('lawyer') || undefined,
+    handler: searchParams.get('handler') || undefined,
     date_from: searchParams.get('date_from') || undefined,
     date_to: searchParams.get('date_to') || undefined,
   }));
@@ -42,7 +42,7 @@ export default function MatchesPage() {
     if (filters.matched !== undefined) params.set('matched', String(filters.matched));
     if (filters.reviewed) params.set('reviewed', filters.reviewed);
     if (filters.source) params.set('source', filters.source);
-    if (filters.lawyer) params.set('lawyer', filters.lawyer);
+    if (filters.handler) params.set('handler', filters.handler);
     if (filters.date_from) params.set('date_from', filters.date_from);
     if (filters.date_to) params.set('date_to', filters.date_to);
     router.replace(`?${params.toString()}`, { scroll: false });
@@ -89,7 +89,7 @@ export default function MatchesPage() {
         <div className="flex items-center gap-2">
           <Search className="w-4 h-4 text-[var(--muted-foreground)]" strokeWidth={1.8} />
           <span className="text-[13px] text-[var(--muted-foreground)]">
-            {total} correspondance{total !== 1 ? 's' : ''} trouvée{total !== 1 ? 's' : ''}
+            {total} match{total !== 1 ? 'es' : ''} found
           </span>
         </div>
       </div>
@@ -97,12 +97,12 @@ export default function MatchesPage() {
       <div data-tour="matches-table" className="bg-white rounded-2xl shadow-[var(--shadow-card)] overflow-hidden">
         <div className="flex items-center gap-4 px-5 py-3 border-b border-[var(--border)] text-[11px] font-medium text-[var(--muted-foreground)] uppercase tracking-wider">
           <div className="w-5 flex-shrink-0" />
-          <div className="w-44 flex-shrink-0">Expéditeur</div>
-          <div className="flex-1 min-w-0 hidden md:block">Dossier</div>
-          <div className="w-14 flex-shrink-0 text-center" title="Score de confiance de l'IA (85%+ = classé automatiquement)">Confiance</div>
+          <div className="w-44 flex-shrink-0">Sender</div>
+          <div className="flex-1 min-w-0 hidden md:block">Booking</div>
+          <div className="w-14 flex-shrink-0 text-center" title="AI confidence score (85%+ = auto-routed)">Confidence</div>
           <div className="w-40 flex-shrink-0 hidden lg:block">Source</div>
-          <div className="w-32 flex-shrink-0 hidden xl:block">Avocat</div>
-          <div className="w-36 flex-shrink-0 hidden lg:block">Catégorie</div>
+          <div className="w-32 flex-shrink-0 hidden xl:block">Dept.</div>
+          <div className="w-36 flex-shrink-0 hidden lg:block">Category</div>
           <div className="w-8 flex-shrink-0" />
           <div className="w-24 flex-shrink-0 text-right">Date</div>
           <div className="w-5 flex-shrink-0" />
@@ -142,21 +142,21 @@ export default function MatchesPage() {
           <div className="flex flex-col items-center justify-center p-10 gap-3 text-center">
             <AlertCircle className="w-6 h-6 text-red-400" strokeWidth={1.5} />
             <p className="text-[13px] text-[var(--muted-foreground)]">
-              Impossible de charger les correspondances. Vérifiez votre connexion.
+              Failed to load matches. Check your connection.
             </p>
             <button
               onClick={load}
               className="flex items-center gap-1.5 px-4 py-2 text-[13px] font-medium rounded-xl bg-[var(--muted)] text-[var(--foreground)] hover:bg-[var(--foreground)] hover:text-white transition-all duration-200"
             >
               <RefreshCw className="w-4 h-4" strokeWidth={1.8} />
-              Réessayer
+              Retry
             </button>
           </div>
         ) : displayLogs.length === 0 ? (
           <div className="p-10 text-center space-y-1">
-            <p className="text-[13px] text-[var(--foreground)]">Aucun résultat</p>
+            <p className="text-[13px] text-[var(--foreground)]">No results</p>
             <p className="text-[12px] text-[var(--muted-foreground)]">
-              Essayez d&apos;ajuster les filtres ou de changer la plage de dates.
+              Try adjusting the filters or changing the date range.
             </p>
           </div>
         ) : (
@@ -181,7 +181,7 @@ export default function MatchesPage() {
             onClick={() => setFilters(f => ({ ...f, page: page - 1 }))}
             className="flex items-center gap-1.5 px-4 py-2 text-[13px] rounded-xl border border-[var(--border)] disabled:opacity-30 hover:bg-[var(--muted)] transition-all duration-200"
           >
-            <ChevronLeft className="w-4 h-4" strokeWidth={1.8} /> Précédent
+            <ChevronLeft className="w-4 h-4" strokeWidth={1.8} /> Previous
           </button>
           <span className="text-[13px] text-[var(--muted-foreground)]">
             Page {page} / {totalPages}

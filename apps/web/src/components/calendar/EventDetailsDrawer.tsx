@@ -73,7 +73,7 @@ export default function EventDetailsDrawer({ event, open, onClose }: Props) {
                 <div className="flex items-center gap-2 mb-2">
                   <div className="w-2.5 h-2.5 rounded-full bg-[var(--accent)]" />
                   <span className="text-[11px] font-medium text-[var(--muted-foreground)] uppercase tracking-wide">
-                    Événement Outlook
+                    Outlook Event
                   </span>
                 </div>
                 <h2 className="text-[18px] font-semibold tracking-[-0.01em] text-[var(--foreground)] leading-snug">
@@ -105,7 +105,7 @@ export default function EventDetailsDrawer({ event, open, onClose }: Props) {
                   </p>
                 )}
                 {event.isAllDay && (
-                  <p className="text-[13px] text-[var(--muted-foreground)] mt-0.5">Journée entière</p>
+                  <p className="text-[13px] text-[var(--muted-foreground)] mt-0.5">All day</p>
                 )}
               </Section>
 
@@ -118,14 +118,14 @@ export default function EventDetailsDrawer({ event, open, onClose }: Props) {
 
               {/* Online meeting */}
               {event.onlineMeetingUrl && (
-                <Section icon={<Video className="w-4 h-4" />} label="Réunion en ligne">
+                <Section icon={<Video className="w-4 h-4" />} label="Online meeting">
                   <a
                     href={event.onlineMeetingUrl}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-1.5 text-[13px] text-[var(--accent)] hover:underline font-medium"
                   >
-                    Rejoindre la réunion <ExternalLink className="w-3 h-3" strokeWidth={2} />
+                    Join meeting <ExternalLink className="w-3 h-3" strokeWidth={2} />
                   </a>
                 </Section>
               )}
@@ -139,7 +139,7 @@ export default function EventDetailsDrawer({ event, open, onClose }: Props) {
 
               {/* Attendees */}
               {event.attendees && event.attendees.length > 0 && (
-                <Section icon={<Users className="w-4 h-4" />} label={`Participants (${event.attendees.length})`}>
+                <Section icon={<Users className="w-4 h-4" />} label={`Attendees (${event.attendees.length})`}>
                   <div className="space-y-1.5">
                     {event.attendees.slice(0, 10).map((a, i) => (
                       <div key={i} className="flex items-center gap-2.5">
@@ -156,7 +156,7 @@ export default function EventDetailsDrawer({ event, open, onClose }: Props) {
                     ))}
                     {event.attendees.length > 10 && (
                       <p className="text-[11px] text-[var(--muted-foreground)] pl-8">
-                        +{event.attendees.length - 10} autres
+                        +{event.attendees.length - 10} more
                       </p>
                     )}
                   </div>
@@ -165,7 +165,7 @@ export default function EventDetailsDrawer({ event, open, onClose }: Props) {
 
               {/* Body preview */}
               {event.bodyPreview && (
-                <Section icon={<Calendar className="w-4 h-4" />} label="Aperçu">
+                <Section icon={<Calendar className="w-4 h-4" />} label="Preview">
                   <p className="text-[12px] text-[var(--muted-foreground)] leading-relaxed line-clamp-4 whitespace-pre-wrap">
                     {event.bodyPreview}
                   </p>

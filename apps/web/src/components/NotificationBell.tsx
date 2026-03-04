@@ -94,10 +94,10 @@ export default function NotificationBell({ compact = false }: { compact?: boolea
           >
             {/* Header */}
             <div className="px-4 py-3.5 border-b border-[var(--border)] flex items-center justify-between">
-              <h3 className="text-[13px] font-semibold text-[var(--foreground)]">À revoir</h3>
+              <h3 className="text-[13px] font-semibold text-[var(--foreground)]">Pending Review</h3>
               {count > 0 && (
                 <span className="text-[11px] font-medium text-amber-500 bg-amber-50 px-2.5 py-0.5 rounded-full">
-                  {count} en attente
+                  {count} pending
                 </span>
               )}
             </div>
@@ -105,7 +105,7 @@ export default function NotificationBell({ compact = false }: { compact?: boolea
             {/* Review items */}
             {items.length === 0 ? (
               <div className="p-6 text-center text-[12px] text-[var(--muted-foreground)]">
-                {count === 0 ? 'Tout est à jour ✓' : 'Chargement...'}
+                {count === 0 ? 'All caught up ✓' : 'Loading...'}
               </div>
             ) : (
               <div className="divide-y divide-[var(--border)]">
@@ -125,7 +125,7 @@ export default function NotificationBell({ compact = false }: { compact?: boolea
                     </p>
                     {item.confidence !== null && (
                       <p className="text-[10px] text-amber-500 mt-0.5 font-medium">
-                        {Math.round((item.confidence ?? 0) * 100)}% confiance
+                        {Math.round((item.confidence ?? 0) * 100)}% confidence
                       </p>
                     )}
                   </motion.div>
@@ -140,7 +140,7 @@ export default function NotificationBell({ compact = false }: { compact?: boolea
                 onClick={() => setOpen(false)}
                 className="block text-center text-[12px] font-medium text-[var(--foreground)] hover:opacity-60 transition-opacity duration-150"
               >
-                Voir toute la file →
+                View all →
               </Link>
             </div>
 
@@ -154,7 +154,7 @@ export default function NotificationBell({ compact = false }: { compact?: boolea
                     <BellOff className="w-3.5 h-3.5 text-[var(--muted-foreground)]" strokeWidth={1.8} />
                   )}
                   <span className="text-[11px] text-[var(--muted-foreground)]">
-                    {isSubscribed ? 'Alertes bureau actives' : 'Alertes bureau désactivées'}
+                    {isSubscribed ? 'Desktop alerts on' : 'Desktop alerts off'}
                   </span>
                 </div>
                 <button
@@ -166,7 +166,7 @@ export default function NotificationBell({ compact = false }: { compact?: boolea
                       : 'text-emerald-600 bg-emerald-50 hover:bg-emerald-100'
                   }`}
                 >
-                  {isLoading ? '...' : isSubscribed ? 'Désactiver' : 'Activer'}
+                  {isLoading ? '...' : isSubscribed ? 'Disable' : 'Enable'}
                 </button>
               </div>
             )}
@@ -174,7 +174,7 @@ export default function NotificationBell({ compact = false }: { compact?: boolea
             {isSupported && permission === 'denied' && (
               <div className="px-4 py-2.5 border-t border-[var(--border)]">
                 <p className="text-[10px] text-[var(--muted-foreground)] text-center">
-                  Alertes bloquées — autoriser dans les paramètres du navigateur
+                  Alerts blocked — allow in browser settings
                 </p>
               </div>
             )}

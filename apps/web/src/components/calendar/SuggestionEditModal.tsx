@@ -16,9 +16,9 @@ interface Props {
 }
 
 function confidenceLabel(c: number): { label: string; color: string } {
-  if (c >= 0.85) return { label: 'Très sûr', color: 'text-emerald-600 bg-emerald-50' };
-  if (c >= 0.65) return { label: 'Probable', color: 'text-amber-600 bg-amber-50' };
-  return { label: 'Incertain', color: 'text-orange-600 bg-orange-50' };
+  if (c >= 0.85) return { label: 'Very confident', color: 'text-emerald-600 bg-emerald-50' };
+  if (c >= 0.65) return { label: 'Likely', color: 'text-amber-600 bg-amber-50' };
+  return { label: 'Uncertain', color: 'text-orange-600 bg-orange-50' };
 }
 
 export default function SuggestionEditModal({ suggestion, open, onClose, onAccepted }: Props) {
@@ -51,11 +51,11 @@ export default function SuggestionEditModal({ suggestion, open, onClose, onAccep
 
   const handleAccept = async () => {
     if (!title.trim() || !startAt) {
-      toast.error('Titre et date de début requis');
+      toast.error('Title and start date required');
       return;
     }
     if (endAt && fromDatetimeLocal(endAt) <= fromDatetimeLocal(startAt)) {
-      toast.error('La date de fin doit être après la date de début');
+      toast.error('End date must be after start date');
       return;
     }
     setSaving(true);
@@ -67,11 +67,11 @@ export default function SuggestionEditModal({ suggestion, open, onClose, onAccep
         location:    location.trim() || undefined,
         description: description.trim() || undefined,
       });
-      toast.success('Événement ajouté au calendrier Outlook');
+      toast.success('Event added to Outlook calendar');
       onAccepted();
       onClose();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Erreur lors de la création");
+      toast.error(err instanceof Error ? err.message : "Error creating event");
     } finally {
       setSaving(false);
     }
@@ -113,7 +113,7 @@ export default function SuggestionEditModal({ suggestion, open, onClose, onAccep
                     </span>
                   </div>
                   <h2 className="text-[16px] font-semibold tracking-[-0.01em] text-[var(--foreground)]">
-                    Vérifier et ajouter
+                    Review and add
                   </h2>
                 </div>
                 <div className="flex items-center gap-2">
@@ -146,7 +146,7 @@ export default function SuggestionEditModal({ suggestion, open, onClose, onAccep
                 {/* Title */}
                 <div>
                   <label className="block text-[11px] font-semibold text-[var(--muted-foreground)] uppercase tracking-wider mb-1.5">
-                    Titre de l&apos;événement
+                    Event title
                   </label>
                   <input
                     type="text"
@@ -154,7 +154,7 @@ export default function SuggestionEditModal({ suggestion, open, onClose, onAccep
                     onChange={e => setTitle(e.target.value)}
                     maxLength={200}
                     className="w-full px-3 py-2.5 text-[13px] bg-white border border-[var(--border)] rounded-xl focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:border-transparent transition-all placeholder:text-[var(--muted-foreground)]"
-                    placeholder="Titre de l'événement"
+                    placeholder="Event title"
                   />
                 </div>
 
@@ -163,7 +163,7 @@ export default function SuggestionEditModal({ suggestion, open, onClose, onAccep
                   <div>
                     <label className="block text-[11px] font-semibold text-[var(--muted-foreground)] uppercase tracking-wider mb-1.5">
                       <Calendar className="w-3 h-3 inline mr-1" strokeWidth={2} />
-                      Début
+                      Start
                     </label>
                     <input
                       type="datetime-local"

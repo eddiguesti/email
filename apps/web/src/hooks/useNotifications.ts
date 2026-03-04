@@ -112,7 +112,7 @@ export function useNotifications(options: UseNotificationsOptions = {}) {
         addNotification({
           id: data.id || crypto.randomUUID(),
           type: 'email_processed',
-          title: data.title || 'Email traité',
+          title: data.title || 'Email processed',
           message: data.message,
           timestamp: data.timestamp,
           metadata: data.metadata,
@@ -124,7 +124,7 @@ export function useNotifications(options: UseNotificationsOptions = {}) {
         addNotification({
           id: data.id || crypto.randomUUID(),
           type: 'todo_created',
-          title: data.title || 'Nouvelle tâche',
+          title: data.title || 'New task',
           message: data.message,
           timestamp: data.timestamp,
           metadata: data.metadata,
@@ -136,7 +136,7 @@ export function useNotifications(options: UseNotificationsOptions = {}) {
         addNotification({
           id: data.id || crypto.randomUUID(),
           type: 'todo_updated',
-          title: data.title || 'Tâche mise à jour',
+          title: data.title || 'Task updated',
           message: data.message,
           timestamp: data.timestamp,
           metadata: data.metadata,
@@ -155,7 +155,7 @@ export function useNotifications(options: UseNotificationsOptions = {}) {
         });
       });
     } catch (err) {
-      setError('Erreur de connexion');
+      setError('Connection error');
       console.error('SSE connection error:', err);
     }
   }, [enabled, addNotification]);

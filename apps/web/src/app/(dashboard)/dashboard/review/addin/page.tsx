@@ -14,21 +14,21 @@ const stagger = {
 };
 
 const STEPS = [
-  { step: 'Téléchargez le manifest avec le bouton ci-dessous', note: 'Fichier : lb-bot-manifest.xml' },
-  { step: 'Ouvrez Outlook (application bureau, pas le navigateur)', note: null },
-  { step: 'Dans le ruban Accueil, cliquez sur "Obtenir des compléments" (icône puzzle ou store)', note: 'Si absent : … → Obtenir des compléments' },
-  { step: 'Dans la fenêtre qui s\'ouvre, cliquez sur "Mes compléments" en haut à gauche', note: null },
-  { step: 'En bas sous "Compléments personnalisés", cliquez sur "+ Ajouter depuis un fichier…"', note: null },
-  { step: 'Sélectionnez lb-bot-manifest.xml puis cliquez sur Installer', note: 'Acceptez l\'avertissement de sécurité si demandé' },
-  { step: 'Ouvrez n\'importe quel email — le bouton "Classer l\'email" apparaît dans le ruban', note: null },
+  { step: 'Download the manifest using the button below', note: 'File: grand-azure-manifest.xml' },
+  { step: 'Open Outlook (desktop app, not the browser)', note: null },
+  { step: 'In the Home ribbon, click "Get Add-ins" (puzzle icon or store)', note: 'If not visible: … → Get Add-ins' },
+  { step: 'In the window that opens, click "My Add-ins" at the top left', note: null },
+  { step: 'Under "Custom Add-ins", click "+ Add from file…"', note: null },
+  { step: 'Select grand-azure-manifest.xml then click Install', note: 'Accept the security warning if prompted' },
+  { step: 'Open any email — the "Route Email" button appears in the ribbon', note: null },
 ];
 
 const FEATURES = [
-  'Voir le dossier suggéré pour l\'email ouvert',
-  'Approuver ou corriger la correspondance',
-  'Classer l\'email dans KLEOS en un clic',
-  'Déplacer l\'email dans un dossier Outlook',
-  'Rechercher manuellement un dossier',
+  'View the suggested booking for the open email',
+  'Approve or correct the routing suggestion',
+  'Route email to PMS in one click',
+  'Move the email to an Outlook folder',
+  'Manually search for a booking',
 ];
 
 export default function AddinPage() {
@@ -38,15 +38,14 @@ export default function AddinPage() {
       <motion.div variants={fadeUp} className="bg-white rounded-2xl shadow-[var(--shadow-card)] overflow-hidden">
         <div className="px-6 py-5 border-b border-[var(--border)]">
           <h2 className="text-[15px] font-semibold tracking-[-0.01em] text-[var(--foreground)]">
-            Installation du complément Outlook
+            Outlook Add-in Installation
           </h2>
           <p className="text-[12px] text-[var(--muted-foreground)] mt-1">
-            Accédez au classement IA directement depuis votre boîte mail
+            Access AI email routing directly from your inbox
           </p>
         </div>
 
         <div className="p-6 space-y-6">
-          {/* Steps */}
           <ol className="space-y-4">
             {STEPS.map(({ step, note }, i) => (
               <li key={i} className="flex items-start gap-4">
@@ -63,32 +62,30 @@ export default function AddinPage() {
             ))}
           </ol>
 
-          {/* Download button */}
           <a
             href="/api/outlook-addin/manifest"
-            download="lb-bot-manifest.xml"
+            download="grand-azure-manifest.xml"
             className="inline-flex items-center gap-2.5 px-6 py-3 rounded-xl bg-[var(--foreground)] text-white text-[13px] font-medium hover:opacity-90 transition-all duration-200"
           >
             <Download className="w-4 h-4" strokeWidth={1.8} />
-            Télécharger le manifest
+            Download manifest
           </a>
 
           <a
-            href="https://learn.microsoft.com/fr-fr/office/dev/add-ins/outlook/sideload-outlook-add-ins-for-testing"
+            href="https://learn.microsoft.com/en-us/office/dev/add-ins/outlook/sideload-outlook-add-ins-for-testing"
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 text-[12px] text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors duration-200 ml-4"
           >
             <ExternalLink className="w-3.5 h-3.5" strokeWidth={1.8} />
-            Guide Microsoft officiel
+            Microsoft official guide
           </a>
         </div>
       </motion.div>
 
-      {/* Features */}
       <motion.div variants={fadeUp} className="bg-white rounded-2xl shadow-[var(--shadow-card)] p-6">
         <h2 className="text-[15px] font-semibold tracking-[-0.01em] text-[var(--foreground)] mb-4">
-          Ce que vous pouvez faire depuis Outlook
+          What you can do from Outlook
         </h2>
         <div className="space-y-2.5">
           {FEATURES.map((feat, i) => (

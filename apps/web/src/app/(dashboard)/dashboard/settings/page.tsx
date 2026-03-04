@@ -57,9 +57,9 @@ export default function SettingsPage() {
         urgent_alerts: urgentAlerts,
         language,
       });
-      toast.success('Paramètres enregistrés');
+      toast.success('Settings saved');
     } catch {
-      toast.error('Erreur lors de la sauvegarde');
+      toast.error('Error saving settings');
     } finally {
       setSaving(false);
     }
@@ -70,9 +70,9 @@ export default function SettingsPage() {
       {/* Header */}
       <motion.div variants={fadeUp} className="flex items-center justify-between">
         <div>
-          <h1 className="text-[28px] font-light tracking-[-0.02em] text-[var(--foreground)]">Paramètres</h1>
+          <h1 className="text-[28px] font-light tracking-[-0.02em] text-[var(--foreground)]">Settings</h1>
           <p className="text-[13px] text-[var(--muted-foreground)] mt-1">
-            Gérez vos préférences et votre compte
+            Manage your preferences and account
           </p>
         </div>
         <button
@@ -92,7 +92,7 @@ export default function SettingsPage() {
             <div className="p-2 rounded-xl bg-[var(--muted)]">
               <User className="w-4 h-4 text-[var(--muted-foreground)]" strokeWidth={1.8} />
             </div>
-            <h2 className="text-[15px] font-semibold tracking-[-0.01em] text-[var(--foreground)]">Profil</h2>
+            <h2 className="text-[15px] font-semibold tracking-[-0.01em] text-[var(--foreground)]">Profile</h2>
           </div>
           <div className="p-6 space-y-5">
             <div className="flex items-center gap-4">
@@ -101,7 +101,7 @@ export default function SettingsPage() {
               </div>
               <div>
                 <p className="text-[15px] font-medium text-[var(--foreground)]">
-                  {user?.displayName || 'Utilisateur'}
+                  {user?.displayName || 'User'}
                 </p>
                 <p className="text-[13px] text-[var(--muted-foreground)]">
                   {user?.email || ''}
@@ -111,7 +111,7 @@ export default function SettingsPage() {
 
             <div className="space-y-3 pt-2">
               <div>
-                <label className="text-[12px] font-medium text-[var(--muted-foreground)]">Nom</label>
+                <label className="text-[12px] font-medium text-[var(--muted-foreground)]">Name</label>
                 <input
                   type="text"
                   defaultValue={user?.displayName || ''}
@@ -120,7 +120,7 @@ export default function SettingsPage() {
                 />
               </div>
               <div>
-                <label className="text-[12px] font-medium text-[var(--muted-foreground)]">Email (boîte mail surveillée)</label>
+                <label className="text-[12px] font-medium text-[var(--muted-foreground)]">Email (monitored inbox)</label>
                 <input
                   type="email"
                   defaultValue={user?.email || ''}
@@ -139,13 +139,14 @@ export default function SettingsPage() {
               <Bell className="w-4 h-4 text-[var(--muted-foreground)]" strokeWidth={1.8} />
             </div>
             <h2 className="text-[15px] font-semibold tracking-[-0.01em] text-[var(--foreground)]">Notifications</h2>
+
           </div>
           <div className="p-6 space-y-5">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-[14px] font-medium text-[var(--foreground)]">Notifications par email</p>
+                <p className="text-[14px] font-medium text-[var(--foreground)]">Email notifications</p>
                 <p className="text-[12px] text-[var(--muted-foreground)] mt-0.5">
-                  Recevoir des emails pour les nouveaux messages
+                  Receive emails for new routing events
                 </p>
               </div>
               <button
@@ -164,9 +165,9 @@ export default function SettingsPage() {
 
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-[14px] font-medium text-[var(--foreground)]">Alertes urgentes</p>
+                <p className="text-[14px] font-medium text-[var(--foreground)]">Urgent alerts</p>
                 <p className="text-[12px] text-[var(--muted-foreground)] mt-0.5">
-                  Notifications push pour les emails urgents
+                  Push notifications for urgent guest emails
                 </p>
               </div>
               <button
@@ -191,7 +192,7 @@ export default function SettingsPage() {
             <div className="p-2 rounded-xl bg-[var(--muted)]">
               <Globe className="w-4 h-4 text-[var(--muted-foreground)]" strokeWidth={1.8} />
             </div>
-            <h2 className="text-[15px] font-semibold tracking-[-0.01em] text-[var(--foreground)]">Langue</h2>
+            <h2 className="text-[15px] font-semibold tracking-[-0.01em] text-[var(--foreground)]">Language</h2>
           </div>
           <div className="p-6">
             <select
@@ -211,23 +212,23 @@ export default function SettingsPage() {
             <div className="p-2 rounded-xl bg-[var(--muted)]">
               <Shield className="w-4 h-4 text-[var(--muted-foreground)]" strokeWidth={1.8} />
             </div>
-            <h2 className="text-[15px] font-semibold tracking-[-0.01em] text-[var(--foreground)]">Sécurité</h2>
+            <h2 className="text-[15px] font-semibold tracking-[-0.01em] text-[var(--foreground)]">Security</h2>
           </div>
           <div className="p-6 space-y-4">
             <div className="flex items-center justify-between p-4 rounded-xl bg-emerald-50">
               <div className="flex items-center gap-3">
                 <Check className="w-4 h-4 text-emerald-500" strokeWidth={2} />
                 <div>
-                  <p className="text-[13px] font-medium text-emerald-700">Compte Microsoft connecté</p>
-                  <p className="text-[12px] text-emerald-600">Authentification sécurisée active</p>
+                  <p className="text-[13px] font-medium text-emerald-700">Microsoft account connected</p>
+                  <p className="text-[12px] text-emerald-600">Secure authentication active</p>
                 </div>
               </div>
             </div>
 
             <div className="p-4 rounded-xl bg-blue-50">
-              <p className="text-[13px] font-medium text-[var(--accent)] mb-0.5">Classement actif</p>
+              <p className="text-[13px] font-medium text-[var(--accent)] mb-0.5">Routing active</p>
               <p className="text-[12px] text-blue-600">
-                Le bot analyse et classe vos emails dans KLEOS selon vos approbations.
+                The bot analyses and routes your emails to the correct department and booking in the PMS.
               </p>
             </div>
           </div>
@@ -240,9 +241,9 @@ export default function SettingsPage() {
               <Puzzle className="w-4 h-4 text-[var(--muted-foreground)]" strokeWidth={1.8} />
             </div>
             <div>
-              <h2 className="text-[15px] font-semibold tracking-[-0.01em] text-[var(--foreground)]">Complément Outlook</h2>
+              <h2 className="text-[15px] font-semibold tracking-[-0.01em] text-[var(--foreground)]">Outlook Add-in</h2>
               <p className="text-[12px] text-[var(--muted-foreground)] mt-0.5">
-                Accédez au triage IA directement depuis votre boîte Outlook
+                Access AI email routing directly from your Outlook inbox
               </p>
             </div>
           </div>
@@ -252,13 +253,13 @@ export default function SettingsPage() {
                 <p className="text-[13px] font-semibold text-[var(--foreground)]">Installation — Outlook Desktop</p>
                 <ol className="space-y-2.5">
                   {[
-                    { step: 'Téléchargez le manifest avec le bouton ci-contre', note: 'Fichier : lb-bot-manifest.xml' },
-                    { step: 'Ouvrez Outlook (application bureau, pas le navigateur)', note: null },
-                    { step: 'Dans le ruban Accueil, cliquez sur "Obtenir des compléments" (icône puzzle ou store)', note: 'Si absent : … → Obtenir des compléments' },
-                    { step: 'Dans la fenêtre qui s\'ouvre, cliquez sur "Mes compléments" en haut à gauche', note: null },
-                    { step: 'En bas sous "Compléments personnalisés", cliquez sur "+ Ajouter depuis un fichier…"', note: null },
-                    { step: 'Sélectionnez lb-bot-manifest.xml puis cliquez sur Installer', note: 'Acceptez l\'avertissement de sécurité' },
-                    { step: 'Ouvrez n\'importe quel email — le bouton "Classer l\'email" apparaît dans le ruban', note: null },
+                    { step: 'Download the manifest using the button on the right', note: 'File: grand-azure-manifest.xml' },
+                    { step: 'Open Outlook (desktop app, not browser)', note: null },
+                    { step: 'In the Home ribbon, click "Get Add-ins" (puzzle icon or store)', note: 'If not visible: … → Get Add-ins' },
+                    { step: 'In the window that opens, click "My Add-ins" at the top left', note: null },
+                    { step: 'Under "Custom Add-ins", click "+ Add from file…"', note: null },
+                    { step: 'Select grand-azure-manifest.xml then click Install', note: 'Accept the security warning' },
+                    { step: 'Open any email — the "Route Email" button appears in the ribbon', note: null },
                   ].map(({ step, note }, i) => (
                     <li key={i} className="flex items-start gap-2.5">
                       <span className="w-5 h-5 rounded-full bg-[var(--foreground)] text-white text-[11px] font-medium flex items-center justify-center flex-shrink-0 mt-0.5">
@@ -275,12 +276,12 @@ export default function SettingsPage() {
 
               <div className="space-y-3">
                 <div className="p-4 rounded-xl border border-[var(--border)] space-y-2">
-                  <p className="text-[13px] font-medium text-[var(--foreground)]">Fonctionnalités du complément</p>
+                  <p className="text-[13px] font-medium text-[var(--foreground)]">Add-in features</p>
                   {[
-                    'Voir le dossier suggéré pour l\'email ouvert',
-                    'Générer un brouillon de réponse IA',
-                    'Approuver ou rejeter le classement',
-                    'Classer l\'email dans KLEOS en un clic',
+                    'View the suggested booking for the open email',
+                    'Generate an AI draft reply',
+                    'Approve or reject the routing suggestion',
+                    'Route email to PMS in one click',
                   ].map((feat, i) => (
                     <div key={i} className="flex items-center gap-2">
                       <Check className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" strokeWidth={2} />
@@ -291,11 +292,11 @@ export default function SettingsPage() {
 
                 <a
                   href="/api/outlook-addin/manifest"
-                  download="lb-bot-manifest.xml"
+                  download="grand-azure-manifest.xml"
                   className="flex items-center justify-center gap-2 w-full px-4 py-3 rounded-xl bg-[var(--foreground)] text-white text-[13px] font-medium hover:opacity-90 transition-all duration-200"
                 >
                   <Download className="w-4 h-4" strokeWidth={1.8} />
-                  Télécharger le manifest
+                  Download manifest
                 </a>
 
                 <a

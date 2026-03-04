@@ -16,14 +16,14 @@ export async function GET() {
 
   <Id>36cea1a9-40df-4050-b9fb-e41df48eb617</Id>
   <Version>1.0.0.0</Version>
-  <ProviderName>SELARL Brosset-Techer</ProviderName>
-  <DefaultLocale>fr-FR</DefaultLocale>
-  <DisplayName DefaultValue="LB-BOT - Classement Intelligent"/>
-  <Description DefaultValue="Classement automatique des emails et intégration Kleos pour SELARL Brosset-Techer"/>
+  <ProviderName>The Grand Azure Hotel</ProviderName>
+  <DefaultLocale>en-GB</DefaultLocale>
+  <DisplayName DefaultValue="Grand Azure Bot - Email Routing"/>
+  <Description DefaultValue="AI-powered email routing and booking assignment for The Grand Azure Hotel"/>
 
   <IconUrl DefaultValue="${appUrl}/assets/icon-32.png"/>
   <HighResolutionIconUrl DefaultValue="${appUrl}/assets/icon-80.png"/>
-  <SupportUrl DefaultValue="https://www.lbrosset.com"/>
+  <SupportUrl DefaultValue="${appUrl}"/>
 
   <AppDomains>
     <AppDomain>${appUrl}</AppDomain>
@@ -161,11 +161,11 @@ export async function GET() {
           <bt:Url id="Taskpane.Url" DefaultValue="${appUrl}/taskpane.html"/>
         </bt:Urls>
         <bt:ShortStrings>
-          <bt:String id="GroupLabel" DefaultValue="LB-BOT"/>
-          <bt:String id="TaskpaneButton.Label" DefaultValue="Classer l'email"/>
+          <bt:String id="GroupLabel" DefaultValue="Grand Azure Bot"/>
+          <bt:String id="TaskpaneButton.Label" DefaultValue="Route Email"/>
         </bt:ShortStrings>
         <bt:LongStrings>
-          <bt:String id="TaskpaneButton.Tooltip" DefaultValue="Ouvrir LB-BOT pour classer et archiver cet email dans Kleos"/>
+          <bt:String id="TaskpaneButton.Tooltip" DefaultValue="Open Grand Azure Bot to route and assign this email to a booking in the PMS"/>
         </bt:LongStrings>
       </Resources>
 
@@ -178,7 +178,7 @@ export async function GET() {
     status: 200,
     headers: {
       'Content-Type': 'application/xml',
-      'Content-Disposition': 'attachment; filename="lb-bot-manifest.xml"',
+      'Content-Disposition': 'attachment; filename="grand-azure-manifest.xml"',
     },
   });
 }

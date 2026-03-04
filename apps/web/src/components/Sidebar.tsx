@@ -16,13 +16,22 @@ import {
 import { useAuth } from '@/context/AuthContext';
 import { toast } from 'sonner';
 
+const CONNECTED_SYSTEMS = [
+  { name: 'Opera Cloud',    label: 'PMS',     color: 'bg-emerald-400' },
+  { name: 'Microsoft 365',  label: 'Email',   color: 'bg-emerald-400' },
+  { name: 'Salesforce CRM', label: 'CRM',     color: 'bg-emerald-400' },
+  { name: 'Booking.com',    label: 'OTA',     color: 'bg-emerald-400' },
+  { name: 'Expedia',        label: 'OTA',     color: 'bg-emerald-400' },
+  { name: 'Amadeus GDS',    label: 'GDS',     color: 'bg-amber-400'   },
+];
+
 const navigation = [
-  { name: 'Correspondances', href: '/dashboard/review',   icon: ScanSearch      },
-  { name: 'Calendrier',      href: '/dashboard/calendar', icon: CalendarDays    },
-  { name: 'Tableau de bord', href: '/dashboard',          icon: LayoutDashboard },
-  { name: 'Activité',        href: '/dashboard/activity', icon: Activity        },
-  { name: 'Paramètres',      href: '/dashboard/settings', icon: Settings        },
-  { name: 'Guide',           href: '/dashboard/tour',     icon: Compass         },
+  { name: 'Email Routing',  href: '/dashboard/review',   icon: ScanSearch      },
+  { name: 'Calendar',       href: '/dashboard/calendar', icon: CalendarDays    },
+  { name: 'Dashboard',      href: '/dashboard',          icon: LayoutDashboard },
+  { name: 'Activity',       href: '/dashboard/activity', icon: Activity        },
+  { name: 'Settings',       href: '/dashboard/settings', icon: Settings        },
+  { name: 'Guide',          href: '/dashboard/tour',     icon: Compass         },
 ];
 
 export default function Sidebar() {
@@ -32,9 +41,9 @@ export default function Sidebar() {
   const handleLogout = async () => {
     try {
       await logout();
-      toast.success('Déconnexion réussie');
+      toast.success('Signed out successfully');
     } catch {
-      toast.error('Erreur lors de la déconnexion');
+      toast.error('Error signing out');
     }
   };
 
@@ -57,14 +66,14 @@ export default function Sidebar() {
       {/* Logo */}
       <div className="flex items-center gap-3 px-5 py-5">
         <div className="w-8 h-8 rounded-lg overflow-hidden flex items-center justify-center">
-          <Image src="/logo-small.png" alt="Logo" width={32} height={32} priority />
+          <Image src="/logo-small.svg" alt="Grand Azure Hotel" width={32} height={32} priority unoptimized />
         </div>
         <div>
           <h1 className="text-[15px] font-semibold tracking-[-0.01em] text-[var(--foreground)]">
-            Brosset Techer
+            Grand Azure Hotel
           </h1>
           <p className="text-[11px] text-[var(--muted-foreground)] font-medium">
-            Gestion Interne
+            Staff Portal
           </p>
         </div>
       </div>
@@ -96,15 +105,31 @@ export default function Sidebar() {
         })}
       </nav>
 
+      {/* Connected systems */}
+      <div className="px-4 py-3 border-t border-[var(--border)]">
+        <p className="text-[10px] font-semibold text-[var(--muted-foreground)] uppercase tracking-wider mb-2">
+          Connected Systems
+        </p>
+        <div className="space-y-1">
+          {CONNECTED_SYSTEMS.map(sys => (
+            <div key={sys.name} className="flex items-center gap-2">
+              <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${sys.color}`} />
+              <span className="text-[11px] text-[var(--foreground)] flex-1 truncate">{sys.name}</span>
+              <span className="text-[10px] text-[var(--muted-foreground)] font-medium">{sys.label}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
       {/* User section */}
       <div className="p-3 border-t border-[var(--border)]">
         <div className="flex items-center gap-3 px-2 py-2">
           <div className="w-8 h-8 rounded-full bg-[var(--muted)] flex items-center justify-center text-[var(--foreground)] font-medium text-xs">
-            {user ? getInitials(user.displayName || user.email) : 'BT'}
+            {user ? getInitials(user.displayName || user.email) : 'GA'}
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-[13px] font-medium text-[var(--foreground)] truncate">
-              {user?.displayName || 'Brosset Techer'}
+              {user?.displayName || 'Grand Azure Hotel'}
             </p>
             <p className="text-[11px] text-[var(--muted-foreground)] truncate">
               {user?.email || 'Admin'}
@@ -113,7 +138,7 @@ export default function Sidebar() {
           <button
             onClick={handleLogout}
             className="p-1.5 rounded-lg text-[var(--muted-foreground)] hover:text-[var(--destructive)] hover:bg-red-50 transition-all duration-200"
-            title="Se déconnecter"
+            title="Sign out"
           >
             <LogOut className="w-4 h-4" strokeWidth={1.8} />
           </button>

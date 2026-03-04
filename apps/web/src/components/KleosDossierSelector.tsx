@@ -14,7 +14,7 @@ interface KleosDossierSelectorProps {
 export function KleosDossierSelector({
   value,
   onChange,
-  placeholder = 'Rechercher un dossier...',
+  placeholder = 'Search bookings...',
   disabled = false,
 }: KleosDossierSelectorProps) {
   const [isOpen, setIsOpen] = useState(false);
@@ -40,7 +40,7 @@ export function KleosDossierSelector({
       const { cases } = await searchKleosCases(searchQuery, { pageSize: 10, onlyOpen: true });
       setResults(cases);
     } catch (err) {
-      setError('Erreur de recherche Kleos');
+      setError('Search error');
       setResults([]);
     } finally {
       setLoading(false);
@@ -241,7 +241,7 @@ export function KleosDossierSelector({
                     d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
                   />
                 </svg>
-                <p className="text-sm">Aucun dossier trouvé</p>
+                <p className="text-sm">No bookings found</p>
               </div>
             ) : (
               <div className="px-4 py-8 text-center text-gray-500">
@@ -253,7 +253,7 @@ export function KleosDossierSelector({
                     d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"
                   />
                 </svg>
-                <p className="text-sm">Tapez pour rechercher dans Kleos</p>
+                <p className="text-sm">Type to search bookings...</p>
               </div>
             )}
           </motion.div>

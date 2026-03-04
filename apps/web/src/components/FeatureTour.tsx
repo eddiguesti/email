@@ -9,38 +9,38 @@ const features = [
   {
     number: '01',
     icon: <Mail className="w-[18px] h-[18px]" strokeWidth={1.8} />,
-    title: 'Pipeline Email',
+    title: 'Email Routing',
     description:
-      "Chaque email entrant est analysé par l'IA et classé automatiquement dans le bon dossier Kleos. Les emails sous 85 % de confiance attendent votre validation.",
+      'Every incoming email is analysed by AI and automatically matched to the correct booking. Emails below 85% confidence wait for your approval.',
     link: '/dashboard/review/queue',
-    linkLabel: 'Voir la file de revue',
+    linkLabel: 'View review queue',
   },
   {
     number: '02',
     icon: <Sparkles className="w-[18px] h-[18px]" strokeWidth={1.8} />,
-    title: 'Assistant IA',
+    title: 'AI Assistant',
     description:
-      "Cliquez sur l'icône ✦ en bas à droite pour interroger vos emails en langage naturel : « Emails urgents du tribunal cette semaine ».",
+      'Click the ✦ icon in the bottom right to ask questions about your emails in plain English: "Urgent booking requests this week".',
     link: null,
     linkLabel: null,
   },
   {
     number: '03',
     icon: <CalendarDays className="w-[18px] h-[18px]" strokeWidth={1.8} />,
-    title: 'Calendrier',
+    title: 'Calendar',
     description:
-      "Visualisez vos rendez-vous Microsoft 365 et acceptez les suggestions d'agenda détectées automatiquement dans vos emails.",
+      'View your Microsoft 365 events and accept calendar suggestions automatically detected in your emails.',
     link: '/dashboard/calendar',
-    linkLabel: 'Ouvrir le calendrier',
+    linkLabel: 'Open calendar',
   },
   {
     number: '04',
     icon: <Eye className="w-[18px] h-[18px]" strokeWidth={1.8} />,
-    title: 'File de revue',
+    title: 'Review Queue',
     description:
-      "Approuvez ou rejetez les classements suggérés par l'IA. Chaque décision améliore la précision du modèle pour votre cabinet.",
+      'Approve or reject AI routing suggestions. Each decision improves the accuracy of the model for your hotel.',
     link: '/dashboard/review/queue',
-    linkLabel: 'Ouvrir la file',
+    linkLabel: 'Open queue',
   },
 ];
 
@@ -74,16 +74,16 @@ export default function FeatureTour({ onDismiss }: { onDismiss: () => void }) {
       <div className="px-6 py-4 flex items-center justify-between border-b border-[var(--border)]">
         <div>
           <h2 className="text-[14px] font-semibold tracking-[-0.01em] text-[var(--foreground)]">
-            Découvrir la plateforme
+            Discover the platform
           </h2>
           <p className="text-[12px] text-[var(--muted-foreground)] mt-0.5">
-            Les 4 modules clés de LB-Bot
+            The 4 key modules of Grand Azure Bot
           </p>
         </div>
         <button
           onClick={onDismiss}
           className="p-2 rounded-lg hover:bg-[var(--muted)] text-[var(--muted-foreground)] transition-all duration-200"
-          aria-label="Fermer la présentation"
+          aria-label="Close"
         >
           <X className="w-4 h-4" strokeWidth={1.8} />
         </button>
@@ -126,14 +126,14 @@ export default function FeatureTour({ onDismiss }: { onDismiss: () => void }) {
       {/* Footer CTA */}
       <div className="px-6 py-4 border-t border-[var(--border)] flex items-center justify-between bg-[var(--muted)]/40">
         <p className="text-[12px] text-[var(--muted-foreground)]">
-          Vous pouvez relancer cette présentation depuis le tableau de bord à tout moment.
+          You can relaunch this tour from the dashboard at any time.
         </p>
         <button
           onClick={handleStartTour}
           className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[var(--foreground)] text-white text-[12px] font-medium hover:opacity-90 transition-all duration-200 flex-shrink-0 ml-4"
         >
           <Compass className="w-3.5 h-3.5" strokeWidth={1.8} />
-          Lancer la visite guidée
+          Start guided tour
         </button>
       </div>
     </motion.div>

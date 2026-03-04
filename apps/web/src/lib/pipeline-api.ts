@@ -25,7 +25,7 @@ export async function getMatchLogs(filters: MatchLogFilters) {
   if (filters.confidence_min !== undefined) sp.set('confidence_min', String(filters.confidence_min));
   if (filters.confidence_max !== undefined) sp.set('confidence_max', String(filters.confidence_max));
   if (filters.source) sp.set('source', filters.source);
-  if (filters.lawyer) sp.set('lawyer', filters.lawyer);
+  if (filters.handler) sp.set('handler', filters.handler);
   if (filters.date_from) sp.set('date_from', filters.date_from);
   if (filters.date_to) sp.set('date_to', filters.date_to);
   if (filters.reviewed) sp.set('reviewed', filters.reviewed);

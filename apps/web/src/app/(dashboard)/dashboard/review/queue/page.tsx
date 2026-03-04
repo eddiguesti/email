@@ -69,14 +69,14 @@ export default function ReviewQueuePage() {
       <div className="flex flex-col items-center justify-center py-20 text-center gap-3">
         <AlertCircle className="w-7 h-7 text-red-400" strokeWidth={1.5} />
         <p className="text-[13px] text-[var(--muted-foreground)]">
-          Impossible de charger la file de validation. Vérifiez votre connexion.
+          Failed to load the review queue. Check your connection.
         </p>
         <button
           onClick={load}
           className="flex items-center gap-2 px-4 py-2.5 text-[13px] font-medium rounded-xl bg-[var(--muted)] text-[var(--foreground)] hover:bg-[var(--foreground)] hover:text-white transition-all duration-200"
         >
           <RefreshCw className="w-4 h-4" strokeWidth={1.8} />
-          Réessayer
+          Retry
         </button>
       </div>
     );
@@ -89,13 +89,13 @@ export default function ReviewQueuePage() {
           <CheckCircle className="w-7 h-7 text-emerald-400" strokeWidth={1.5} />
         </div>
         <h2 className="text-[20px] font-semibold tracking-[-0.01em] text-[var(--foreground)] mb-2">
-          Aucun email à valider
+          No emails to review
         </h2>
         <p className="text-[13px] text-[var(--muted-foreground)] mb-1 max-w-sm">
-          Tous les emails entre 60 et 85% de confiance ont été traités.
+          All emails between 60-85% confidence have been handled.
         </p>
         <p className="text-[12px] text-[var(--muted-foreground)] mb-5 max-w-sm">
-          Les emails à 85%+ sont classés automatiquement — consultez <strong>Toutes les correspondances</strong> pour les voir.
+          Emails at 85%+ are routed automatically — check <strong>All Matches</strong> to view them.
         </p>
         <button
           onClick={load}
@@ -118,10 +118,10 @@ export default function ReviewQueuePage() {
           </div>
           <div>
             <span className="text-[13px] font-medium text-[var(--foreground)]">
-              {isDemo ? displayItems.length : total} email{(isDemo ? displayItems.length : total) !== 1 ? 's' : ''} à valider
+              {isDemo ? displayItems.length : total} email{(isDemo ? displayItems.length : total) !== 1 ? 's' : ''} to review
             </span>
             <p className="text-[11px] text-[var(--muted-foreground)]">
-              Confiance entre 60–85% — l&apos;IA n&apos;est pas sûre, votre avis est nécessaire
+              Confidence 60–85% — AI is uncertain, your review is needed
             </p>
           </div>
         </div>
@@ -166,14 +166,14 @@ export default function ReviewQueuePage() {
 
               <div className="p-4 bg-[var(--muted)] rounded-xl group-hover:bg-[var(--border)] transition-colors duration-150">
                 <p className="text-[13px] font-medium text-[var(--foreground)]">
-                  Dossier suggéré : [{item.dossier_ref}] {item.dossier_name}
+                  Suggested booking: [{item.dossier_ref}] {item.dossier_name}
                 </p>
                 <p className="text-[12px] text-[var(--muted-foreground)] mt-1">
-                  Avocat : {item.lawyer || 'N/D'} · Boîte : {item.mailbox}
+                  Dept.: {item.handler || 'N/A'} · Mailbox: {item.mailbox}
                 </p>
                 {item.match_reasons && item.match_reasons.length > 0 && (
                   <div className="mt-2 space-y-0.5">
-                    <p className="text-[11px] font-medium text-[var(--muted-foreground)] mb-1">Pourquoi ce dossier :</p>
+                    <p className="text-[11px] font-medium text-[var(--muted-foreground)] mb-1">Why this booking:</p>
                     {item.match_reasons.map((r, idx) => (
                       <p key={idx} className="text-[11px] text-[var(--muted-foreground)]">· {r}</p>
                     ))}

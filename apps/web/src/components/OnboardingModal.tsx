@@ -35,25 +35,25 @@ const BOT_MODES: { id: BotMode; icon: React.ReactNode; label: string; descriptio
   {
     id: 'automatique',
     icon: <Zap className="w-6 h-6" strokeWidth={1.8} />,
-    label: 'Automatique',
-    description: 'Les emails avec confiance ≥ 85% sont classés automatiquement dans KLEOS. Les emails 60-85% attendent votre validation.',
-    tag: 'Recommandé',
+    label: 'Automatic',
+    description: 'Emails with ≥ 85% confidence are automatically routed to the PMS. Emails at 60–85% wait for your approval.',
+    tag: 'Recommended',
     tagColor: 'bg-emerald-100 text-emerald-700',
   },
   {
     id: 'assiste',
     icon: <SlidersHorizontal className="w-6 h-6" strokeWidth={1.8} />,
-    label: 'Assisté',
-    description: 'Toutes les correspondances passent par la file de revue. Vous validez chaque classement avant qu\'il soit effectué.',
-    tag: 'Contrôle total',
+    label: 'Assisted',
+    description: 'All matches go through the review queue. You approve each routing before it is applied.',
+    tag: 'Full control',
     tagColor: 'bg-blue-100 text-blue-700',
   },
   {
     id: 'observation',
     icon: <Eye className="w-6 h-6" strokeWidth={1.8} />,
     label: 'Observation',
-    description: 'Le bot analyse et suggère seulement — aucune action dans KLEOS. Idéal pour tester et valider la précision.',
-    tag: 'Mode actuel',
+    description: 'The bot analyses and suggests only — no actions in the PMS. Ideal for testing accuracy.',
+    tag: 'Current mode',
     tagColor: 'bg-gray-100 text-gray-600',
   },
 ];
@@ -62,20 +62,20 @@ const EMAIL_FILTERS: { id: EmailFilter; icon: React.ReactNode; label: string; de
   {
     id: 'smart',
     icon: <Sparkles className="w-5 h-5" strokeWidth={1.8} />,
-    label: 'Intelligent',
-    description: 'Ignore automatiquement les newsletters, spams et notifications. Traite tous les vrais emails.',
+    label: 'Smart',
+    description: 'Automatically ignores newsletters, spam and notifications. Processes all genuine emails.',
   },
   {
     id: 'clients',
     icon: <Filter className="w-5 h-5" strokeWidth={1.8} />,
-    label: 'Clients uniquement',
-    description: 'Traite seulement les emails d\'expéditeurs déjà liés à un dossier ou connus de KLEOS.',
+    label: 'Guests only',
+    description: 'Processes only emails from senders already linked to a booking or known in the PMS.',
   },
   {
     id: 'all',
     icon: <Mail className="w-5 h-5" strokeWidth={1.8} />,
-    label: 'Tout traiter',
-    description: 'Tente de classer chaque email reçu, sans filtrage préalable.',
+    label: 'Process all',
+    description: 'Attempts to route every incoming email without pre-filtering.',
   },
 ];
 
@@ -187,16 +187,16 @@ export default function OnboardingModal({ onComplete }: OnboardingModalProps) {
                   <Bot className="w-8 h-8 text-white" strokeWidth={1.5} />
                 </div>
                 <h1 className="text-[26px] font-light tracking-[-0.02em] text-[var(--foreground)] mb-3">
-                  Bienvenue, {user?.displayName?.split(' ')[0] || 'Maître'} 👋
+                  Welcome, {user?.displayName?.split(' ')[0] || 'there'} 👋
                 </h1>
                 <p className="text-[14px] text-[var(--muted-foreground)] leading-relaxed max-w-sm">
-                  LB-BOT va surveiller votre boîte mail, identifier les emails liés à vos dossiers KLEOS et les classer automatiquement.
+                  Grand Azure Bot monitors your hotel inbox, identifies emails linked to bookings and routes them to the right department automatically.
                 </p>
                 <div className="grid grid-cols-3 gap-3 mt-7 w-full">
                   {[
-                    { icon: <Mail className="w-4 h-4" />, label: 'Analyse\nautomatique' },
-                    { icon: <CheckCircle className="w-4 h-4" />, label: 'Classement\nKLEOS' },
-                    { icon: <Sparkles className="w-4 h-4" />, label: 'Brouillons\nIA' },
+                    { icon: <Mail className="w-4 h-4" />, label: 'Auto\nAnalysis' },
+                    { icon: <CheckCircle className="w-4 h-4" />, label: 'PMS\nRouting' },
+                    { icon: <Sparkles className="w-4 h-4" />, label: 'AI\nDrafts' },
                   ].map((f, i) => (
                     <div key={i} className="p-3 rounded-2xl bg-[var(--muted)] flex flex-col items-center gap-2">
                       <div className="text-[var(--muted-foreground)]">{f.icon}</div>
@@ -218,10 +218,10 @@ export default function OnboardingModal({ onComplete }: OnboardingModalProps) {
                 className="flex-1"
               >
                 <h2 className="text-[20px] font-semibold tracking-[-0.01em] text-[var(--foreground)] mb-1">
-                  Comment voulez-vous que le bot travaille ?
+                  How should the bot work?
                 </h2>
                 <p className="text-[13px] text-[var(--muted-foreground)] mb-5">
-                  Vous pourrez changer cela à tout moment dans les paramètres.
+                  You can change this at any time in settings.
                 </p>
                 <div className="space-y-2.5">
                   {BOT_MODES.map(mode => (
@@ -264,10 +264,10 @@ export default function OnboardingModal({ onComplete }: OnboardingModalProps) {
                 className="flex-1"
               >
                 <h2 className="text-[20px] font-semibold tracking-[-0.01em] text-[var(--foreground)] mb-1">
-                  Quels emails traiter ?
+                  Which emails to process?
                 </h2>
                 <p className="text-[13px] text-[var(--muted-foreground)] mb-5">
-                  Définissez le périmètre d&apos;analyse de votre boîte mail.
+                  Define the scope of your inbox analysis.
                 </p>
                 <div className="space-y-2.5">
                   {EMAIL_FILTERS.map(filter => (
@@ -307,10 +307,10 @@ export default function OnboardingModal({ onComplete }: OnboardingModalProps) {
                 className="flex-1"
               >
                 <h2 className="text-[20px] font-semibold tracking-[-0.01em] text-[var(--foreground)] mb-1">
-                  Complément Outlook
+                  Outlook Add-in
                 </h2>
                 <p className="text-[13px] text-[var(--muted-foreground)] mb-5">
-                  Accédez à LB-BOT directement dans Outlook — optionnel, vous pouvez le faire plus tard.
+                  Access Grand Azure Bot directly inside Outlook — optional, you can do this later.
                 </p>
                 <div className="p-5 rounded-2xl border border-[var(--border)] space-y-4">
                   <div className="flex items-start gap-3">
@@ -318,13 +318,13 @@ export default function OnboardingModal({ onComplete }: OnboardingModalProps) {
                       <Puzzle className="w-5 h-5 text-[var(--muted-foreground)]" strokeWidth={1.8} />
                     </div>
                     <div>
-                      <p className="text-[14px] font-semibold text-[var(--foreground)] mb-1">LB-BOT pour Outlook</p>
+                      <p className="text-[14px] font-semibold text-[var(--foreground)] mb-1">Grand Azure Bot for Outlook</p>
                       <div className="space-y-1">
                         {[
-                          'Dossier suggéré visible directement sur l\'email',
-                          'Couleur automatique selon le statut de classement',
-                          'Déplacement en dossier en un clic',
-                          'Génération de brouillons IA dans Outlook',
+                          'Suggested booking visible directly on the email',
+                          'Automatic colour coding by routing status',
+                          'Route to PMS in one click',
+                          'Generate AI draft replies inside Outlook',
                         ].map((f, i) => (
                           <div key={i} className="flex items-center gap-2">
                             <CheckCircle className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" strokeWidth={2} />
@@ -337,16 +337,16 @@ export default function OnboardingModal({ onComplete }: OnboardingModalProps) {
 
                   <a
                     href="/api/outlook-addin/manifest"
-                    download="lb-bot-manifest.xml"
+                    download="grand-azure-manifest.xml"
                     className="flex items-center justify-center gap-2 w-full px-4 py-3 rounded-xl bg-[var(--foreground)] text-white text-[13px] font-medium hover:opacity-90 transition-all duration-200"
                   >
                     <Download className="w-4 h-4" strokeWidth={1.8} />
-                    Télécharger le manifest Outlook
+                    Download Outlook Manifest
                   </a>
                 </div>
 
                 <p className="text-[12px] text-[var(--muted-foreground)] text-center mt-4">
-                  Vous retrouverez ce téléchargement dans <strong>Paramètres → Complément Outlook</strong>
+                  You can find this download in <strong>Settings → Outlook Add-in</strong>
                 </p>
               </motion.div>
             )}
@@ -370,10 +370,10 @@ export default function OnboardingModal({ onComplete }: OnboardingModalProps) {
                   <CheckCircle className="w-8 h-8 text-emerald-500" strokeWidth={1.5} />
                 </motion.div>
                 <h2 className="text-[24px] font-light tracking-[-0.02em] text-[var(--foreground)] mb-3">
-                  Tout est prêt !
+                  All set!
                 </h2>
                 <p className="text-[13px] text-[var(--muted-foreground)] leading-relaxed max-w-sm mb-6">
-                  LB-BOT va commencer à analyser votre boîte mail.
+                  Grand Azure Bot will start analysing your hotel inbox.
                 </p>
 
                 <div className="w-full space-y-2 text-left">
@@ -384,13 +384,13 @@ export default function OnboardingModal({ onComplete }: OnboardingModalProps) {
                   />
                   <SummaryRow
                     icon={<Filter className="w-4 h-4" />}
-                    label="Filtre emails"
+                    label="Email filter"
                     value={EMAIL_FILTERS.find(f => f.id === emailFilter)?.label || emailFilter}
                   />
                   <SummaryRow
                     icon={<Puzzle className="w-4 h-4" />}
-                    label="Complément Outlook"
-                    value="Disponible dans Paramètres"
+                    label="Outlook Add-in"
+                    value="Available in Settings"
                   />
                 </div>
               </motion.div>
@@ -405,7 +405,7 @@ export default function OnboardingModal({ onComplete }: OnboardingModalProps) {
               onClick={() => setStep(s => s - 1)}
               className="text-[13px] text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors"
             >
-              Retour
+              Back
             </button>
           ) : (
             <span />
@@ -416,7 +416,7 @@ export default function OnboardingModal({ onComplete }: OnboardingModalProps) {
               onClick={() => setStep(s => s + 1)}
               className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[var(--foreground)] text-white text-[13px] font-medium hover:opacity-90 transition-all duration-200"
             >
-              {step === 0 ? 'Commencer la configuration' : step === 3 ? 'Presque terminé' : 'Suivant'}
+              {step === 0 ? 'Start setup' : step === 3 ? 'Almost done' : 'Next'}
               <ArrowRight className="w-4 h-4" strokeWidth={2} />
             </button>
           ) : (
@@ -426,17 +426,17 @@ export default function OnboardingModal({ onComplete }: OnboardingModalProps) {
                 disabled={saving}
                 className="text-[13px] text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors disabled:opacity-40"
               >
-                Passer
+                Skip
               </button>
               <button
                 onClick={handleFinishAndTour}
                 disabled={saving}
                 className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[var(--foreground)] text-white text-[13px] font-medium hover:opacity-90 disabled:opacity-40 transition-all duration-200"
               >
-                {saving ? 'Enregistrement...' : (
+                {saving ? 'Saving...' : (
                   <>
                     <Compass className="w-4 h-4" strokeWidth={1.8} />
-                    Découvrir la plateforme
+                    Explore the platform
                   </>
                 )}
               </button>

@@ -50,11 +50,11 @@ export default function SuggestionPanel({ suggestions, loading, onRefresh }: Pro
     optimisticRemove(s.id);
     try {
       await acceptSuggestion(s.id);
-      toast.success(`"${s.title.slice(0, 40)}" ajouté au calendrier`);
+      toast.success(`"${s.title.slice(0, 40)}" added to calendar`);
       onRefresh();
     } catch (err) {
       optimisticRestore(s.id);
-      toast.error(err instanceof Error ? err.message : 'Erreur');
+      toast.error(err instanceof Error ? err.message : 'Error');
     } finally {
       setBusy(s.id, false);
     }
@@ -65,11 +65,11 @@ export default function SuggestionPanel({ suggestions, loading, onRefresh }: Pro
     optimisticRemove(s.id);
     try {
       await dismissSuggestion(s.id);
-      toast.success('Suggestion ignorée');
+      toast.success('Suggestion dismissed');
       onRefresh();
     } catch (err) {
       optimisticRestore(s.id);
-      toast.error(err instanceof Error ? err.message : 'Erreur');
+      toast.error(err instanceof Error ? err.message : 'Error');
     } finally {
       setBusy(s.id, false);
     }
@@ -101,9 +101,9 @@ export default function SuggestionPanel({ suggestions, loading, onRefresh }: Pro
             <div className="w-12 h-12 rounded-2xl bg-[var(--muted)] flex items-center justify-center mb-3">
               <CalendarDays className="w-5 h-5 text-[var(--muted-foreground)]" strokeWidth={1.5} />
             </div>
-            <p className="text-[13px] font-medium text-[var(--foreground)]">Aucune suggestion</p>
+            <p className="text-[13px] font-medium text-[var(--foreground)]">No suggestions</p>
             <p className="text-[12px] text-[var(--muted-foreground)] mt-1 leading-relaxed">
-              Les emails contenant des rendez-vous apparaîtront ici automatiquement
+              Emails containing appointments will appear here automatically
             </p>
           </div>
         ) : (
@@ -122,7 +122,7 @@ export default function SuggestionPanel({ suggestions, loading, onRefresh }: Pro
                   <div className="flex items-center gap-1.5 mb-2">
                     <div className={`w-2 h-2 rounded-full ${confidenceDot(s.confidence)}`} />
                     <span className="text-[10px] font-medium text-[var(--muted-foreground)]">
-                      {Math.round(s.confidence * 100)}% confiance
+                      {Math.round(s.confidence * 100)}% confidence
                     </span>
                     {s.sender_name && (
                       <>

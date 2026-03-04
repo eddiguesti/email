@@ -1,61 +1,45 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabaseAdmin } from '@/lib/supabase-server';
-import { getUserFromRequest } from '@/lib/auth-server';
+import { MOCK_DATA } from '@/lib/mock-data';
 
 export async function GET(req: NextRequest) {
-  const user = getUserFromRequest(req);
-  if (!user) {
-    return NextResponse.json({ error: 'Non authentifié' }, { status: 401 });
-  }
-
   const { searchParams } = req.nextUrl;
-  const matched = searchParams.get('matched');
-  const confidenceMin = searchParams.get('confidence_min');
-  const confidenceMax = searchParams.get('confidence_max');
-  const source = searchParams.get('source');
-  const lawyer = searchParams.get('lawyer');
-  const dateFrom = searchParams.get('date_from');
-  const dateTo = searchParams.get('date_to');
-  const reviewed = searchParams.get('reviewed');
   const page = Math.max(parseInt(searchParams.get('page') || '1', 10), 1);
   const perPage = Math.min(parseInt(searchParams.get('per_page') || '50', 10), 200);
 
-  let query = supabaseAdmin
-    .from('match_logs')
-    .select('*', { count: 'exact' })
-    .order('created_at', { ascending: false });
-  if (!user.isAdmin) query = query.eq('mailbox', user.email);
-  if (matched === 'true') query = query.eq('matched', true);
-  if (matched === 'false') query = query.eq('matched', false);
-  const confMin = confidenceMin ? parseFloat(confidenceMin) : NaN;
-  const confMax = confidenceMax ? parseFloat(confidenceMax) : NaN;
-  if (!isNaN(confMin)) query = query.gte('confidence', confMin);
-  if (!isNaN(confMax)) query = query.lte('confidence', confMax);
-  if (source) query = query.eq('match_source', source);
-  if (lawyer) query = query.ilike('lawyer', `%${lawyer}%`);
-  if (dateFrom) query = query.gte('received_at', dateFrom);
-  if (dateTo) query = query.lte('received_at', dateTo);
-  if (reviewed === 'true') query = query.not('review_approved', 'is', null);
-  if (reviewed === 'false') query = query.is('review_approved', null);
+  let matches = [...MOCK_DATA.match_logs] as Record<string, unknown>[];
+
+  const matched = searchParams.get('matched');
+  if (matched === 'true') matches = matches.filter(m => m.matched === true);
+  if (matched === 'false') matches = matches.filter(m => m.matched === false);
+
+  const confMin = parseFloat(searchParams.get('confidence_min') || '');
+  const confMax = parseFloat(searchParams.get('confidence_max') || '');
+  if (!isNaN(confMin)) matches = matches.filter(m => (m.confidence as number) >= confMin);
+  if (!isNaN(confMax)) matches = matches.filter(m => (m.confidence as number) <= confMax);
+
+  const source = searchParams.get('source');
+  if (source) matches = matches.filter(m => m.match_source === source);
+
+  const handler = searchParams.get('handler');
+  if (handler) matches = matches.filter(m => (m.handler as string || '').toLowerCase().includes(handler.toLowerCase()));
+
+  const dateFrom = searchParams.get('date_from');
+  const dateTo = searchParams.get('date_to');
+  if (dateFrom) matches = matches.filter(m => (m.received_at as string) >= dateFrom);
+  if (dateTo) matches = matches.filter(m => (m.received_at as string) <= dateTo);
+
+  const reviewed = searchParams.get('reviewed');
+  if (reviewed === 'true') matches = matches.filter(m => m.review_approved !== null);
+  if (reviewed === 'false') matches = matches.filter(m => m.review_approved === null);
 
   const category = searchParams.get('category');
-  if (category) query = query.eq('category_color', category);
+  if (category) matches = matches.filter(m => m.category_color === category);
 
+  matches.sort((a, b) => (b.created_at as string).localeCompare(a.created_at as string));
+
+  const total = matches.length;
   const from = (page - 1) * perPage;
-  const to = from + perPage - 1;
-  query = query.range(from, to);
+  const paginated = matches.slice(from, from + perPage);
 
-  const { data, error, count } = await query;
-
-  if (error) {
-    console.error('[matches] DB error:', error.message);
-    return NextResponse.json({ error: 'Erreur interne' }, { status: 500 });
-  }
-
-  return NextResponse.json({
-    matches: data || [],
-    total: count || 0,
-    page,
-    per_page: perPage,
-  });
+  return NextResponse.json({ matches: paginated, total, page, per_page: perPage });
 }

@@ -155,7 +155,7 @@ export function NotificationBell() {
                   <div className="w-10 h-10 rounded-xl bg-[var(--muted)] flex items-center justify-center mx-auto mb-3">
                     <Bell className="w-5 h-5 text-[var(--muted-foreground)]" strokeWidth={1.5} />
                   </div>
-                  <p className="text-[13px] text-[var(--muted-foreground)]">Aucune notification</p>
+                  <p className="text-[13px] text-[var(--muted-foreground)]">No notifications</p>
                 </div>
               ) : (
                 notifications.slice(0, 10).map((notification) => (

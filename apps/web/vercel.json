@@ -1,4 +1,4 @@
 {
   "installCommand": "cd ../.. && pnpm install",
-  "buildCommand": "cd ../.. && pnpm --filter @lb-bot/shared build && pnpm --filter @lb-bot/web build"
+  "buildCommand": "cd ../.. && pnpm --filter @grand-azure/shared build && pnpm --filter @grand-azure/web build"
 }

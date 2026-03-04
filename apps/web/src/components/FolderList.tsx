@@ -26,7 +26,6 @@ const folderIcons: Record<string, typeof Inbox> = {
   'Sent Items': Send,
   'Éléments envoyés': Send,
   'Drafts': FileText,
-  'Brouillons': FileText,
   'Deleted Items': Trash2,
   'Éléments supprimés': Trash2,
   'Archive': Archive,
@@ -144,7 +143,7 @@ export default function FolderList({ selectedFolderId, onFolderSelect }: FolderL
       <div className="p-6">
         <div className="flex items-center justify-center gap-2 text-[var(--muted-foreground)]">
           <Loader2 className="w-4 h-4 animate-spin" />
-          <span className="text-[13px]">Chargement...</span>
+          <span className="text-[13px]">Loading...</span>
         </div>
       </div>
     );
@@ -159,7 +158,7 @@ export default function FolderList({ selectedFolderId, onFolderSelect }: FolderL
           className="flex items-center gap-2 text-[13px] text-[var(--foreground)] hover:text-[var(--accent)] transition-colors"
         >
           <RefreshCw className="w-3 h-3" strokeWidth={1.8} />
-          Réessayer
+          Retry
         </button>
       </div>
     );
