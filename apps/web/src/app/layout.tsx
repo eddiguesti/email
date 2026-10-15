@@ -62,6 +62,9 @@ export default function RootLayout({
             />
           </AuthProvider>
         </Suspense>
+        <footer style={{ padding: '12px 24px', textAlign: 'center', fontSize: 12 }}>
+          <a href="https://hexcore.digital/" style={{ display: 'inline-flex', alignItems: 'center', minHeight: 44, color: 'inherit', textDecoration: 'underline', textUnderlineOffset: 4 }}>Made by Hexcore</a>
+        </footer>
       </body>
     </html>
   );
